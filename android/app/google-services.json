@@ -1,0 +1,126 @@
+{
+  "project_info": {
+    "project_number": "971401377167",
+    "project_id": "chitieuplus-app",
+    "storage_bucket": "chitieuplus-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971401377167:android:5422cdf733d9bdb962c7fa",
+        "android_client_info": {
+          "package_name": "com.example.chitieu_plus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971401377167-3hefjpcmt8ik3ocfp2oql82tckraoicl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.chitieu_plus",
+            "certificate_hash": "9f906e22e7b07b75bbbdad79bb6cfd801ba9371b"
+          }
+        },
+        {
+          "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUFZ6r7_d88iGwUrX4XJK_3wx7iiWgn2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971401377167-4e7tt1kk51eb42lpqaqu2llq2k30sqq2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.chitieuplusV2"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971401377167:android:5936c639f2cbe72862c7fa",
+        "android_client_info": {
+          "package_name": "com.example.chitieuplus_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUFZ6r7_d88iGwUrX4XJK_3wx7iiWgn2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971401377167-4e7tt1kk51eb42lpqaqu2llq2k30sqq2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.chitieuplusV2"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971401377167:android:7b5c903728a8ac5062c7fa",
+        "android_client_info": {
+          "package_name": "com.example.chitieuplus_v2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUFZ6r7_d88iGwUrX4XJK_3wx7iiWgn2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971401377167-4e7tt1kk51eb42lpqaqu2llq2k30sqq2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.chitieuplusV2"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

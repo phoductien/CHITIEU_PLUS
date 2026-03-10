@@ -1,0 +1,101 @@
+﻿> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:compileKotlin UP-TO-DATE
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+
+> Task :app:signingReport
+Variant: debug
+Config: debug
+Store: C:\Users\ADMIN\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E6:FB:56:7C:27:4D:F9:65:2F:DD:60:91:B7:C1:CE:FC
+SHA1: 9F:90:6E:22:E7:B0:7B:75:BB:BD:AD:79:BB:6C:FD:80:1B:A9:37:1B
+SHA-256: 58:2B:4E:B3:EC:0A:AD:94:BD:E2:22:F2:9A:AC:A7:8D:85:61:4A:D0:04:17:10:DA:76:58:CE:9D:A7:F4:D6:C1
+Valid until: Friday, November 12, 2055
+----------
+Variant: release
+Config: debug
+Store: C:\Users\ADMIN\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E6:FB:56:7C:27:4D:F9:65:2F:DD:60:91:B7:C1:CE:FC
+SHA1: 9F:90:6E:22:E7:B0:7B:75:BB:BD:AD:79:BB:6C:FD:80:1B:A9:37:1B
+SHA-256: 58:2B:4E:B3:EC:0A:AD:94:BD:E2:22:F2:9A:AC:A7:8D:85:61:4A:D0:04:17:10:DA:76:58:CE:9D:A7:F4:D6:C1
+Valid until: Friday, November 12, 2055
+----------
+Variant: profile
+Config: debug
+Store: C:\Users\ADMIN\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E6:FB:56:7C:27:4D:F9:65:2F:DD:60:91:B7:C1:CE:FC
+SHA1: 9F:90:6E:22:E7:B0:7B:75:BB:BD:AD:79:BB:6C:FD:80:1B:A9:37:1B
+SHA-256: 58:2B:4E:B3:EC:0A:AD:94:BD:E2:22:F2:9A:AC:A7:8D:85:61:4A:D0:04:17:10:DA:76:58:CE:9D:A7:F4:D6:C1
+Valid until: Friday, November 12, 2055
+----------
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\ADMIN\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E6:FB:56:7C:27:4D:F9:65:2F:DD:60:91:B7:C1:CE:FC
+SHA1: 9F:90:6E:22:E7:B0:7B:75:BB:BD:AD:79:BB:6C:FD:80:1B:A9:37:1B
+SHA-256: 58:2B:4E:B3:EC:0A:AD:94:BD:E2:22:F2:9A:AC:A7:8D:85:61:4A:D0:04:17:10:DA:76:58:CE:9D:A7:F4:D6:C1
+Valid until: Friday, November 12, 2055
+----------
+
+> Task :cloud_firestore:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\ADMIN\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E6:FB:56:7C:27:4D:F9:65:2F:DD:60:91:B7:C1:CE:FC
+SHA1: 9F:90:6E:22:E7:B0:7B:75:BB:BD:AD:79:BB:6C:FD:80:1B:A9:37:1B
+SHA-256: 58:2B:4E:B3:EC:0A:AD:94:BD:E2:22:F2:9A:AC:A7:8D:85:61:4A:D0:04:17:10:DA:76:58:CE:9D:A7:F4:D6:C1
+Valid until: Friday, November 12, 2055
+----------
+
+> Task :firebase_auth:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\ADMIN\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E6:FB:56:7C:27:4D:F9:65:2F:DD:60:91:B7:C1:CE:FC
+SHA1: 9F:90:6E:22:E7:B0:7B:75:BB:BD:AD:79:BB:6C:FD:80:1B:A9:37:1B
+SHA-256: 58:2B:4E:B3:EC:0A:AD:94:BD:E2:22:F2:9A:AC:A7:8D:85:61:4A:D0:04:17:10:DA:76:58:CE:9D:A7:F4:D6:C1
+Valid until: Friday, November 12, 2055
+----------
+
+> Task :firebase_core:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\ADMIN\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E6:FB:56:7C:27:4D:F9:65:2F:DD:60:91:B7:C1:CE:FC
+SHA1: 9F:90:6E:22:E7:B0:7B:75:BB:BD:AD:79:BB:6C:FD:80:1B:A9:37:1B
+SHA-256: 58:2B:4E:B3:EC:0A:AD:94:BD:E2:22:F2:9A:AC:A7:8D:85:61:4A:D0:04:17:10:DA:76:58:CE:9D:A7:F4:D6:C1
+Valid until: Friday, November 12, 2055
+----------
+
+> Task :shared_preferences_android:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\ADMIN\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: E6:FB:56:7C:27:4D:F9:65:2F:DD:60:91:B7:C1:CE:FC
+SHA1: 9F:90:6E:22:E7:B0:7B:75:BB:BD:AD:79:BB:6C:FD:80:1B:A9:37:1B
+SHA-256: 58:2B:4E:B3:EC:0A:AD:94:BD:E2:22:F2:9A:AC:A7:8D:85:61:4A:D0:04:17:10:DA:76:58:CE:9D:A7:F4:D6:C1
+Valid until: Friday, November 12, 2055
+----------
+
+[Incubating] Problems report is available at: file:///D:/CHITIEU_PLUS/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 3s
+9 actionable tasks: 5 executed, 4 up-to-date
