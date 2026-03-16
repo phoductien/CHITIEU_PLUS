@@ -1,9 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:chitieu_plus/widgets/app_logo.dart';
 import 'package:chitieu_plus/widgets/app_loading_indicator.dart';
 import 'package:chitieu_plus/services/otp_service.dart';
 import 'package:chitieu_plus/screens/reset_password_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:chitieu_plus/providers/notification_provider.dart';
+import 'package:chitieu_plus/models/notification_model.dart';
+import 'package:chitieu_plus/widgets/auth_footer_terms.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String email;
@@ -21,6 +26,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   int _secondsRemaining = 300; // 5 minutes
   bool _canResend = false;
   bool _isLoading = false;
+  bool _isError = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -43,6 +50,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   void _startTimer() {
     _canResend = false;
     _secondsRemaining = 300;
+    _isError = false;
+    _errorMessage = '';
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
@@ -50,6 +59,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
           _secondsRemaining--;
         } else {
           _canResend = true;
+          _isError = true;
+          _errorMessage = 'Mã OTP đã hết hiệu lực. Vui lòng gửi lại.';
           _timer?.cancel();
         }
       });
@@ -82,15 +93,71 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     }
   }
 
+  void _onOTPChanged(String value, int index) {
+    setState(() {
+      _isError = false;
+      _errorMessage = '';
+    });
+    
+    if (value.length > 1) {
+      // Xử lý paste
+      String pastedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+      if (pastedValue.isNotEmpty) {
+        for (int i = 0; i < 6; i++) {
+          if (i < pastedValue.length) {
+            _controllers[i].text = pastedValue[i];
+          } else {
+            _controllers[i].clear();
+          }
+        }
+        if (pastedValue.length >= 6) {
+          _focusNodes[5].unfocus();
+          _verifyOTP(); // Tự động check khi paste đủ 6 số
+        } else {
+          _focusNodes[pastedValue.length].requestFocus();
+        }
+      }
+      return;
+    }
+
+    if (value.isNotEmpty) {
+      if (index < 5) {
+        _focusNodes[index + 1].requestFocus();
+      } else if (index == 5) {
+        _focusNodes[index].unfocus();
+        _verifyOTP(); // tự động check mã
+      }
+    } else {
+      if (index > 0) {
+        _focusNodes[index - 1].requestFocus();
+      }
+    }
+  }
+
   Future<void> _verifyOTP() async {
+    if (_secondsRemaining <= 0) {
+      setState(() {
+        _isError = true;
+        _errorMessage = 'Mã OTP đã hết hiệu lực sau 5 phút. Vui lòng gửi lại.';
+      });
+      _showErrorSnackBar(_errorMessage);
+      return;
+    }
+
     String otp = _controllers.map((e) => e.text).join();
     if (otp.length < 6) {
+      setState(() {
+        _isError = true;
+        _errorMessage = 'Vui lòng nhập đầy đủ 6 chữ số';
+      });
       _showErrorSnackBar('Vui lòng nhập đầy đủ 6 chữ số');
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _isError = false;
+      _errorMessage = '';
     });
 
     // Small delay for UX
@@ -104,14 +171,25 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       });
 
       if (isValid) {
-        Navigator.push(
+        if (mounted) {
+          context.read<NotificationProvider>().addNotification(
+            title: 'Xác thực thành công',
+            body: 'Mã OTP của bạn đã được chấp nhận.',
+            type: NotificationType.security,
+          );
+        }
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => ResetPasswordScreen(email: widget.email, otp: otp),
           ),
         );
       } else {
-        _showErrorSnackBar('Mã OTP ko đúng hoặc đã hết hạn');
+        setState(() {
+          _isError = true;
+          _errorMessage = 'Mã OTP không đúng';
+        });
+        _showErrorSnackBar(_errorMessage);
       }
     }
   }
@@ -208,6 +286,17 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(6, (index) => _buildOTPBox(index)),
                   ),
+                  if (_isError && _errorMessage.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _errorMessage,
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 40),
                   
                   // Timer and Resend
@@ -256,6 +345,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                             ),
                           ),
                   ),
+                  const SizedBox(height: 32),
+                  const AuthFooterTerms(),
                 ],
               ),
             ),
@@ -273,7 +364,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         color: const Color(0xFF0D3B66).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: _focusNodes[index].hasFocus ? const Color(0xFFF05D15) : Colors.white.withValues(alpha: 0.2),
+          color: _isError 
+              ? Colors.redAccent 
+              : (_focusNodes[index].hasFocus ? const Color(0xFFF05D15) : Colors.white.withValues(alpha: 0.2)),
           width: 2,
         ),
       ),
@@ -282,22 +375,16 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         focusNode: _focusNodes[index],
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
-        maxLength: 1,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(6),
+        ],
         style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
         decoration: const InputDecoration(
           counterText: '',
           border: InputBorder.none,
         ),
-        onChanged: (value) {
-          if (value.isNotEmpty && index < 5) {
-            _focusNodes[index + 1].requestFocus();
-          } else if (value.isEmpty && index > 0) {
-            _focusNodes[index - 1].requestFocus();
-          }
-          if (value.isNotEmpty && index == 5) {
-            _focusNodes[index].unfocus();
-          }
-        },
+        onChanged: (value) => _onOTPChanged(value, index),
       ),
     );
   }

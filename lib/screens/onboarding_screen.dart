@@ -99,18 +99,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.only(left: 16.0, top: 16.0), // padding: Xô đẩy nhẹ khỏi vách trần bên trái và trên
                 child: Align(
                   alignment: Alignment.centerLeft, // alignment: Ép góc tọa lạc của đối tượng con nhích lệch sang trái
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white), // icon: Truyền tham biến hình vẽ kí hiệu nút bấm
-                    onPressed: () {
-                      if (_currentPage > 0) {
-                         _pageController.previousPage(
-                           duration: const Duration(milliseconds: 300),
-                           curve: Curves.easeIn,
-                         );
-                      } else {
-                         // Xử lý đi ngược về Splash hoặc bỏ qua
-                      }
-                    },
+                  child: Visibility(
+                    visible: _currentPage > 0,
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white), // icon: Truyền tham biến hình vẽ kí hiệu nút bấm
+                      onPressed: () {
+                        if (_currentPage > 0) {
+                           _pageController.previousPage(
+                             duration: const Duration(milliseconds: 300),
+                             curve: Curves.easeIn,
+                           );
+                        } else {
+                           // Xử lý đi ngược về Splash hoặc bỏ qua
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),

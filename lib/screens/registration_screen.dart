@@ -7,6 +7,9 @@ import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/screens/login_screen.dart';
 import 'package:chitieu_plus/widgets/app_logo.dart';
 import 'package:chitieu_plus/widgets/app_loading_indicator.dart';
+import 'package:chitieu_plus/providers/notification_provider.dart';
+import 'package:chitieu_plus/models/notification_model.dart';
+import 'package:chitieu_plus/widgets/auth_footer_terms.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -300,22 +303,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       const SizedBox(height: 32),
                       
                       // Footer Security info
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.shield, color: Colors.white.withValues(alpha: 0.3), size: 16),
-                          const SizedBox(width: 8),
-                          Text(
-                            'BẢO MẬT CHUẨN NGÂN HÀNG MÃ HÓA AES-256',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ],
-                      ),
+                      const AuthFooterTerms(),
                     ],
                   ),
                 ),
@@ -425,6 +413,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
         if (mounted) {
           await context.read<UserProvider>().syncToFirebase();
+        }
+
+        // Add Notification
+        if (mounted) {
+          context.read<NotificationProvider>().addNotification(
+            title: 'Đăng ký thành công',
+            body: 'Chào mừng $name! Tài khoản của bạn đã được khởi tạo.',
+            type: NotificationType.system,
+          );
         }
 
         // 3. Sign out so user must log in explicitly

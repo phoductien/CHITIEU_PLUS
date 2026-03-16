@@ -3,6 +3,9 @@ import 'package:chitieu_plus/widgets/app_logo.dart';
 import 'package:chitieu_plus/widgets/app_loading_indicator.dart';
 import 'package:chitieu_plus/services/otp_service.dart';
 import 'package:chitieu_plus/screens/otp_verification_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:chitieu_plus/providers/notification_provider.dart';
+import 'package:chitieu_plus/models/notification_model.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -41,6 +44,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       // In a real production app, we would verify account existence via a cloud function 
       // or similar to avoid enumeration, but here we proceed to send OTP.
       await OTPService().sendOTP(email);
+      
+      if (mounted) {
+        context.read<NotificationProvider>().addNotification(
+          title: 'Yêu cầu OTP',
+          body: 'Mã xác thực OTP đã được gửi đến email $email',
+          type: NotificationType.security,
+        );
+      }
       
       if (mounted) {
         Navigator.push(

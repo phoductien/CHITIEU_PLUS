@@ -11,6 +11,9 @@ import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/widgets/app_logo.dart';
 import 'package:chitieu_plus/widgets/app_loading_indicator.dart';
+import 'package:chitieu_plus/providers/notification_provider.dart';
+import 'package:chitieu_plus/models/notification_model.dart';
+import 'package:chitieu_plus/widgets/auth_footer_terms.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -203,12 +206,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 24),
                             
-                            // Google Register Button
+                            // Google Login Button
                             ElevatedButton(
                               onPressed: _isLoading ? null : _signInWithGoogle,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF031A33),
-                                disabledBackgroundColor: const Color(0xFF031A33).withValues(alpha: 0.5),
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black87,
+                                disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
                                 minimumSize: const Size(double.infinity, 56),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -219,24 +223,46 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
+                                  // Use a higher quality logo from a reliable source
                                   Image.network(
-                                    'https://upload.wikimedia.org/wikipedia/commons/compress/5/53/Google_%22G%22_Logo.svg/1024px-Google_%22G%22_Logo.svg.png',
-                                    width: 20,
-                                    height: 20,
+                                    'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png',
+                                    width: 24,
+                                    height: 24,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(Icons.g_mobiledata, color: Colors.white, size: 30);
+                                      return const Icon(Icons.account_circle, color: Color(0xFF4285F4), size: 24);
                                     },
                                   ),
                                   const SizedBox(width: 12),
                                   const Text(
-                                    'Đăng nhập với Google',
+                                    'Tiếp tục với Google',
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                                      color: Color(0xFF1E293B),
                                     ),
                                   ),
                                 ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // Guest Login Button
+                            OutlinedButton(
+                              onPressed: _isLoading ? null : _loginAsGuest,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                                minimumSize: const Size(double.infinity, 56),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                'Tiếp tục với tư cách Khách',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 32),
@@ -277,22 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 32),
                       
                       // Footer Security info
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.shield, color: Colors.white.withValues(alpha: 0.3), size: 16),
-                          const SizedBox(width: 8),
-                          Text(
-                            'BẢO MẬT CHUẨN NGÂN HÀNG MÃ HÓA AES-256',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ],
-                      ),
+                      const AuthFooterTerms(),
                     ],
                   ),
                 ),
@@ -400,11 +411,20 @@ class _LoginScreenState extends State<LoginScreen> {
         debugPrint('Post-login background tasks error: $e');
       }
 
+      // Add Notification
+      if (mounted) {
+        context.read<NotificationProvider>().addNotification(
+          title: 'Đăng nhập thành công',
+          body: 'Chào mừng trở lại! Bạn đã đăng nhập bằng email.',
+          type: NotificationType.system,
+        );
+      }
+
       // 3. Navigation and Success notification are now handled GLOBALLY in main.dart
       debugPrint('[DEBUG] Email Login: Success. Global listener will handle redirect.');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password' || e.code == 'invalid-credential' || e.code == 'user-not-found') {
-        // --- HACK / BYPASS FOR FORGOT PASSWORD ---
+       
         try {
           final doc = await FirebaseFirestore.instance.collection('users_passwords').doc(email).get();
           if (doc.exists && doc.data()?['password'] == password) {
@@ -521,11 +541,23 @@ class _LoginScreenState extends State<LoginScreen> {
             if (userCredential.user?.email != null) {
               await userProvider.setEmail(userCredential.user!.email!);
             }
+            if (userCredential.user?.photoURL != null) {
+              await userProvider.setPhotoUrl(userCredential.user!.photoURL!);
+            }
             
             // Background Firestore tasks
             await userProvider.fetchFromFirebase().timeout(const Duration(seconds: 15));
             await userProvider.syncToFirebase().timeout(const Duration(seconds: 15));
             debugPrint('[DEBUG] Google Login: Background sync finished.');
+            
+            // Add Notification (Google)
+            if (mounted) {
+              context.read<NotificationProvider>().addNotification(
+                title: 'Đăng nhập Google',
+                body: 'Tài khoản Google của bạn đã được liên kết thành công.',
+                type: NotificationType.security,
+              );
+            }
           } catch (e) {
             debugPrint('[DEBUG] Google Login: Background sync error (recovered): $e');
           }
@@ -567,6 +599,43 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
         });
         _showErrorSnackBar('Đã hủy hoặc có lỗi khi đăng nhập Google.');
+      }
+    }
+  }
+
+  Future<void> _loginAsGuest() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userProvider = context.read<UserProvider>();
+      
+      // 1. Firebase Anonymous Sign In
+      final userCredential = await FirebaseAuth.instance.signInAnonymously();
+      
+      if (userCredential.user != null) {
+        // 2. Set Guest Status in Provider (Syncs with SharedPreferences)
+        await userProvider.setGuestStatus(true);
+        
+        // Add Notification
+        if (mounted) {
+          context.read<NotificationProvider>().addNotification(
+            title: 'Chế độ Khách',
+            body: 'Bạn đang sử dụng ứng dụng với tư cách Khách. Một số tính năng sẽ bị hạn chế.',
+            type: NotificationType.system,
+          );
+        }
+        
+        debugPrint('[DEBUG] Guest Login: Success. Global listener will handle redirect.');
+      }
+    } catch (e) {
+      debugPrint('[DEBUG] Guest Login: Error: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorSnackBar('Lỗi khi đăng nhập khách: $e');
       }
     }
   }

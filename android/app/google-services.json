@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "971401377167",
+    "firebase_url": "https://chitieuplus-app-default-rtdb.firebaseio.com",
     "project_id": "chitieuplus-app",
     "storage_bucket": "chitieuplus-app.firebasestorage.app"
   },
@@ -22,7 +23,7 @@
           }
         },
         {
-          "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+          "client_id": "971401377167-fk3p4q28u9ev8clu50ejf437ip183ckb.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -58,7 +59,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+          "client_id": "971401377167-fk3p4q28u9ev8clu50ejf437ip183ckb.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -94,7 +95,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com",
+          "client_id": "971401377167-fk3p4q28u9ev8clu50ejf437ip183ckb.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

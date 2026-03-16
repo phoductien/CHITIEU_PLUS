@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"chitieuplus-app","appId":"1:971401377167:android:5422cdf733d9bdb962c7fa","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"chitieuplus-app","configurations":{"android":"1:971401377167:android:5422cdf733d9bdb962c7fa","ios":"1:971401377167:ios:9d6ab2a07d3e0f7062c7fa","macos":"1:971401377167:ios:9d6ab2a07d3e0f7062c7fa","web":"1:971401377167:web:3fdda45472a9055962c7fa","windows":"1:971401377167:web:3128c1c9b553e97f62c7fa"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "chitieuplus-app",
+          "appId": "1:971401377167:android:5422cdf733d9bdb962c7fa",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "chitieuplus-app",
+          "configurations": {
+            "android": "1:971401377167:android:5422cdf733d9bdb962c7fa",
+            "ios": "1:971401377167:ios:9d6ab2a07d3e0f7062c7fa",
+            "macos": "1:971401377167:ios:9d6ab2a07d3e0f7062c7fa",
+            "web": "1:971401377167:web:3fdda45472a9055962c7fa",
+            "windows": "1:971401377167:web:3128c1c9b553e97f62c7fa"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

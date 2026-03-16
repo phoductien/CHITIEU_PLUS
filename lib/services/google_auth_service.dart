@@ -37,10 +37,11 @@ class GoogleAuthService {
     if (_isInitialized) return;
 
     // Configuration for Google Sign-In
-    const String webClientId = '971401377167-81nlemscod3kmnksrh4v6q7goag4aoku.apps.googleusercontent.com';
+    const String webClientId = '971401377167-fk3p4q28u9ev8clu50ejf437ip183ckb.apps.googleusercontent.com';
     
     _googleSignIn = GoogleSignIn(
       clientId: kIsWeb ? webClientId : null,
+      serverClientId: kIsWeb ? null : webClientId,
       scopes: [
         'email',
         'https://www.googleapis.com/auth/userinfo.profile',

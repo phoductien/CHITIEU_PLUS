@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:chitieu_plus/widgets/app_loading_indicator.dart';
 import 'package:chitieu_plus/screens/reset_success_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:chitieu_plus/providers/notification_provider.dart';
+import 'package:chitieu_plus/models/notification_model.dart';
+import 'package:chitieu_plus/widgets/auth_footer_terms.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
@@ -88,6 +92,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
+        context.read<NotificationProvider>().addNotification(
+          title: 'Đổi mật khẩu thành công',
+          body: 'Mật khẩu tài khoản ${widget.email} đã được cập nhật mới.',
+          type: NotificationType.security,
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const ResetSuccessScreen()),
@@ -259,6 +268,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 32),
+                  const AuthFooterTerms(),
                 ],
               ),
             ),
