@@ -128,7 +128,7 @@ class LocalStorageService {
       Map<String, dynamic> data = transaction.toMap();
       data['date'] = transaction.date.toIso8601String();
       data['isPinned'] = transaction.isPinned ? 1 : 0;
-      
+
       batch.insert(
         'transactions',
         data,

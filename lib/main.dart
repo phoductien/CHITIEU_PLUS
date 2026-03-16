@@ -10,7 +10,6 @@ import 'package:chitieu_plus/services/google_auth_service.dart';
 import 'package:chitieu_plus/widgets/auth_wrapper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chitieu_plus/screens/home_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -28,8 +27,6 @@ void main() async {
     databaseFactory = databaseFactoryFfi;
   }
   
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

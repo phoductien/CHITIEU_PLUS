@@ -1,0 +1,12 @@
+{
+  "name": "chitieuplus-ai-proxy",
+  "version": "1.0.0",
+  "description": "Vercel serverless proxy for Gemini API to protect API Key",
+  "main": "api/gemini.js",
+  "scripts": {
+    "start": "node api/gemini.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  }
+}

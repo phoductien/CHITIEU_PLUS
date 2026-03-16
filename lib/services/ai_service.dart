@@ -1,5 +1,5 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,9 +8,6 @@ class AiService {
   factory AiService() => _instance;
   AiService._internal();
 
-  late GenerativeModel _model;
-  late GenerativeModel _utilityModel;
-  late ChatSession _chatSession;
   bool _initialized = false;
   String _currentModelName = 'gemini-3-flash';
   static const String _versionPrefsKey = 'selected_ai_version_v2';
@@ -19,12 +16,16 @@ class AiService {
   String _currentVersion = '3.0';
   String _currentTier = 'Tư duy';
 
-  // Mapping of Version + Tier to Model ID
+  // !!! QUAN TRỌNG: SAU KHI DEPLOY LÊN VERCEL XONG, HÃY DÁN ĐƯỜNG LINK VÀO ĐÂY !!!
+  // Ví dụ: 'https://chitieuplus-proxy.vercel.app/api/gemini'
+  final String _vercelProxyUrl = 'https://chitieu-plus.vercel.app/api/gemini';
+
+  // Mapping of Version + Tier to Model ID (Chủ yếu để hiển thị UI)
   static const Map<String, Map<String, String>> _modelMap = {
     '2.0': {
       'Nhanh': 'gemini-2.0-flash-lite',
       'Tư duy': 'gemini-2.0-flash',
-      'Pro': 'gemini-2.0-flash-001', // Using stable flash as Pro for 2.0
+      'Pro': 'gemini-2.0-flash-001',
     },
     '2.5': {
       'Nhanh': 'gemini-2.5-flash-lite',
@@ -42,6 +43,9 @@ class AiService {
   String get currentTier => _currentTier;
   String get currentModelName => _currentModelName;
 
+  // Lịch sử chat theo session (Client cần giữ để gửi lên Server vì Vercel là Stateless)
+  final List<Map<String, dynamic>> _clientHistory = [];
+
   Future<void> init() async {
     if (_initialized) return;
 
@@ -50,57 +54,6 @@ class AiService {
     _currentTier = prefs.getString(_tierPrefsKey) ?? 'Tư duy';
     _currentModelName = _modelMap[_currentVersion]?[_currentTier] ?? 'gemini-3-flash';
 
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    
-    if (apiKey == null || apiKey.isEmpty) {
-      debugPrint('[AiService] CRITICAL ERROR: GEMINI_API_KEY is not set in .env file.');
-      _initialized = false;
-      return;
-    }
-
-    _model = GenerativeModel(
-        model: _currentModelName,
-        apiKey: apiKey,
-        generationConfig: GenerationConfig(
-          temperature: 0.4,
-          responseMimeType: 'application/json',
-        ),
-        systemInstruction: Content.system('''
-Bạn là một trợ lý quản lý tài chính thông minh của ứng dụng ChiTieuPlus.
-
-KIẾN THỨC & TƯ DUY:
-- Ngoài các logic nghiệp vụ dưới đây, bạn được khuyến khích sử dụng kho kiến thức rộng lớn của mình (World Knowledge) để hỗ trợ người dùng đa dạng các chủ đề.
-- Đặc tính phản hồi dựa trên phân tầng model:
-    1. Gemini Flash (Nhanh): Tập trung vào tốc độ phản hồi cực nhanh và hiệu suất xử lý khối lượng lớn dữ liệu, trả lời gần như tức thì.
-    2. Gemini Thinking (Tư duy): Sử dụng suy luận logic sâu sắc, phân tích vấn đề theo hướng trình bày từng bước (Chain-of-Thought).
-    3. Gemini Pro (Nâng cao): Sự cân bằng hoàn hảo giữa sự thông minh vượt trội và tốc độ xử lý nhanh.
-
-LOGIC TÀI CHÍNH QUAN TRỌNG:
-- Mọi giao dịch người dùng nhập (ví dụ: "Ăn sáng 20k") đều được coi là Chi tiêu (expense).
-- Thu nhập (income) được hiểu là số tiền còn lại trong ví sau khi đã trừ các khoản chi tiêu.
-- Nếu số dư trong ví nhỏ hơn 0 (âm), đó là Khoản nợ.
-- Nếu số dư chuyển từ trạng thái âm sang dương, phần chênh lệch đó được tính là Thu nhập.
-
-QUY TẮC CỐ ĐỊNH:
-1. Luôn phản hồi JSON.
-2. Cấu trúc JSON:
-{
-  "message": "Lời nhắn tự nhiên",
-  "transaction": {
-    "title": "Tiêu đề",
-    "amount": double,
-    "category": "Ăn uống|Mua sắm|Di chuyển|Nhà cửa|Giải trí|Lương|Khác",
-    "type": "expense",
-    "note": "Ghi chú",
-    "wallet": "main"
-  }
-} (transaction để null nếu chỉ câu hỏi đáp/phân tích).
-3. Luôn ưu tiên độ chính xác số tiền (k=1000, tr=1tr).
-4. Ngôn ngữ: Tiếng Việt.
-'''),
-      );
-
-    _chatSession = _model.startChat();
     _initialized = true;
   }
 
@@ -126,7 +79,6 @@ QUY TẮC CỐ ĐỊNH:
   Future<void> updateModel(String modelName) async {
     if (_currentModelName == modelName) return;
     _currentModelName = modelName;
-    await _reinitModel();
   }
 
   Future<void> updateConfig({String? version, String? tier}) async {
@@ -143,60 +95,7 @@ QUY TẮC CỐ ĐỊNH:
     final newModelId = _modelMap[_currentVersion]?[_currentTier];
     if (newModelId != null && newModelId != _currentModelName) {
       _currentModelName = newModelId;
-      await _reinitModel();
     }
-  }
-
-  Future<void> _reinitModel() async {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    if (apiKey == null || apiKey.isEmpty) {
-      debugPrint('[AiService] CRITICAL ERROR: GEMINI_API_KEY is not set in .env file.');
-      _initialized = false;
-      return;
-    }
-
-    _model = GenerativeModel(
-        model: _currentModelName,
-        apiKey: apiKey,
-        generationConfig: GenerationConfig(
-          temperature: 0.4,
-          responseMimeType: 'application/json',
-        ),
-        systemInstruction: Content.system('''
-Bạn là một trợ lý quản lý tài chính thông minh của ứng dụng ChiTieuPlus.
-
-KIẾN THỨC & TƯ DUY:
-- Ngoài các logic nghiệp vụ dưới đây, bạn được khuyến khích sử dụng kho kiến thức rộng lớn của mình (World Knowledge) để hỗ trợ người dùng đa dạng các chủ đề.
-- Đặc tính phản hồi dựa trên phân tầng model:
-    1. Gemini Flash (Nhanh): Tập trung vào tốc độ phản hồi cực nhanh và hiệu suất xử lý khối lượng lớn dữ liệu, trả lời gần như tức thì.
-    2. Gemini Thinking (Tư duy): Sử dụng suy luận logic sâu sắc, phân tích vấn đề theo hướng trình bày từng bước (Chain-of-Thought).
-    3. Gemini Pro (Nâng cao): Sự cân bằng hoàn hảo giữa sự thông minh vượt trội và tốc độ xử lý nhanh.
-
-LOGIC TÀI CHÍNH QUAN TRỌNG:
-- Mọi giao dịch người dùng nhập (ví dụ: "Ăn sáng 20k") đều được coi là Chi tiêu (expense).
-- Thu nhập (income) được hiểu là số tiền còn lại trong ví sau khi đã trừ các khoản chi tiêu.
-- Nếu số dư trong ví nhỏ hơn 0 (âm), đó là Khoản nợ.
-- Nếu số dư chuyển từ trạng thái âm sang dương, phần chênh lệch đó được tính là Thu nhập.
-
-QUY TẮC CỐ ĐỊNH:
-1. Luôn phản hồi JSON.
-2. Cấu trúc JSON:
-{
-  "message": "Lời nhắn tự nhiên",
-  "transaction": {
-    "title": "Tiêu đề",
-    "amount": double,
-    "category": "Ăn uống|Mua sắm|Di chuyển|Nhà cửa|Giải trí|Lương|Khác",
-    "type": "expense",
-    "note": "Ghi chú",
-    "wallet": "main"
-  }
-} (transaction để null nếu chỉ câu hỏi đáp/phân tích).
-3. Luôn ưu tiên độ chính xác số tiền (k=1000, tr=1tr).
-4. Ngôn ngữ: Tiếng Việt.
-'''),
-      );
-    _chatSession = _model.startChat();
   }
 
   Future<void> _ensureInitialized() async {
@@ -206,45 +105,54 @@ QUY TẮC CỐ ĐỊNH:
 
   Future<String> sendMessage(String text, {List<Map<String, dynamic>>? attachments, List<String>? contextStrings}) async {
     await _ensureInitialized();
-    if (!_initialized) return "Chưa cấu hình API Key cho AI. Vui lòng kiểm tra file .env";
 
     final lockoutTime = await getLockoutTime();
     if (lockoutTime != null) {
       return "LIMIT_EXCEEDED";
     }
 
+    if (_vercelProxyUrl.contains('YOUR_VERCEL_DOMAIN_HERE')) {
+         return "LỖI: Chưa cấu hình Vercel Proxy URL. Vui lòng mở `ai_service.dart` và cập nhật biến `_vercelProxyUrl`.";
+    }
+
     try {
-      final List<Part> parts = [];
-      
-      if (contextStrings != null && contextStrings.isNotEmpty) {
-        // Tối ưu ngữ cảnh: Chỉ lấy tối đa 3 context cuối cùng nếu quá nhiều
-        final filteredContext = contextStrings.length > 5 ? contextStrings.sublist(contextStrings.length - 5) : contextStrings;
-        for (var ctx in filteredContext) {
-          parts.add(TextPart("--- Ngữ cảnh ---\n$ctx\n"));
-        }
-      }
+      final payload = {
+        'type': 'chat',
+        'message': text,
+        'history': _clientHistory,
+        'version': _currentVersion,
+        'tier': _currentTier,
+        'contextStrings': contextStrings ?? [],
+        'attachments': (attachments ?? []).map((att) => {
+           'base64': att['bytes'] != null ? base64Encode(att['bytes'] as Uint8List) : null,
+           'mimeType': att['mimeType'],
+        }).where((a) => a['base64'] != null).toList(),
+      };
 
-      parts.add(TextPart(text));
+      // Gửi yêu cầu qua thẻ POST
+      final response = await http.post(
+        Uri.parse(_vercelProxyUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
 
-      if (attachments != null && attachments.isNotEmpty) {
-        for (var att in attachments) {
-          if (att['bytes'] != null) {
-            parts.add(DataPart(att['mimeType'] as String, att['bytes'] as Uint8List));
-          }
-        }
+      if (response.statusCode == 200) {
+         final data = jsonDecode(utf8.decode(response.bodyBytes));
+         
+         // Update client history
+         _clientHistory.add({'role': 'user', 'text': text});
+         _clientHistory.add({'role': 'ai', 'text': data['response']});
+
+         return data['response'] ?? "Không có phản hồi từ AI.";
+      } else if (response.statusCode == 429) {
+         await _setLockout();
+         return "LIMIT_EXCEEDED";
+      } else {
+         return "Lỗi từ Server (${response.statusCode}): ${response.body}";
       }
-      
-      final response = await _chatSession.sendMessage(Content.multi(parts));
-      return response.text ?? "Xin lỗi, tôi không thể xử lý yêu cầu này lúc này.";
-    } on GenerativeAIException catch (e) {
-      if (e.message.contains('Quota exceeded')) {
-        await _setLockout();
-        return "LIMIT_EXCEEDED"; 
-      }
-      return "Đã xảy ra lỗi AI: ${e.message}";
     } catch (e) {
-      debugPrint('[AiService] Error: $e');
-      return "Đã xảy ra lỗi khi kết nối với AI.";
+      debugPrint('[AiService] Error HTTP: $e');
+      return "Không thể kết nối với Vercel Server. Lỗi: $e";
     }
   }
 
@@ -258,11 +166,19 @@ QUY TẮC CỐ ĐỊNH:
 
     await _ensureInitialized();
     try {
-      final prompt = "Tạo tiêu đề ngắn (<4 từ) cho: '$firstMessage'. Chỉ trả về tiêu đề.";
-      final response = await _utilityModel.generateContent([Content.text(prompt)]);
-      final title = response.text?.replaceAll('"', '').trim() ?? "Cuộc trò chuyện mới";
-      _titleCache[cacheKey] = title;
-      return title;
+      final response = await http.post(
+        Uri.parse(_vercelProxyUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'type': 'title', 'message': firstMessage}),
+      );
+      
+      if (response.statusCode == 200) {
+         final data = jsonDecode(utf8.decode(response.bodyBytes));
+         final title = data['result'] ?? "Cuộc trò chuyện mới";
+         _titleCache[cacheKey] = title;
+         return title;
+      }
+      return "Cuộc trò chuyện mới";
     } catch (e) {
       return "Cuộc trò chuyện mới";
     }
@@ -274,11 +190,19 @@ QUY TẮC CỐ ĐỊNH:
 
     await _ensureInitialized();
     try {
-      final prompt = "Phân loại vào: 'Tài chính', 'Mua sắm', 'Hỏi đáp', 'Phân tích', 'Công việc', 'Giải trí', 'Học tập', 'Khác'. Chỉ trả về 1 tên. Input: '$firstMessage'";
-      final response = await _utilityModel.generateContent([Content.text(prompt)]);
-      final category = response.text?.replaceAll('"', '').trim() ?? "Khác";
-      _categoryCache[cacheKey] = category;
-      return category;
+      final response = await http.post(
+        Uri.parse(_vercelProxyUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'type': 'category', 'message': firstMessage}),
+      );
+      
+      if (response.statusCode == 200) {
+         final data = jsonDecode(utf8.decode(response.bodyBytes));
+         final category = data['result'] ?? "Khác";
+         _categoryCache[cacheKey] = category;
+         return category;
+      }
+      return "Khác";
     } catch (e) {
       return "Khác";
     }

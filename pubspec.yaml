@@ -49,8 +49,6 @@ dependencies:
   fl_chart: ^0.66.0
   animate_do: ^3.3.4
   intl: ^0.20.2
-  google_generative_ai: ^0.4.7
-  flutter_dotenv: ^6.0.0
   image_picker: ^1.2.1
   file_picker: ^10.3.10
   speech_to_text: ^7.3.0
