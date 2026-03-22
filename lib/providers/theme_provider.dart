@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class ThemeProvider with ChangeNotifier {
   bool _isDarkMode = true; // Default to dark as per app style
@@ -66,14 +64,12 @@ class ThemeProvider with ChangeNotifier {
   void toggleDarkMode(bool value) {
     _isDarkMode = value;
     _saveToPrefs();
-    _syncToFirestore();
     notifyListeners();
   }
 
   void toggleEyeProtection(bool value) {
     _isEyeProtection = value;
     _saveToPrefs();
-    _syncToFirestore();
     notifyListeners();
   }
 
@@ -84,48 +80,11 @@ class ThemeProvider with ChangeNotifier {
     _isDarkMode = prefs.getBool('isDarkMode') ?? true;
     _isEyeProtection = prefs.getBool('isEyeProtection') ?? false;
     notifyListeners();
-
-    // After loading from prefs, try to sync with Firestore if logged in
-    _loadFromFirestore();
-  }
-
-  Future<void> _loadFromFirestore() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        bool changed = false;
-        if (data.containsKey('isDarkMode')) {
-          _isDarkMode = data['isDarkMode'];
-          changed = true;
-        }
-        if (data.containsKey('isEyeProtection')) {
-          _isEyeProtection = data['isEyeProtection'];
-          changed = true;
-        }
-        if (changed) {
-          notifyListeners();
-          _saveToPrefs();
-        }
-      }
-    }
   }
 
   Future<void> _saveToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', _isDarkMode);
     await prefs.setBool('isEyeProtection', _isEyeProtection);
-  }
-
-  Future<void> _syncToFirestore() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'isDarkMode': _isDarkMode,
-        'isEyeProtection': _isEyeProtection,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    }
   }
 }

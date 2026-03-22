@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chitieu_plus/services/google_auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
@@ -406,6 +407,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         email: email,
         password: password,
       );
+
+      // Save to custom users_passwords collection as requested
+      await FirebaseFirestore.instance
+          .collection('users_passwords')
+          .doc(email)
+          .set({'password': password}, SetOptions(merge: true));
 
       // 2. Save Name immediately to Provider (which also caches locally)
       if (mounted) {

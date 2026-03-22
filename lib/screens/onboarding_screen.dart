@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/screens/login_screen.dart';
+import 'package:chitieu_plus/screens/terms_and_privacy_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -216,6 +218,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               color: Colors.white.withValues(alpha: 0.8), // color: Nổi bật đoạn liên kết bằng sắc tố tươi rạng
                               decoration: TextDecoration.underline, // decoration: Kẻ vẽ hằn in lằng chỉ gạch đít ở vùng thềm chân trang của nội dung
                             ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const TermsAndPrivacyScreen(initialTabIndex: 1), // 1 is Terms
+                                  ),
+                                );
+                              },
                           ),
                           const TextSpan(text: ' và '),
                           TextSpan(
@@ -224,6 +235,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               color: Colors.white.withValues(alpha: 0.8),
                               decoration: TextDecoration.underline,
                             ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const TermsAndPrivacyScreen(initialTabIndex: 0), // 0 is Privacy
+                                  ),
+                                );
+                              },
                           ),
                           const TextSpan(text: ' của chúng tôi.'),
                         ],

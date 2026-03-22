@@ -15,13 +15,16 @@ class RealtimeDbService {
 
   DatabaseReference get _userRef {
     if (_userId == null) throw Exception('User not logged in');
-    return _db.ref().child('users/$_userId');
+    final isGuest = _auth.currentUser?.isAnonymous ?? false;
+    final collection = isGuest ? 'guests' : 'users';
+    return _db.ref().child('$collection/$_userId');
   }
 
-  // Upload a transaction to Realtime Database
   Future<void> saveTransaction(TransactionModel transaction) async {
     try {
-      await _userRef.child('transactions/${transaction.id}').set(transaction.toMap());
+      final map = transaction.toMap();
+      map['date'] = transaction.date.toIso8601String();
+      await _userRef.child('transactions/${transaction.id}').set(map);
       debugPrint('[RealtimeDB] Transaction saved: ${transaction.id}');
     } catch (e) {
       debugPrint('[RealtimeDB] Error saving transaction: $e');
@@ -29,12 +32,13 @@ class RealtimeDbService {
     }
   }
 
-  // Sync Multiple Transactions (e.g., from local SQLite)
   Future<void> syncLocalTransactions(List<TransactionModel> transactions) async {
     try {
       final Map<String, Map<String, dynamic>> updates = {};
       for (var t in transactions) {
-        updates['transactions/${t.id}'] = t.toMap();
+        final map = t.toMap();
+        map['date'] = t.date.toIso8601String();
+        updates['transactions/${t.id}'] = map;
       }
       await _userRef.update(updates);
       debugPrint('[RealtimeDB] Bulk sync completed.');

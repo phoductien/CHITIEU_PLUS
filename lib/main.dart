@@ -18,6 +18,33 @@ import 'package:chitieu_plus/providers/language_provider.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+class AppRestart extends StatefulWidget {
+  final Widget child;
+  const AppRestart({super.key, required this.child});
+  
+  static void restart(BuildContext context) {
+    context.findAncestorStateOfType<_AppRestartState>()?.restartApp();
+  }
+
+  @override
+  State<AppRestart> createState() => _AppRestartState();
+}
+
+class _AppRestartState extends State<AppRestart> {
+  Key key = UniqueKey();
+  
+  void restartApp() {
+    setState(() {
+      key = UniqueKey();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyedSubtree(key: key, child: widget.child);
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -67,6 +94,16 @@ class _MyAppState extends State<MyApp> {
     // Listen to auth state changes to perform global redirects
     _authStream.listen((User? user) {
       if (user != null) {
+        if (_isInitialCheck && user.isAnonymous) {
+          debugPrint('[DEBUG] main.dart: Ký tự khách cũ còn sót lại từ phiên trước. Tiến hành xóa...');
+          UserProvider.cleanupGuestIfAny();
+          // cleanupGuestIfAny sẽ gọi account.delete() hoặc signOut(),
+          // từ đó kích hoạt một sự kiện authStateChanges(null) mới.
+          // Ta không điều hướng vòng HomeScreen cho khách ma này.
+          _isInitialCheck = false;
+          return;
+        }
+
         debugPrint('[DEBUG] main.dart: Auth state changed to LOGGED IN. Checking navigation...');
         
         final navState = navigatorKey.currentState;
@@ -97,36 +134,38 @@ class _MyAppState extends State<MyApp> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final languageProvider = Provider.of<LanguageProvider>(context);
     
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      title: 'ChiTieuPlus',
-      debugShowCheckedModeBanner: false,
-      locale: languageProvider.locale,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('vi'),
-        Locale('en'),
-      ],
-      themeMode: themeProvider.themeMode,
-      theme: ThemeData(
-        fontFamily: 'Arial',
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF05D15)),
-        useMaterial3: true,
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
-          },
+    return AppRestart(
+      child: MaterialApp(
+        navigatorKey: navigatorKey,
+        title: 'ChiTieuPlus',
+        debugShowCheckedModeBanner: false,
+        locale: languageProvider.locale,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('vi'),
+          Locale('en'),
+        ],
+        themeMode: themeProvider.themeMode,
+        theme: ThemeData(
+          fontFamily: 'Arial',
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF05D15)),
+          useMaterial3: true,
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+            },
+          ),
         ),
+        home: const AuthWrapper(),
       ),
-      home: const AuthWrapper(),
     );
   }
 }
