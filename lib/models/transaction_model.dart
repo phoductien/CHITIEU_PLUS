@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
 enum TransactionType { expense, income }
 
 class TransactionModel {
@@ -48,7 +49,13 @@ class TransactionModel {
       title: map['title'] ?? '',
       amount: (map['amount'] ?? 0.0).toDouble(),
       category: map['category'] ?? 'Khác',
-      date: (map['date'] as Timestamp).toDate(),
+      date: map['date'] is Timestamp 
+          ? (map['date'] as Timestamp).toDate()
+          : (map['date'] is String 
+              ? DateTime.tryParse(map['date']) ?? DateTime.now()
+              : (map['date'] is int 
+                  ? DateTime.fromMillisecondsSinceEpoch(map['date']) 
+                  : DateTime.now())),
       type: map['type'] == 'income' ? TransactionType.income : TransactionType.expense,
       note: map['note'],
       wallet: map['wallet'] ?? 'main',

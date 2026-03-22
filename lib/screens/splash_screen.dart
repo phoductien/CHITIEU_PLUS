@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:chitieu_plus/screens/onboarding_screen.dart';
 import 'package:chitieu_plus/widgets/app_logo.dart';
-import 'package:chitieu_plus/widgets/app_loading_indicator.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,37 +10,63 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _progressController;
+  late AnimationController _controller;
+  late Animation<double> _bgOpacity;
+  late Animation<double> _logoScale;
+  late Animation<double> _logoOpacity;
+  late Animation<Offset> _textSlide;
+  late Animation<double> _textOpacity;
+  late Animation<double> _subtitleOpacity;
   late Animation<double> _progressAnimation;
 
   @override
   void initState() {
     super.initState();
-    _progressController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(milliseconds: 3000),
     );
 
+    // Fade in the whole gradient background from pure black (0.0 - 0.3)
+    _bgOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeIn)),
+    );
+
+    // Fade and scale for the logo (0.0 - 0.5)
+    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
+    );
+    _logoScale = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic)),
+    );
+
+    // Slide up and fade for main text (0.3 - 0.7)
+    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.7, curve: Curves.easeOut)),
+    );
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.7, curve: Curves.easeOutCubic)),
+    );
+
+    // Fade for subtitle (0.5 - 0.9)
+    _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.5, 0.9, curve: Curves.easeIn)),
+    );
+
+    // Progress counter (0.0 - 1.0)
     _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _progressController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _controller, curve: Curves.linear),
     );
 
-    _progressController.forward().then((_) {
+    _controller.forward().then((_) {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 800),
             pageBuilder: (context, animation, secondaryAnimation) => const OnboardingScreen(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              const begin = Offset(1.0, 0.0);
-              const end = Offset.zero;
-              const curve = Curves.ease;
-              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-              var offsetAnimation = animation.drive(tween);
-              return SlideTransition(
-                position: offsetAnimation,
+              return FadeTransition(
+                opacity: animation,
                 child: child,
               );
             },
@@ -53,25 +78,28 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _progressController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
+      backgroundColor: Colors.black, // Khởi đầu đen tuyền
+      body: FadeTransition(
+        opacity: _bgOpacity,
+        child: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF022C4F),
-              Color(0xFF02467D),
-              Color(0xFF0174D7),
+              Color(0xFF01142F), // Rất tối
+              Color(0xFF022C4F), // Xanh dương đậm
+              Color(0xFF015BB5), // Xanh dương sáng hơn
             ],
-            stops: [0.0, 0.4, 1.0],
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: SafeArea(
@@ -86,30 +114,64 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       children: [
                         const Spacer(flex: 3),
                         
-                        // Branding
+                        // Cinematic Branding
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const AppLogo(size: 110),
+                            ScaleTransition(
+                              scale: _logoScale,
+                              child: FadeTransition(
+                                opacity: _logoOpacity,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF0174D7).withValues(alpha: 0.8),
+                                        blurRadius: 60,
+                                        spreadRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const AppLogo(size: 120),
+                                ),
+                              ),
+                            ),
                             const SizedBox(height: 32),
-                            const Text(
-                              'ChiTieuPlus',
-                              style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 36,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: -0.5,
+                            SlideTransition(
+                              position: _textSlide,
+                              child: FadeTransition(
+                                opacity: _textOpacity,
+                                child: const Text(
+                                  'ChiTieuPlus',
+                                  style: TextStyle(
+                                    fontFamily: 'Roboto',
+                                    fontSize: 42,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    letterSpacing: -0.5,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black54,
+                                        blurRadius: 15,
+                                        offset: Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Text(
-                              'TRỢ THỦ TÀI CHÍNH CỦA BẠN',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withValues(alpha: 0.75),
-                                letterSpacing: 2.0,
+                            FadeTransition(
+                              opacity: _subtitleOpacity,
+                              child: Text(
+                                'TRỢ THỦ TÀI CHÍNH CỦA BẠN',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  letterSpacing: 4.0,
+                                ),
                               ),
                             ),
                           ],
@@ -118,42 +180,74 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         const Spacer(flex: 2),
 
                         // Loading Indicator
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 56.0),
-                          child: AnimatedBuilder(
-                            animation: _progressAnimation,
-                            builder: (context, child) {
-                              return Column(
-                                children: [
-                                  const AppLoadingIndicator(size: 40, color: Colors.white),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'LOADING... ${(_progressAnimation.value * 100).toInt()}%',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white.withValues(alpha: 0.9),
-                                      letterSpacing: 1.5,
+                        FadeTransition(
+                          opacity: _subtitleOpacity,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 56.0),
+                            child: AnimatedBuilder(
+                              animation: _progressAnimation,
+                              builder: (context, child) {
+                                return Column(
+                                  children: [
+                                    Container(
+                                      height: 6,
+                                      width: 200,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            height: 6,
+                                            width: 200 * _progressAnimation.value,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(3),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.white.withValues(alpha: 0.8),
+                                                  blurRadius: 10,
+                                                  spreadRadius: 1,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            },
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'ĐANG KHỞI TẠO... ${(_progressAnimation.value * 100).toInt()}%',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white.withValues(alpha: 0.9),
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
                           ),
                         ),
 
                         const Spacer(flex: 1),
 
                         // Footer
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 24.0),
-                          child: Text(
-                            'BẢN QUYỀN THUỘC VỀ NHÓM 18',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.3),
-                              letterSpacing: 2.5,
+                        FadeTransition(
+                          opacity: _subtitleOpacity,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 24.0),
+                            child: Text(
+                              'BẢN QUYỀN THUỘC VỀ NHÓM 18',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 2.0,
+                              ),
                             ),
                           ),
                         ),
@@ -164,6 +258,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               );
             },
           ),
+        ),
         ),
       ),
     );

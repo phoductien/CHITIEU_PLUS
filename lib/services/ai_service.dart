@@ -18,7 +18,7 @@ class AiService {
 
   // !!! QUAN TRỌNG: SAU KHI DEPLOY LÊN VERCEL XONG, HÃY DÁN ĐƯỜNG LINK VÀO ĐÂY !!!
   // Ví dụ: 'https://chitieuplus-proxy.vercel.app/api/gemini'
-  final String _vercelProxyUrl = 'https://YOUR_VERCEL_DOMAIN_HERE/api/gemini';
+  final String _vercelProxyUrl = 'https://chitieu-plus.vercel.app/api/gemini';
 
   // Mapping of Version + Tier to Model ID (Chủ yếu để hiển thị UI)
   static const Map<String, Map<String, String>> _modelMap = {

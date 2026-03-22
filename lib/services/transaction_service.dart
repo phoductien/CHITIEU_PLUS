@@ -111,7 +111,7 @@ class TransactionService {
 
   /// Fetches all user transactions from Firestore and saves them to local SQLite database.
   /// Returns the bytes of the generated SQLite file.
-  Future<Uint8List> exportAllToSqliteBytes() async {
+  Future<Uint8List> exportAllToSqliteBytes({String webFormat = 'json'}) async {
     if (_userId == null) throw Exception('Vui lòng đăng nhập để xuất dữ liệu.');
 
     // 1. Fetch all from Firestore
@@ -126,18 +126,33 @@ class TransactionService {
     // 2. Clear local SQLite and rebuild (Desktop/Mobile only)
     try {
       if (kIsWeb) {
-        // Fallback for Web: Export as JSON
-        final jsonList = transactions.map((t) {
-          final map = t.toMap();
-          map['id'] = t.id; // Include ID in export
-          // Convert Timestamp to ISO 8601 string for JSON compatibility
-          if (map['date'] is Timestamp) {
-            map['date'] = (map['date'] as Timestamp).toDate().toIso8601String();
+        if (webFormat == 'csv') {
+          final buffer = StringBuffer();
+          buffer.writeln('ID,Tiêu đề,Số tiền,Loại,Danh mục,Ngày giờ,Ví,Ghi chú');
+          for (var t in transactions) {
+            String note = t.note?.replaceAll('"', '""') ?? '';
+            String title = t.title.replaceAll('"', '""');
+            String category = t.category.replaceAll('"', '""');
+            String dateStr = t.date.toIso8601String();
+            String typeStr = t.type == TransactionType.income ? 'Thu thập' : 'Chi tiêu';
+            buffer.writeln('"${t.id}","$title",${t.amount},"$typeStr","$category","$dateStr","${t.wallet}","$note"');
           }
-          return map;
-        }).toList();
-        final jsonString = json.encode(jsonList);
-        return Uint8List.fromList(utf8.encode(jsonString));
+          final String csvString = '\uFEFF${buffer.toString()}'; // Add BOM for Excel UTF-8 display
+          return Uint8List.fromList(utf8.encode(csvString));
+        } else {
+          // Fallback for Web: Export as JSON
+          final jsonList = transactions.map((t) {
+            final map = t.toMap();
+            map['id'] = t.id; // Include ID in export
+            // Convert Timestamp to ISO 8601 string for JSON compatibility
+            if (map['date'] is Timestamp) {
+              map['date'] = (map['date'] as Timestamp).toDate().toIso8601String();
+            }
+            return map;
+          }).toList();
+          final jsonString = json.encode(jsonList);
+          return Uint8List.fromList(utf8.encode(jsonString));
+        }
       }
 
       await _local.clearAllData();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
@@ -23,6 +24,10 @@ import 'package:chitieu_plus/utils/download_helper.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:chitieu_plus/screens/terms_and_privacy_screen.dart';
+import 'package:chitieu_plus/screens/budget_settings_screen.dart';
+import 'package:chitieu_plus/widgets/custom_date_picker.dart';
+import 'package:chitieu_plus/widgets/main_drawer.dart';
+import 'package:chitieu_plus/screens/user_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? welcomeMessage;
@@ -35,6 +40,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   late PageController _pageController;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  String _getAiGreeting(int tabIndex) {
+    switch (tabIndex) {
+      case 0: return 'Chào bạn! Tôi có thể giúp gì cho\nngân sách của bạn hôm nay?';
+      case 1: return 'Giao dịch hôm nay thế nào?\nĐể tôi tóm tắt giúp nhé!';
+      case 2: return 'Lên kế hoạch thông minh?\nĐể tôi hỗ trợ bạn!';
+      case 3: return 'Phân tích chi tiêu của bạn?\nTôi luôn sẵn sàng hỗ trợ!';
+      default: return 'Chào bạn! Tôi có thể giúp gì cho bạn?';
+    }
+  }
 
   @override
   void initState() {
@@ -63,6 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final languageProvider = context.watch<LanguageProvider>();
     
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: const MainDrawer(),
       backgroundColor: themeProvider.backgroundColor,
       body: Container(
         decoration: BoxDecoration(
@@ -83,69 +101,68 @@ class _HomeScreenState extends State<HomeScreen> {
               TransactionTab(),
               BudgetTab(),
               ReportTab(),
-              SettingsTab(),
             ],
           ),
-          if (_currentIndex == 0)
-            Positioned(
-              right: 16,
-              bottom: 85, // Nằm ngay trên tab điều hướng
-              child: SafeArea(
-                child: ZoomIn(
-                  duration: const Duration(milliseconds: 300),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      FloatingActionButton(
-                        heroTag: 'ai_assistant_btn',
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const AiChatScreen()),
-                          );
-                        },
-                        backgroundColor: const Color(0xFFEC5B13), // primary orange
-                        elevation: 8,
-                        shape: const CircleBorder(),
-                        child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 32),
-                      ),
-                      Positioned(
-                        top: -55,
-                        right: 15,
-                        child: FadeInUp(
-                          duration: const Duration(milliseconds: 600),
-                          delay: const Duration(milliseconds: 500),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: themeProvider.secondaryColor.withValues(alpha: 0.95),
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                topRight: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                                bottomRight: Radius.circular(4),
-                              ),
-                              border: Border.all(color: themeProvider.borderColor),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
+          Positioned(
+            right: 16,
+            bottom: 85, // Nằm ngay trên tab điều hướng
+            child: SafeArea(
+              child: ZoomIn(
+                duration: const Duration(milliseconds: 300),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    FloatingActionButton(
+                      heroTag: 'ai_assistant_btn',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AiChatScreen()),
+                        );
+                      },
+                      backgroundColor: const Color(0xFFEC5B13), // primary orange
+                      elevation: 8,
+                      shape: const CircleBorder(),
+                      child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 32),
+                    ),
+                    Positioned(
+                      top: -55,
+                      right: 15,
+                      child: FadeInUp(
+                        key: ValueKey<int>(_currentIndex), // Re-animate when tab changes
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 500),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: themeProvider.secondaryColor.withValues(alpha: 0.95),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
+                              bottomLeft: Radius.circular(16),
+                              bottomRight: Radius.circular(4),
                             ),
-                            child: Text(
-                              'Chào bạn! Tôi có thể giúp gì cho\nngân sách của bạn hôm nay?',
-                              style: TextStyle(color: themeProvider.foregroundColor, fontSize: 13, height: 1.4),
-                            ),
+                            border: Border.all(color: themeProvider.borderColor),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
+                          ),
+                          child: Text(
+                            _getAiGreeting(_currentIndex),
+                            style: TextStyle(color: themeProvider.foregroundColor, fontSize: 13, height: 1.4),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
         ],
       ),
       ),
@@ -156,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBottomNavBar(ThemeProvider themeProvider, LanguageProvider languageProvider) {
     return Container(
       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 8),
-    decoration: BoxDecoration(
+      decoration: BoxDecoration(
         color: themeProvider.secondaryColor.withValues(alpha: 0.9),
         border: Border(top: BorderSide(color: themeProvider.borderColor)),
       ),
@@ -166,7 +183,6 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildNavItem(0, Icons.home_filled, languageProvider.translate('tab_home'), themeProvider),
           _buildNavItem(1, Icons.receipt_long_rounded, languageProvider.translate('tab_transactions'), themeProvider),
-          _buildNavItem(2, Icons.account_balance_wallet_rounded, languageProvider.translate('tab_budget'), themeProvider),
           Expanded(
             child: GestureDetector(
               onTap: () async {
@@ -202,24 +218,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 24),
                   ),
-                      Transform.translate(
-                        offset: const Offset(0, -20),
-                        child: Text(
-                          languageProvider.translate('ai_scan'),
-                          style: TextStyle(
-                            color: themeProvider.foregroundColor.withValues(alpha: 0.8),
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
+                  Transform.translate(
+                    offset: const Offset(0, -20),
+                    child: Text(
+                      languageProvider.translate('ai_scan'),
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withValues(alpha: 0.8),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
                       ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
+          _buildNavItem(2, Icons.account_balance_wallet_rounded, languageProvider.translate('tab_budget'), themeProvider),
           _buildNavItem(3, Icons.analytics_rounded, languageProvider.translate('tab_report'), themeProvider),
-          _buildNavItem(4, Icons.settings_rounded, languageProvider.translate('tab_settings'), themeProvider),
         ],
       ),
     );
@@ -268,74 +284,59 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   bool _isBalanceVisible = true;
-  List<double> _barValues = List.filled(7, 0.0);
-  List<double> _pieValues = List.filled(4, 0.0); 
   double _totalBalance = 0;
+  late Timer _timer;
+  DateTime _currentTime = DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() { _currentTime = DateTime.now(); });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  String _getFormattedDateTime() {
+    final formatter = DateFormat('EEEE, dd/MM/yyyy • HH:mm', 'vi');
+    String formatted = formatter.format(_currentTime);
+    final parts = formatted.split(', ');
+    if (parts.length > 1) {
+      final dayNames = parts[0].split(' ').map((e) => e.isNotEmpty ? e[0].toUpperCase() + e.substring(1) : '').join(' ');
+      return '$dayNames, ${parts[1]}';
+    }
+    return formatted;
+  }
+
+  String _getGreetingText() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Chào buổi sáng,';
+    } else if (hour == 12) {
+      return 'Chào buổi trưa,';
+    } else if (hour < 18) {
+      return 'Chào buổi chiều,';
+    } else {
+      return 'Chào buổi tối,';
+    }
   }
 
   void _calculateData(List<TransactionModel> transactions) {
     double balance = 0;
-    Map<String, double> catTotals = {
-      'Ăn uống': 0,
-      'Mua sắm': 0,
-      'Di chuyển': 0,
-      'Khác': 0,
-    };
-
-    // Reset bar values
-    List<double> last7Days = List.filled(7, 0.0);
-    DateTime today = DateTime.now();
-
     for (var tx in transactions) {
       if (tx.wallet != 'main') continue; // Chỉ tính toán cho ví chính
-
       if (tx.type == TransactionType.income) {
         balance += tx.amount;
       } else {
         balance -= tx.amount;
-        
-        // Donut Chart logic
-        if (catTotals.containsKey(tx.category)) {
-          catTotals[tx.category] = catTotals[tx.category]! + tx.amount;
-        } else {
-          catTotals['Khác'] = catTotals['Khác']! + tx.amount;
-        }
-
-        // Bar Chart logic (Last 7 days)
-        int dayDiff = today.difference(tx.date).inDays;
-        if (dayDiff >= 0 && dayDiff < 7) {
-          int index = (tx.date.weekday - 1);
-          last7Days[index] += tx.amount;
-        }
       }
     }
-
     _totalBalance = balance;
-    
-    // Normalize bar values for display (maxY = 20 for the UI scaling used in the app)
-    double maxVal = last7Days.reduce((a, b) => a > b ? a : b);
-    if (maxVal > 0) {
-      _barValues = last7Days.map((v) => (v / maxVal) * 20).toList();
-    } else {
-      _barValues = List.filled(7, 0.0);
-    }
-
-    // Pie values for the donut chart (percetages)
-    double totalExpense = catTotals.values.reduce((a, b) => a + b);
-    if (totalExpense > 0) {
-      _pieValues = [
-        (catTotals['Ăn uống']! / totalExpense) * 100,
-        (catTotals['Mua sắm']! / totalExpense) * 100,
-        (catTotals['Di chuyển']! / totalExpense) * 100,
-        (catTotals['Khác']! / totalExpense) * 100,
-      ];
-    } else {
-      _pieValues = List.filled(4, 0.0);
-    }
   }
 
   @override
@@ -369,13 +370,31 @@ class _HomeTabState extends State<HomeTab> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        Text('${languageProvider.translate('hello')},', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 14)),
-                        Text(
-                          userProvider.name.isNotEmpty ? userProvider.name : 'Nguyễn Văn A',
-                          style: TextStyle(color: themeProvider.foregroundColor, fontSize: 22, fontWeight: FontWeight.bold),
+                        IconButton(
+                          icon: Icon(Icons.menu_rounded, color: themeProvider.foregroundColor, size: 28),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_getGreetingText(), style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 13)),
+                            Text(
+                              userProvider.name.isNotEmpty ? userProvider.name : 'Khách',
+                              style: TextStyle(color: themeProvider.foregroundColor, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _getFormattedDateTime(),
+                              style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.4), fontSize: 11),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -409,12 +428,19 @@ class _HomeTabState extends State<HomeTab> {
                           ],
                         ),
                         const SizedBox(width: 12),
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: const Color(0xFFFFD180),
-                          backgroundImage: userProvider.photoUrl.isNotEmpty 
-                              ? NetworkImage(userProvider.photoUrl) 
-                              : const NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Felix'),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const UserProfileScreen()));
+                          },
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: const Color(0xFFFFD180),
+                            backgroundImage: userProvider.photoUrl.isEmpty 
+                                ? const NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Felix') as ImageProvider
+                                : (userProvider.photoUrl.startsWith('data:image/') 
+                                    ? MemoryImage(base64Decode(userProvider.photoUrl.split(',').last)) 
+                                    : NetworkImage(userProvider.photoUrl)) as ImageProvider,
+                          ),
                         ),
                       ],
                     ),
@@ -494,39 +520,7 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ),
               ),
-              const SizedBox(height: 35),
-              _buildSectionHeader('Xu hướng chi tiêu', 'Tuần này', themeProvider),
-              const SizedBox(height: 16),
-              FadeInUp(
-                duration: const Duration(milliseconds: 700),
-                child: Container(
-                  height: 180,
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
-                  decoration: BoxDecoration(
-                    color: themeProvider.secondaryColor.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: themeProvider.borderColor),
-                  ),
-                  child: _buildBarChart(themeProvider),
-                ),
-              ),
-              const SizedBox(height: 35),
-              _buildSectionHeader('Phân bổ chi tiêu', null, themeProvider),
-              const SizedBox(height: 16),
-              FadeInUp(
-                duration: const Duration(milliseconds: 800),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: themeProvider.secondaryColor.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: themeProvider.borderColor),
-                  ),
-                  child: _buildDonutChart(themeProvider),
-                ),
-              ),
-              const SizedBox(height: 35),
+
               _buildSectionHeader('Giao dịch gần đây', 'Tất cả', themeProvider),
               const SizedBox(height: 16),
               if (isLoading)
@@ -561,138 +555,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildBarChart(ThemeProvider themeProvider) {
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        maxY: 20,
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    days[value.toInt() % days.length], 
-                    style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold)
-                  ),
-                );
-              },
-            ),
-          ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        barGroups: [
-          _makeBarData(0, _barValues[0], themeProvider),
-          _makeBarData(1, _barValues[1], themeProvider),
-          _makeBarData(2, _barValues[2], themeProvider),
-          _makeBarData(3, _barValues[3], themeProvider),
-          _makeBarData(4, _barValues[4], themeProvider),
-          _makeBarData(5, _barValues[5], themeProvider),
-          _makeBarData(6, _barValues[6], themeProvider),
-        ],
-      ),
-      swapAnimationDuration: const Duration(milliseconds: 1000), // Hoạt hoạ BarChart
-      swapAnimationCurve: Curves.easeOutQuart,
-    );
-  }
 
-  BarChartGroupData _makeBarData(int x, double y, ThemeProvider themeProvider) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          color: themeProvider.foregroundColor.withValues(alpha: 0.1),
-          width: 14,
-          borderRadius: BorderRadius.circular(4),
-          backDrawRodData: BackgroundBarChartRodData(show: true, toY: 20, color: themeProvider.backgroundColor.withValues(alpha: 0.3)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDonutChart(ThemeProvider themeProvider) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: SizedBox(
-            height: 140,
-            child: Stack(
-              children: [
-                PieChart(
-                  PieChartData(
-                    sectionsSpace: 0,
-                    centerSpaceRadius: 45,
-                    sections: [
-                      ...(_pieValues[0] == 0 
-                        ? [PieChartSectionData(color: themeProvider.foregroundColor.withValues(alpha: 0.1), value: 100, radius: 16, showTitle: false)]
-                        : [
-                            PieChartSectionData(color: const Color(0xFFFF6D00), value: _pieValues[0], radius: 18, showTitle: false),
-                            PieChartSectionData(color: Colors.blue, value: _pieValues[1], radius: 16, showTitle: false),
-                            PieChartSectionData(color: Colors.green, value: _pieValues[2], radius: 14, showTitle: false),
-                            PieChartSectionData(color: Colors.yellow, value: _pieValues[3], radius: 12, showTitle: false),
-                          ]),
-                    ],
-                  ),
-                  swapAnimationDuration: const Duration(milliseconds: 1200), // Hoạt hoạ DonutChart
-                  swapAnimationCurve: Curves.easeOutCubic,
-                ),
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Tổng', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12)),
-                      Text(_pieValues[0] == 0 ? '0%' : '100%', style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold, fontSize: 16)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          flex: 3,
-          child: Column(
-            children: [
-              _buildAllocationItem('Ăn uống', _pieValues[0] == 0 ? '0%' : '${_pieValues[0].toStringAsFixed(0)}%', const Color(0xFFFF6D00), themeProvider),
-              _buildAllocationItem('Mua sắm', _pieValues[1] == 0 ? '0%' : '${_pieValues[1].toStringAsFixed(0)}%', Colors.blue, themeProvider),
-              _buildAllocationItem('Di chuyển', _pieValues[2] == 0 ? '0%' : '${_pieValues[2].toStringAsFixed(0)}%', Colors.green, themeProvider),
-              _buildAllocationItem('Khác', _pieValues[3] == 0 ? '0%' : '${_pieValues[3].toStringAsFixed(0)}%', Colors.yellow, themeProvider),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAllocationItem(String title, String percent, Color color, ThemeProvider themeProvider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-              const SizedBox(width: 10),
-              Text(title, style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7), fontSize: 14)),
-            ],
-          ),
-          Text(percent, style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold, fontSize: 14)),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTransactionList(List<TransactionModel> transactions, ThemeProvider themeProvider) {
     if (transactions.isEmpty) {
@@ -784,6 +647,8 @@ class _TransactionTabState extends State<TransactionTab> {
   final TextEditingController _searchController = TextEditingController();
   final Set<String> _selectedIds = {};
   bool _isSelectionMode = false;
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
 
   @override
   void initState() {
@@ -799,15 +664,51 @@ class _TransactionTabState extends State<TransactionTab> {
   Future<void> _exportDatabase(BuildContext context) async {
     try {
       final transactionService = TransactionService();
-      final fileExt = kIsWeb ? 'json' : 'db';
-      final fileTypeLabel = kIsWeb ? 'JSON' : 'SQLite';
       
-      if (!mounted) return;
+      String format = 'db';
+      if (kIsWeb) {
+        if (!context.mounted) return;
+        final chosen = await showDialog<String>(
+          context: context,
+          builder: (dialogCtx) {
+            final theme = dialogCtx.read<ThemeProvider>();
+            return AlertDialog(
+              backgroundColor: theme.secondaryColor,
+              title: Text('Chọn định dạng xuất', style: TextStyle(color: theme.foregroundColor)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.data_object_rounded, color: const Color(0xFFEC5B13)),
+                    title: Text('JSON', style: TextStyle(color: theme.foregroundColor, fontWeight: FontWeight.bold)),
+                    subtitle: Text('Dùng cho dữ liệu khối', style: TextStyle(color: theme.foregroundColor.withValues(alpha: 0.5), fontSize: 12)),
+                    onTap: () => Navigator.pop(dialogCtx, 'json'),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: Icon(Icons.table_chart_rounded, color: Colors.green),
+                    title: Text('CSV', style: TextStyle(color: theme.foregroundColor, fontWeight: FontWeight.bold)),
+                    subtitle: Text('Dễ dàng mở bằng Excel', style: TextStyle(color: theme.foregroundColor.withValues(alpha: 0.5), fontSize: 12)),
+                    onTap: () => Navigator.pop(dialogCtx, 'csv'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+        if (chosen == null) return;
+        format = chosen;
+      }
+
+      final fileExt = kIsWeb ? format : 'db';
+      final fileTypeLabel = kIsWeb ? format.toUpperCase() : 'SQLite';
+      
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Đang chuẩn bị dữ liệu $fileTypeLabel...')),
       );
 
-      final bytes = await transactionService.exportAllToSqliteBytes();
+      final bytes = await transactionService.exportAllToSqliteBytes(webFormat: format);
       final fileName = 'chitieu_plus_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.$fileExt';
       
       await DownloadHelper.instance.downloadFile(bytes, fileName);
@@ -815,7 +716,7 @@ class _TransactionTabState extends State<TransactionTab> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(kIsWeb ? 'Đang bắt đầu tải xuống: $fileName' : 'Đã xuất database thành công: $fileName'),
+          content: Text(kIsWeb ? 'Đang tải xuống: $fileName' : 'Đã xuất database thành công: $fileName'),
           backgroundColor: Colors.green,
         ),
       );
@@ -823,7 +724,7 @@ class _TransactionTabState extends State<TransactionTab> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi khi xuất database: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text('Lỗi khi xuất dữ liệu: ${e.toString().replaceAll('Exception: ', '')}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -888,34 +789,30 @@ class _TransactionTabState extends State<TransactionTab> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: themeProvider.secondaryColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.calendar_today_rounded, color: Colors.white70, size: 20),
-          ),
           GestureDetector(
-            onTap: () => context.read<TransactionProvider>().refresh(),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => CustomDatePicker(
+                  initialStartDate: _customStartDate,
+                  initialEndDate: _customEndDate,
+                  onApply: (start, end) {
+                    setState(() {
+                      _customStartDate = start;
+                      _customEndDate = end;
+                      _activeFilter = 'Tùy chỉnh';
+                    });
+                  },
+                ),
+              );
+            },
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: themeProvider.secondaryColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-            ),
-          ),
-          GestureDetector(
-            onTap: () => _exportDatabase(context),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: themeProvider.secondaryColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.ios_share_rounded, color: Colors.white, size: 20),
+              child: const Icon(Icons.calendar_today_rounded, color: Colors.white70, size: 20),
             ),
           ),
           Text(
@@ -1009,7 +906,33 @@ class _TransactionTabState extends State<TransactionTab> {
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () => _exportDatabase(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: themeProvider.secondaryColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: themeProvider.borderColor.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.output_rounded, color: themeProvider.foregroundColor.withValues(alpha: 0.7), size: 14),
+                    const SizedBox(width: 6),
+                    Text('Xuất file', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7), fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1069,6 +992,11 @@ class _TransactionTabState extends State<TransactionTab> {
         matchesDate = tx.date.isAfter(weekStart.subtract(const Duration(seconds: 1)));
       } else if (_activeFilter == 'Tháng này') {
         matchesDate = tx.date.year == monthStart.year && tx.date.month == monthStart.month;
+      } else if (_activeFilter == 'Tùy chỉnh' && _customStartDate != null && _customEndDate != null) {
+        final start = DateTime(_customStartDate!.year, _customStartDate!.month, _customStartDate!.day);
+        final end = DateTime(_customEndDate!.year, _customEndDate!.month, _customEndDate!.day, 23, 59, 59);
+        matchesDate = tx.date.isAfter(start.subtract(const Duration(seconds: 1))) && 
+                      tx.date.isBefore(end.add(const Duration(seconds: 1)));
       }
       
       return matchesQuery && matchesDate;
@@ -1341,22 +1269,429 @@ class _TransactionTabState extends State<TransactionTab> {
 }
 
 // --- TAB 3: NGÂN SÁCH ---
-class BudgetTab extends StatelessWidget {
+class BudgetTab extends StatefulWidget {
   const BudgetTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Màn hình Ngân sách', style: TextStyle(color: Colors.white, fontSize: 18)));
-  }
+  State<BudgetTab> createState() => _BudgetTabState();
 }
 
-// --- TAB 3: BÁO CÁO ---
-class ReportTab extends StatelessWidget {
-  const ReportTab({super.key});
+class _BudgetTabState extends State<BudgetTab> {
+  double _budgetLimit = 5000000;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Màn hình Báo cáo', style: TextStyle(color: Colors.white, fontSize: 18)));
+    final themeProvider = context.watch<ThemeProvider>();
+    final transactionProvider = context.watch<TransactionProvider>();
+    final allTxs = transactionProvider.transactions;
+    
+    // Calculate current month's expense
+    final now = DateTime.now();
+    double currentMonthExpense = 0;
+    
+    final Map<String, double> catSpent = {
+      'Ăn uống': 0, 'Mua sắm': 0, 'Di chuyển': 0, 'Hóa đơn': 0, 'Khác': 0
+    };
+
+    for (var tx in allTxs) {
+      if (tx.type == TransactionType.expense && tx.date.year == now.year && tx.date.month == now.month) {
+        currentMonthExpense += tx.amount;
+        if (catSpent.containsKey(tx.category)) {
+          catSpent[tx.category] = catSpent[tx.category]! + tx.amount;
+        } else {
+          catSpent['Khác'] = catSpent['Khác']! + tx.amount;
+        }
+      }
+    }
+
+    final double overBudget = currentMonthExpense > _budgetLimit ? currentMonthExpense - _budgetLimit : 0;
+    final bool isOver = overBudget > 0;
+    final double percent = _budgetLimit > 0 ? (currentMonthExpense / _budgetLimit).clamp(0.0, 1.0) : 0.0;
+
+    return Scaffold(
+      backgroundColor: themeProvider.backgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Ngân sách chi tiêu', style: TextStyle(color: themeProvider.foregroundColor, fontSize: 22, fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () async {
+                      final newLimit = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const BudgetSettingsScreen()),
+                      );
+                      if (newLimit != null && newLimit is double && mounted) {
+                        setState(() {
+                          _budgetLimit = newLimit;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: themeProvider.secondaryColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text('Điều chỉnh', style: TextStyle(color: Color(0xFFF05D15), fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: themeProvider.borderColor),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Đã tiêu', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 14)),
+                              if (isOver)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(color: Colors.redAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                                  child: const Text('Vượt ngân sách', style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'đ ${NumberFormat('#,###').format(currentMonthExpense)}',
+                            style: TextStyle(
+                              color: isOver ? Colors.redAccent : themeProvider.foregroundColor,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // Progress Bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: LinearProgressIndicator(
+                              value: percent,
+                              backgroundColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                              valueColor: AlwaysStoppedAnimation<Color>(isOver ? Colors.redAccent : const Color(0xFFF05D15)),
+                              minHeight: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Ngân sách: đ ${NumberFormat('#,###').format(_budgetLimit)}', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 12)),
+                              Text(isOver ? 'Vượt quá đ ${NumberFormat('#,###').format(overBudget)}' : 'Còn lại đ ${NumberFormat('#,###').format(_budgetLimit - currentMonthExpense)}', 
+                                style: TextStyle(color: isOver ? Colors.redAccent : const Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    Text('CHI TIẾT HẠNG MỤC', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    const SizedBox(height: 16),
+                    ...catSpent.keys.map((cat) {
+                       if (catSpent[cat]! == 0) return const SizedBox.shrink();
+                       return Padding(
+                         padding: const EdgeInsets.only(bottom: 16),
+                         child: Row(
+                           children: [
+                             Container(
+                               width: 40, height: 40,
+                               decoration: BoxDecoration(color: themeProvider.foregroundColor.withValues(alpha: 0.05), shape: BoxShape.circle),
+                               child: Icon(Icons.category, color: themeProvider.foregroundColor.withValues(alpha: 0.5), size: 20),
+                             ),
+                             const SizedBox(width: 16),
+                             Expanded(
+                               child: Column(
+                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                 children: [
+                                   Text(cat, style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold)),
+                                   const SizedBox(height: 4),
+                                   ClipRRect(
+                                     borderRadius: BorderRadius.circular(2),
+                                     child: LinearProgressIndicator(
+                                       value: _budgetLimit > 0 ? (catSpent[cat]! / _budgetLimit).clamp(0.0, 1.0) : 0,
+                                       backgroundColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                                       valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                                       minHeight: 4,
+                                     ),
+                                   ),
+                                 ],
+                               ),
+                             ),
+                             const SizedBox(width: 16),
+                             Text('đ ${NumberFormat('#,###').format(catSpent[cat])}', style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold)),
+                           ],
+                         ),
+                       );
+                    }),
+                    const SizedBox(height: 100),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- TAB 4: BÁO CÁO ---
+class ReportTab extends StatefulWidget {
+  const ReportTab({super.key});
+
+  @override
+  State<ReportTab> createState() => _ReportTabState();
+}
+
+class _ReportTabState extends State<ReportTab> {
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final transactionProvider = context.watch<TransactionProvider>();
+    final transactions = transactionProvider.transactions;
+    
+    // Calculate Chart Data
+    Map<String, double> catTotals = {'Ăn uống': 0, 'Mua sắm': 0, 'Di chuyển': 0, 'Khác': 0};
+    List<double> last7Days = List.filled(7, 0.0);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    for (var tx in transactions) {
+      if (tx.type == TransactionType.expense) {
+        if (catTotals.containsKey(tx.category)) {
+          catTotals[tx.category] = catTotals[tx.category]! + tx.amount;
+        } else {
+          catTotals['Khác'] = catTotals['Khác']! + tx.amount;
+        }
+        int dayDiff = today.difference(tx.date).inDays;
+        if (dayDiff >= 0 && dayDiff < 7) {
+          int index = (tx.date.weekday - 1);
+          last7Days[index] += tx.amount;
+        }
+      }
+    }
+
+    double maxVal = last7Days.reduce((a, b) => a > b ? a : b);
+    List<double> barValues = maxVal > 0 ? last7Days.map((v) => (v / maxVal) * 20).toList() : List.filled(7, 0.0);
+    double totalExpense = catTotals.values.reduce((a, b) => a + b);
+    List<double> pieValues = totalExpense > 0 ? [
+      (catTotals['Ăn uống']! / totalExpense) * 100,
+      (catTotals['Mua sắm']! / totalExpense) * 100,
+      (catTotals['Di chuyển']! / totalExpense) * 100,
+      (catTotals['Khác']! / totalExpense) * 100,
+    ] : List.filled(4, 0.0);
+
+    return Scaffold(
+      backgroundColor: themeProvider.backgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Báo cáo tài chính', style: TextStyle(color: themeProvider.foregroundColor, fontSize: 22, fontWeight: FontWeight.bold)),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: themeProvider.secondaryColor, borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.share_rounded, color: Colors.white, size: 20),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 10),
+                    Text('CƠ CẤU CHI TIÊU', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: themeProvider.secondaryColor.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: themeProvider.borderColor),
+                      ),
+                      child: _buildDonutChart(themeProvider, pieValues),
+                    ),
+                    const SizedBox(height: 35),
+                    Text('XU HƯỚNG CI TIÊU (7 NGÀY)', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    const SizedBox(height: 16),
+                    Container(
+                      height: 180,
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+                      decoration: BoxDecoration(
+                        color: themeProvider.secondaryColor.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: themeProvider.borderColor),
+                      ),
+                      child: _buildBarChart(themeProvider, barValues),
+                    ),
+                    const SizedBox(height: 100),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDonutChart(ThemeProvider themeProvider, List<double> pieValues) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 140,
+            child: Stack(
+              children: [
+                PieChart(
+                  PieChartData(
+                    sectionsSpace: 0,
+                    centerSpaceRadius: 45,
+                    sections: [
+                      ...(pieValues[0] == 0 && pieValues[1] == 0 && pieValues[2] == 0 && pieValues[3] == 0 
+                        ? [PieChartSectionData(color: themeProvider.foregroundColor.withValues(alpha: 0.1), value: 100, radius: 16, showTitle: false)]
+                        : [
+                            PieChartSectionData(color: const Color(0xFFFF6D00), value: pieValues[0], radius: 18, showTitle: false),
+                            PieChartSectionData(color: Colors.blue, value: pieValues[1], radius: 16, showTitle: false),
+                            PieChartSectionData(color: Colors.green, value: pieValues[2], radius: 14, showTitle: false),
+                            PieChartSectionData(color: Colors.yellow, value: pieValues[3], radius: 12, showTitle: false),
+                          ]),
+                    ],
+                  ),
+                  swapAnimationDuration: const Duration(milliseconds: 1200),
+                  swapAnimationCurve: Curves.easeOutCubic,
+                ),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Tổng', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12)),
+                      Text(pieValues[0] == 0 && pieValues[1] == 0 ? '0%' : '100%', style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          flex: 3,
+          child: Column(
+            children: [
+              _buildAllocationItem('Ăn uống', pieValues[0] == 0 ? '0%' : '${pieValues[0].toStringAsFixed(0)}%', const Color(0xFFFF6D00), themeProvider),
+              _buildAllocationItem('Mua sắm', pieValues[1] == 0 ? '0%' : '${pieValues[1].toStringAsFixed(0)}%', Colors.blue, themeProvider),
+              _buildAllocationItem('Di chuyển', pieValues[2] == 0 ? '0%' : '${pieValues[2].toStringAsFixed(0)}%', Colors.green, themeProvider),
+              _buildAllocationItem('Khác', pieValues[3] == 0 ? '0%' : '${pieValues[3].toStringAsFixed(0)}%', Colors.yellow, themeProvider),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAllocationItem(String title, String percent, Color color, ThemeProvider themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+              const SizedBox(width: 10),
+              Text(title, style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7), fontSize: 14)),
+            ],
+          ),
+          Text(percent, style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarChart(ThemeProvider themeProvider, List<double> barValues) {
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: 20,
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(days[value.toInt() % days.length], style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold)),
+                );
+              },
+            ),
+          ),
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        gridData: const FlGridData(show: false),
+        borderData: FlBorderData(show: false),
+        barGroups: [
+          _makeBarData(0, barValues[0], themeProvider),
+          _makeBarData(1, barValues[1], themeProvider),
+          _makeBarData(2, barValues[2], themeProvider),
+          _makeBarData(3, barValues[3], themeProvider),
+          _makeBarData(4, barValues[4], themeProvider),
+          _makeBarData(5, barValues[5], themeProvider),
+          _makeBarData(6, barValues[6], themeProvider),
+        ],
+      ),
+      swapAnimationDuration: const Duration(milliseconds: 1000),
+      swapAnimationCurve: Curves.easeOutQuart,
+    );
+  }
+
+  BarChartGroupData _makeBarData(int x, double y, ThemeProvider themeProvider) {
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          toY: y,
+          color: themeProvider.foregroundColor.withValues(alpha: 0.1),
+          width: 14,
+          borderRadius: BorderRadius.circular(4),
+          backDrawRodData: BackgroundBarChartRodData(show: true, toY: 20, color: themeProvider.backgroundColor.withValues(alpha: 0.3)),
+        ),
+      ],
+    );
   }
 }
 
@@ -1601,6 +1936,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         title: 'Đăng xuất',
                         showArrow: false,
                         onTap: () async {
+                          await UserProvider.cleanupGuestIfAny();
                           await FirebaseAuth.instance.signOut();
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.remove('is_bypassed_auth');

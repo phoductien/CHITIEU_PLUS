@@ -618,6 +618,13 @@ class _LoginScreenState extends State<LoginScreen> {
         // 2. Set Guest Status in Provider (Syncs with SharedPreferences)
         await userProvider.setGuestStatus(true);
         
+        // 3. Explicitly Sync Initial Guest Profile to Firebase
+        try {
+          await userProvider.syncToFirebase().timeout(const Duration(seconds: 5));
+        } catch (e) {
+          debugPrint('[DEBUG] Guest Login: Error syncing initial profile to Firebase: $e');
+        }
+        
         // Add Notification
         if (mounted) {
           context.read<NotificationProvider>().addNotification(
