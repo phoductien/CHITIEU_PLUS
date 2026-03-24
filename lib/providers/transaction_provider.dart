@@ -25,10 +25,14 @@ class TransactionProvider with ChangeNotifier {
   void _initAuthListener() {
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
-        debugPrint('[TransactionProvider] User logged in, re-initializing stream...');
+        debugPrint(
+          '[TransactionProvider] User logged in, re-initializing stream...',
+        );
         _init();
       } else {
-        debugPrint('[TransactionProvider] User logged out, clearing transactions...');
+        debugPrint(
+          '[TransactionProvider] User logged out, clearing transactions...',
+        );
         _transactions = [];
         _subscription?.cancel();
         _subscription = null;
@@ -56,13 +60,23 @@ class TransactionProvider with ChangeNotifier {
               if (safeData is Map) {
                 safeData.forEach((key, value) {
                   if (value != null && value is Map) {
-                    loaded.add(TransactionModel.fromMap(key.toString(), Map<String, dynamic>.from(value)));
+                    loaded.add(
+                      TransactionModel.fromMap(
+                        key.toString(),
+                        Map<String, dynamic>.from(value),
+                      ),
+                    );
                   }
                 });
               } else if (safeData is List) {
                 for (int i = 0; i < safeData.length; i++) {
                   if (safeData[i] != null && safeData[i] is Map) {
-                    loaded.add(TransactionModel.fromMap(i.toString(), Map<String, dynamic>.from(safeData[i] as Map)));
+                    loaded.add(
+                      TransactionModel.fromMap(
+                        i.toString(),
+                        Map<String, dynamic>.from(safeData[i] as Map),
+                      ),
+                    );
                   }
                 }
               }

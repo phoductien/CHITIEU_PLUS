@@ -20,9 +20,12 @@ class AddTransactionScreen extends StatefulWidget {
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
 }
 
-class _AddTransactionScreenState extends State<AddTransactionScreen> with SingleTickerProviderStateMixin {
+class _AddTransactionScreenState extends State<AddTransactionScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final TextEditingController _amountController = TextEditingController(text: '0');
+  final TextEditingController _amountController = TextEditingController(
+    text: '0',
+  );
   final TextEditingController _noteController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _selectedCategory = 'Ăn uống';
@@ -30,21 +33,53 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
   bool _isAiProcessing = false;
 
   final List<Map<String, dynamic>> _categories = [
-    {'name': 'Ăn uống', 'icon': Icons.restaurant_rounded, 'color': Color(0xFFF97316)},
-    {'name': 'Mua sắm', 'icon': Icons.shopping_bag_rounded, 'color': Color(0xFF3B82F6)},
-    {'name': 'Di chuyển', 'icon': Icons.directions_car_rounded, 'color': Color(0xFFA855F7)},
-    {'name': 'Hóa đơn', 'icon': Icons.description_rounded, 'color': Color(0xFFEF4444)},
-    {'name': 'Giải trí', 'icon': Icons.videogame_asset_rounded, 'color': Color(0xFF10B981)},
-    {'name': 'Sức khỏe', 'icon': Icons.medical_services_rounded, 'color': Color(0xFFEC4899)},
-    {'name': 'Giáo dục', 'icon': Icons.school_rounded, 'color': Color(0xFFFACC15)},
-    {'name': 'Thêm', 'icon': Icons.add_circle_outline_rounded, 'color': Colors.blueGrey},
+    {
+      'name': 'Ăn uống',
+      'icon': Icons.restaurant_rounded,
+      'color': Color(0xFFF97316),
+    },
+    {
+      'name': 'Mua sắm',
+      'icon': Icons.shopping_bag_rounded,
+      'color': Color(0xFF3B82F6),
+    },
+    {
+      'name': 'Di chuyển',
+      'icon': Icons.directions_car_rounded,
+      'color': Color(0xFFA855F7),
+    },
+    {
+      'name': 'Hóa đơn',
+      'icon': Icons.description_rounded,
+      'color': Color(0xFFEF4444),
+    },
+    {
+      'name': 'Giải trí',
+      'icon': Icons.videogame_asset_rounded,
+      'color': Color(0xFF10B981),
+    },
+    {
+      'name': 'Sức khỏe',
+      'icon': Icons.medical_services_rounded,
+      'color': Color(0xFFEC4899),
+    },
+    {
+      'name': 'Giáo dục',
+      'icon': Icons.school_rounded,
+      'color': Color(0xFFFACC15),
+    },
+    {
+      'name': 'Thêm',
+      'icon': Icons.add_circle_outline_rounded,
+      'color': Colors.blueGrey,
+    },
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     if (widget.initialOcrResult != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _parseAiResult(widget.initialOcrResult!);
@@ -96,7 +131,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
         try {
           final bytes = await image.readAsBytes();
           final aiService = AiService();
-          
+
           final prompt = '''
           Hãy đóng vai một chuyên gia kế toán. Tôi sẽ gửi cho bạn một ảnh hóa đơn hoặc đoạn văn bản hóa đơn. 
           Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
@@ -112,7 +147,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
           final responseText = await aiService.sendMessage(
             prompt,
             attachments: [
-              {'bytes': bytes, 'mimeType': 'image/jpeg'}
+              {'bytes': bytes, 'mimeType': 'image/jpeg'},
             ],
           );
 
@@ -131,9 +166,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
               body: e.toString(),
               type: NotificationType.system,
             );
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Lỗi: $e')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
           }
         } finally {
           if (mounted) {
@@ -151,7 +186,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
   }
 
   Future<void> _saveTransaction() async {
-    final amountText = _amountController.text.replaceAll('.', '').replaceAll(',', '');
+    final amountText = _amountController.text
+        .replaceAll('.', '')
+        .replaceAll(',', '');
     final double? amount = double.tryParse(amountText);
 
     if (amount == null || amount <= 0) {
@@ -174,12 +211,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
     }
 
     // Determine type based on category
-    final type = _selectedCategory == 'Lương' ? TransactionType.income : TransactionType.expense;
+    final type = _selectedCategory == 'Lương'
+        ? TransactionType.income
+        : TransactionType.expense;
 
     final transaction = TransactionModel(
       id: '', // Firestore will generate this
       userId: user.uid,
-      title: _noteController.text.isNotEmpty ? _noteController.text : _selectedCategory,
+      title: _noteController.text.isNotEmpty
+          ? _noteController.text
+          : _selectedCategory,
       amount: amount,
       category: _selectedCategory,
       date: _selectedDate,
@@ -197,7 +238,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
           type: NotificationType.transaction,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lưu giao dịch thành công!'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Lưu giao dịch thành công!'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
@@ -209,7 +253,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
           type: NotificationType.system,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi lưu giao dịch: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Lỗi khi lưu giao dịch: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -230,16 +277,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
     try {
       final data = json.decode(jsonStr);
       setState(() {
-        _noteController.text = data['title'] ?? data['note'] ?? ''; 
-        
+        _noteController.text = data['title'] ?? data['note'] ?? '';
+
         // Format amount with dots for display if possible
         if (data['amount'] != null) {
-          final amount = data['amount'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+          final amount = data['amount'].toString().replaceAll(
+            RegExp(r'[^0-9]'),
+            '',
+          );
           _amountController.text = amount;
         }
-        
+
         final String catName = data['category'] ?? 'Khác';
-        final int catIndex = _categories.indexWhere((c) => c['name'] == catName);
+        final int catIndex = _categories.indexWhere(
+          (c) => c['name'] == catName,
+        );
         if (catIndex != -1) {
           _selectedCategory = catName;
         }
@@ -250,14 +302,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
           } catch (_) {}
         }
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã trích xuất thông tin từ hóa đơn'), backgroundColor: Color(0xFFEC5B13)),
+        const SnackBar(
+          content: Text('Đã trích xuất thông tin từ hóa đơn'),
+          backgroundColor: Color(0xFFEC5B13),
+        ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi xử lý dữ liệu AI: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi xử lý dữ liệu AI: $e')));
     }
   }
 
@@ -269,7 +324,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -290,7 +348,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                   children: [
                     const CircularProgressIndicator(color: Color(0xFFEC5B13)),
                     const SizedBox(height: 20),
-                    const Text('Đang phân tích ảnh...', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Đang phân tích ảnh...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -330,10 +394,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
         Expanded(
           child: TabBarView(
             controller: _tabController,
-            children: [
-              _buildManualTab(),
-              _buildAutoTab(),
-            ],
+            children: [_buildManualTab(), _buildAutoTab()],
           ),
         ),
       ],
@@ -350,7 +411,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
           Center(
             child: Column(
               children: [
-                const Text('Số tiền giao dịch', style: TextStyle(color: Colors.white54, fontSize: 14)),
+                const Text(
+                  'Số tiền giao dịch',
+                  style: TextStyle(color: Colors.white54, fontSize: 14),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -361,13 +425,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                       child: TextField(
                         controller: _amountController,
                         keyboardType: TextInputType.number,
-                        style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold),
-                        decoration: const InputDecoration(border: InputBorder.none),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text('đ', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'đ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -384,7 +461,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('DANH MỤC', style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.bold)),
+                const Text(
+                  'DANH MỤC',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 20),
                 GridView.builder(
                   shrinkWrap: true,
@@ -400,21 +484,31 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                     final cat = _categories[index];
                     final isSelected = _selectedCategory == cat['name'];
                     return GestureDetector(
-                      onTap: () => setState(() => _selectedCategory = cat['name']),
+                      onTap: () =>
+                          setState(() => _selectedCategory = cat['name']),
                       child: Column(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: isSelected ? const Color(0xFFEC5B13) : const Color(0xFF334155),
+                              color: isSelected
+                                  ? const Color(0xFFEC5B13)
+                                  : const Color(0xFF334155),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(cat['icon'], color: Colors.white, size: 24),
+                            child: Icon(
+                              cat['icon'],
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             cat['name'],
-                            style: TextStyle(color: isSelected ? Colors.white : Colors.white54, fontSize: 11),
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white54,
+                              fontSize: 11,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -423,7 +517,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                   },
                 ),
                 const SizedBox(height: 30),
-                const Text('NGÀY GIAO DỊCH', style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.bold)),
+                const Text(
+                  'NGÀY GIAO DỊCH',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 GestureDetector(
                   onTap: () => _selectDate(context),
@@ -435,10 +536,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.calendar_month_rounded, color: Colors.white54, size: 20),
+                        const Icon(
+                          Icons.calendar_month_rounded,
+                          color: Colors.white54,
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Text(
-                          DateFormat('EEEE, d MMMM, y', 'vi').format(_selectedDate),
+                          DateFormat(
+                            'EEEE, d MMMM, y',
+                            'vi',
+                          ).format(_selectedDate),
                           style: const TextStyle(color: Colors.white),
                         ),
                       ],
@@ -446,7 +554,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                   ),
                 ),
                 const SizedBox(height: 25),
-                const Text('GHI CHÚ', style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.bold)),
+                const Text(
+                  'GHI CHÚ',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -507,7 +622,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color color, {required VoidCallback onTap}) {
+  Widget _buildActionCard(
+    String title,
+    IconData icon,
+    Color color, {
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -524,7 +644,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
             const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -542,13 +666,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
           backgroundColor: const Color(0xFFEC5B13),
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           elevation: 8,
           shadowColor: const Color(0xFFEC5B13).withValues(alpha: 0.5),
         ),
-        child: const Text('Lưu giao dịch', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        child: const Text(
+          'Lưu giao dịch',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
-
 }

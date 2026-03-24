@@ -11,7 +11,9 @@ class ThemeProvider with ChangeNotifier {
   // Dynamic Background Color
   Color get backgroundColor {
     if (_isEyeProtection) return const Color(0xFFFAF3E0); // Warm sepia-like
-    return _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFF082F49); // Dark Blue (Sky 950)
+    return _isDarkMode
+        ? const Color(0xFF0F172A)
+        : const Color(0xFF082F49); // Dark Blue (Sky 950)
   }
 
   // Dynamic Background Gradient
@@ -41,13 +43,18 @@ class ThemeProvider with ChangeNotifier {
   // Dynamic Secondary Surface Color (Cards, App Bars)
   Color get secondaryColor {
     if (_isEyeProtection) return const Color(0xFFFDF5E6); // Old Lace (Warm)
-    return _isDarkMode ? const Color(0xFF1E293B) : const Color(0xFF0F4C75); // Lighter blue for light mode cards
+    return _isDarkMode
+        ? const Color(0xFF1E293B)
+        : const Color(0xFF0F4C75); // Lighter blue for light mode cards
   }
 
   // Dynamic Foreground Color (Text, Icons)
   Color get foregroundColor {
-    if (_isEyeProtection) return const Color(0xFF5D4037); // Deep Brown for sepia
-    return _isDarkMode ? Colors.white : Colors.white; // White for both when background is dark
+    if (_isEyeProtection)
+      return const Color(0xFF5D4037); // Deep Brown for sepia
+    return _isDarkMode
+        ? Colors.white
+        : Colors.white; // White for both when background is dark
   }
 
   // Dynamic Border/Divider Color

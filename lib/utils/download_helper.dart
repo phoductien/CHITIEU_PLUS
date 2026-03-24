@@ -5,6 +5,6 @@ import 'download_helper_stub.dart'
 
 abstract class DownloadHelper {
   Future<void> downloadFile(Uint8List bytes, String fileName);
-  
+
   static DownloadHelper get instance => getDownloadHelper();
 }

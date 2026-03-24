@@ -6,6 +6,7 @@ import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
 import 'package:chitieu_plus/providers/theme_provider.dart';
 import 'package:chitieu_plus/providers/language_provider.dart';
+import 'package:chitieu_plus/models/notification_model.dart';
 import 'package:chitieu_plus/screens/notification_screen.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -28,6 +29,7 @@ import 'package:chitieu_plus/screens/budget_settings_screen.dart';
 import 'package:chitieu_plus/widgets/custom_date_picker.dart';
 import 'package:chitieu_plus/widgets/main_drawer.dart';
 import 'package:chitieu_plus/screens/user_profile_screen.dart';
+import 'package:chitieu_plus/screens/deposit_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? welcomeMessage;
@@ -44,19 +46,124 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _getAiGreeting(int tabIndex) {
     switch (tabIndex) {
-      case 0: return 'Chào bạn! Tôi có thể giúp gì cho\nngân sách của bạn hôm nay?';
-      case 1: return 'Giao dịch hôm nay thế nào?\nĐể tôi tóm tắt giúp nhé!';
-      case 2: return 'Lên kế hoạch thông minh?\nĐể tôi hỗ trợ bạn!';
-      case 3: return 'Phân tích chi tiêu của bạn?\nTôi luôn sẵn sàng hỗ trợ!';
-      default: return 'Chào bạn! Tôi có thể giúp gì cho bạn?';
+      case 0:
+        return 'Chào bạn! Tôi có thể giúp gì cho\nngân sách của bạn hôm nay?';
+      case 1:
+        return 'Giao dịch hôm nay thế nào?\nĐể tôi tóm tắt giúp nhé!';
+      case 2:
+        return 'Lên kế hoạch thông minh?\nĐể tôi hỗ trợ bạn!';
+      case 3:
+        return 'Phân tích chi tiêu của bạn?\nTôi luôn sẵn sàng hỗ trợ!';
+      default:
+        return 'Chào bạn! Tôi có thể giúp gì cho bạn?';
     }
   }
+
+  late StreamSubscription<NotificationModel> _notificationSubscription;
 
   @override
   void initState() {
     super.initState();
     initializeDateFormatting('vi', null);
     _pageController = PageController(initialPage: _currentIndex);
+
+    // Listen for new notifications
+    final notificationProvider = context.read<NotificationProvider>();
+    _notificationSubscription = notificationProvider.onNewNotification.listen((
+      notification,
+    ) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+            content: FadeInDown(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: notification.color.withValues(alpha: 0.5),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: notification.color.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        notification.icon,
+                        color: notification.color,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            notification.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            notification.body,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Xem',
+                        style: TextStyle(color: Color(0xFFFF6D00)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    });
+
     if (widget.welcomeMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -65,7 +172,9 @@ class _HomeScreenState extends State<HomeScreen> {
               content: Text(widget.welcomeMessage!),
               backgroundColor: const Color(0xFFFF6D00),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           );
         }
@@ -74,201 +183,327 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _notificationSubscription.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final languageProvider = context.watch<LanguageProvider>();
-    
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: const MainDrawer(),
       backgroundColor: themeProvider.backgroundColor,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: themeProvider.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: themeProvider.backgroundGradient),
         child: Stack(
           children: [
-          PageView(
-            controller: _pageController,
-            physics: const BouncingScrollPhysics(),
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            children: const [
-              HomeTab(),
-              TransactionTab(),
-              BudgetTab(),
-              ReportTab(),
-            ],
-          ),
-          Positioned(
-            right: 16,
-            bottom: 85, // Nằm ngay trên tab điều hướng
-            child: SafeArea(
-              child: ZoomIn(
-                duration: const Duration(milliseconds: 300),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    FloatingActionButton(
-                      heroTag: 'ai_assistant_btn',
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const AiChatScreen()),
-                        );
-                      },
-                      backgroundColor: const Color(0xFFEC5B13), // primary orange
-                      elevation: 8,
-                      shape: const CircleBorder(),
-                      child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 32),
-                    ),
-                    Positioned(
-                      top: -55,
-                      right: 15,
-                      child: FadeInUp(
-                        key: ValueKey<int>(_currentIndex), // Re-animate when tab changes
-                        duration: const Duration(milliseconds: 600),
-                        delay: const Duration(milliseconds: 500),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: themeProvider.secondaryColor.withValues(alpha: 0.95),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(16),
-                              topRight: Radius.circular(16),
-                              bottomLeft: Radius.circular(16),
-                              bottomRight: Radius.circular(4),
+            PageView(
+              controller: _pageController,
+              physics: const BouncingScrollPhysics(),
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              children: [
+                HomeTab(
+                  onTabChange: (index) {
+                    _pageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                ),
+                const TransactionTab(),
+                const BudgetTab(),
+                const ReportTab(),
+              ],
+            ),
+            Positioned(
+              right: 16,
+              bottom: 85, // Nằm ngay trên tab điều hướng
+              child: SafeArea(
+                child: ZoomIn(
+                  duration: const Duration(milliseconds: 300),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AiChatScreen(),
                             ),
-                            border: Border.all(color: themeProvider.borderColor),
+                          );
+                        },
+                        child: Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              )
+                                color: const Color(
+                                  0xFFEC5B13,
+                                ).withValues(alpha: 0.4),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
                             ],
                           ),
-                          child: Text(
-                            _getAiGreeting(_currentIndex),
-                            style: TextStyle(color: themeProvider.foregroundColor, fontSize: 13, height: 1.4),
+                          child: const Icon(
+                            Icons.smart_toy_rounded,
+                            color: Colors.white,
+                            size: 28,
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      Positioned(
+                        top: -55,
+                        right: 15,
+                        child: FadeInUp(
+                          key: ValueKey<int>(
+                            _currentIndex,
+                          ), // Re-animate when tab changes
+                          duration: const Duration(milliseconds: 600),
+                          delay: const Duration(milliseconds: 500),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: themeProvider.secondaryColor.withValues(
+                                alpha: 0.95,
+                              ),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(4),
+                              ),
+                              border: Border.all(
+                                color: themeProvider.borderColor,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              _getAiGreeting(_currentIndex),
+                              style: TextStyle(
+                                color: themeProvider.foregroundColor,
+                                fontSize: 13,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomNavBar(themeProvider, languageProvider),
     );
   }
 
-  Widget _buildBottomNavBar(ThemeProvider themeProvider, LanguageProvider languageProvider) {
+  Widget _buildBottomNavBar(
+    ThemeProvider themeProvider,
+    LanguageProvider languageProvider,
+  ) {
     return Container(
-      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 8),
-      decoration: BoxDecoration(
-        color: themeProvider.secondaryColor.withValues(alpha: 0.9),
-        border: Border(top: BorderSide(color: themeProvider.borderColor)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      height: 90,
+      margin: const EdgeInsets.only(left: 20, right: 20, bottom: 25),
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        clipBehavior: Clip.none,
         children: [
-          _buildNavItem(0, Icons.home_filled, languageProvider.translate('tab_home'), themeProvider),
-          _buildNavItem(1, Icons.receipt_long_rounded, languageProvider.translate('tab_transactions'), themeProvider),
-          Expanded(
+          // Glass Background
+          Container(
+            height: 70,
+            decoration: BoxDecoration(
+              color: themeProvider.secondaryColor.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(35),
+              border: Border.all(color: themeProvider.borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(
+                  0,
+                  Icons.grid_view_rounded,
+                  languageProvider.translate('tab_home'),
+                  themeProvider,
+                ),
+                _buildNavItem(
+                  1,
+                  Icons.receipt_long_rounded,
+                  languageProvider.translate('tab_transactions'),
+                  themeProvider,
+                ),
+                const SizedBox(width: 60), // Space for AI Scan button
+                _buildNavItem(
+                  2,
+                  Icons.account_balance_wallet_rounded,
+                  languageProvider.translate('tab_budget'),
+                  themeProvider,
+                ),
+                _buildNavItem(
+                  3,
+                  Icons.analytics_rounded,
+                  languageProvider.translate('tab_report'),
+                  themeProvider,
+                ),
+              ],
+            ),
+          ),
+          // AI Scan Button (Floating)
+          Positioned(
+            top: -15,
             child: GestureDetector(
               onTap: () async {
                 final result = await Navigator.push<String>(
                   context,
-                  MaterialPageRoute(builder: (context) => const OcrScanScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const OcrScanScreen(),
+                  ),
                 );
                 if (result != null && mounted) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AddTransactionScreen(initialOcrResult: result),
+                      builder: (context) =>
+                          AddTransactionScreen(initialOcrResult: result),
                     ),
                   );
                 }
               },
-              behavior: HitTestBehavior.opaque,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
-                    transform: Matrix4.translationValues(0.0, -24.0, 0.0),
+                    width: 64,
+                    height: 64,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC5B13),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: themeProvider.secondaryColor, width: 4),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))
-                      ]
-                    ),
-                    child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 24),
-                  ),
-                  Transform.translate(
-                    offset: const Offset(0, -20),
-                    child: Text(
-                      languageProvider.translate('ai_scan'),
-                      style: TextStyle(
-                        color: themeProvider.foregroundColor.withValues(alpha: 0.8),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: themeProvider.backgroundColor,
+                        width: 4,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFEC5B13).withValues(alpha: 0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.document_scanner_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    languageProvider.translate('ai_scan'),
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor.withValues(
+                        alpha: 0.9,
+                      ),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          _buildNavItem(2, Icons.account_balance_wallet_rounded, languageProvider.translate('tab_budget'), themeProvider),
-          _buildNavItem(3, Icons.analytics_rounded, languageProvider.translate('tab_report'), themeProvider),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, ThemeProvider themeProvider) {
+  Widget _buildNavItem(
+    int index,
+    IconData icon,
+    String label,
+    ThemeProvider themeProvider,
+  ) {
     final isSelected = _currentIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          _pageController.animateToPage(
-            index,
+    return GestureDetector(
+      onTap: () {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        },
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Icon(icon, color: isSelected ? const Color(0xFFEC5B13) : themeProvider.foregroundColor.withValues(alpha: 0.4), size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? const Color(0xFFEC5B13) : themeProvider.foregroundColor.withValues(alpha: 0.6),
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? const Color(0xFFEC5B13).withValues(alpha: 0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
-        ),
+            child: Icon(
+              icon,
+              color: isSelected
+                  ? const Color(0xFFEC5B13)
+                  : themeProvider.foregroundColor.withValues(alpha: 0.4),
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFFEC5B13)
+                  : themeProvider.foregroundColor.withValues(alpha: 0.4),
+              fontSize: 9,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -276,7 +511,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // --- TAB 1: TRANG CHỦ ---
 class HomeTab extends StatefulWidget {
-  const HomeTab({super.key});
+  final Function(int)? onTabChange;
+  const HomeTab({super.key, this.onTabChange});
 
   @override
   State<HomeTab> createState() => _HomeTabState();
@@ -292,7 +528,10 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() { _currentTime = DateTime.now(); });
+      if (mounted)
+        setState(() {
+          _currentTime = DateTime.now();
+        });
     });
   }
 
@@ -307,7 +546,10 @@ class _HomeTabState extends State<HomeTab> {
     String formatted = formatter.format(_currentTime);
     final parts = formatted.split(', ');
     if (parts.length > 1) {
-      final dayNames = parts[0].split(' ').map((e) => e.isNotEmpty ? e[0].toUpperCase() + e.substring(1) : '').join(' ');
+      final dayNames = parts[0]
+          .split(' ')
+          .map((e) => e.isNotEmpty ? e[0].toUpperCase() + e.substring(1) : '')
+          .join(' ');
       return '$dayNames, ${parts[1]}';
     }
     return formatted;
@@ -363,36 +605,82 @@ class _HomeTabState extends State<HomeTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
-              // Header
+              const SizedBox(height: 24),
+              // Header Premium
               FadeInDown(
-                duration: const Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 600),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        IconButton(
-                          icon: Icon(Icons.menu_rounded, color: themeProvider.foregroundColor, size: 28),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () {
-                            Scaffold.of(context).openDrawer();
-                          },
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: themeProvider.secondaryColor.withValues(
+                              alpha: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: themeProvider.borderColor,
+                            ),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.menu_rounded,
+                              color: themeProvider.foregroundColor,
+                              size: 24,
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => Scaffold.of(context).openDrawer(),
+                          ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_getGreetingText(), style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 13)),
                             Text(
-                              userProvider.name.isNotEmpty ? userProvider.name : 'Khách',
-                              style: TextStyle(color: themeProvider.foregroundColor, fontSize: 20, fontWeight: FontWeight.bold),
+                              _getGreetingText(),
+                              style: TextStyle(
+                                color: themeProvider.foregroundColor.withValues(
+                                  alpha: 0.6,
+                                ),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                            const SizedBox(height: 2),
                             Text(
-                              _getFormattedDateTime(),
-                              style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.4), fontSize: 11),
+                              userProvider.name.isNotEmpty
+                                  ? userProvider.name
+                                  : 'Khách',
+                              style: TextStyle(
+                                color: themeProvider.foregroundColor,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFEC5B13,
+                                ).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                _getFormattedDateTime(),
+                                style: const TextStyle(
+                                  color: Color(0xFFEC5B13),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -400,46 +688,57 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     Row(
                       children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.notifications_rounded, color: themeProvider.foregroundColor, size: 28),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const NotificationScreen()),
-                                );
-                              },
+                        _buildHeaderButton(
+                          icon: Icons.notifications_none_rounded,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationScreen(),
                             ),
-                            if (notificationProvider.unreadCount > 0)
-                              Positioned(
-                                right: 8,
-                                top: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(color: Color(0xFFFF6D00), shape: BoxShape.circle),
-                                  child: Text(
-                                    notificationProvider.unreadCount > 9 ? '9+' : notificationProvider.unreadCount.toString(),
-                                    style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                          ],
+                          ),
+                          badgeCount: notificationProvider.unreadCount,
+                          themeProvider: themeProvider,
                         ),
                         const SizedBox(width: 12),
                         GestureDetector(
-                          onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const UserProfileScreen()));
-                          },
-                          child: CircleAvatar(
-                            radius: 24,
-                            backgroundColor: const Color(0xFFFFD180),
-                            backgroundImage: userProvider.photoUrl.isEmpty 
-                                ? const NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Felix') as ImageProvider
-                                : (userProvider.photoUrl.startsWith('data:image/') 
-                                    ? MemoryImage(base64Decode(userProvider.photoUrl.split(',').last)) 
-                                    : NetworkImage(userProvider.photoUrl)) as ImageProvider,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const UserProfileScreen(),
+                            ),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFEC5B13),
+                                width: 2,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 22,
+                              backgroundColor: const Color(0xFFFFD180),
+                              backgroundImage: userProvider.photoUrl.isEmpty
+                                  ? const NetworkImage(
+                                          'https://api.dicebear.com/7.x/avataaars/png?seed=Felix',
+                                        )
+                                        as ImageProvider
+                                  : (userProvider.photoUrl.startsWith(
+                                              'data:image/',
+                                            )
+                                            ? MemoryImage(
+                                                base64Decode(
+                                                  userProvider.photoUrl
+                                                      .split(',')
+                                                      .last,
+                                                ),
+                                              )
+                                            : NetworkImage(
+                                                userProvider.photoUrl,
+                                              ))
+                                        as ImageProvider,
+                            ),
                           ),
                         ),
                       ],
@@ -448,83 +747,178 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
               const SizedBox(height: 25),
-              // Wallet Card
+              // Wallet Card Premium
               FadeInUp(
-                duration: const Duration(milliseconds: 600),
+                duration: const Duration(milliseconds: 700),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
-                        themeProvider.secondaryColor,
-                        themeProvider.secondaryColor.withValues(alpha: 0.8),
+                        Color(0xFF1E293B), // Navy 800
+                        Color(0xFF0F172A), // Navy 900
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: themeProvider.borderColor),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: themeProvider.isDarkMode 
-                          ? Colors.black.withValues(alpha: 0.3) 
-                          : const Color(0xFF0F172A).withValues(alpha: 0.08), 
-                        blurRadius: 20, 
-                        offset: const Offset(0, 10)
-                      )
+                        color: Colors.black.withValues(alpha: 0.4),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
                     ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Stack(
                     children: [
-                      Row(
-                        children: [
-                          Text(languageProvider.translate('wallet'), style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 14)),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
-                            child: Icon(
-                              _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                              color: themeProvider.foregroundColor.withValues(alpha: 0.6),
-                              size: 18,
+                      // Decorative elements
+                      Positioned(
+                        right: -30,
+                        top: -30,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFFEC5B13).withValues(alpha: 0.2),
+                                Colors.transparent,
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            _isBalanceVisible ? NumberFormat('#,###').format(_totalBalance) : '*********',
-                            style: TextStyle(color: themeProvider.foregroundColor, fontSize: 36, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('đ', style: TextStyle(color: Color(0xFFFF6D00), fontSize: 24, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF6D00),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Chi tiết', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.account_balance_wallet_rounded,
+                                    color: const Color(0xFFEC5B13),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    userProvider.bankAccounts.isNotEmpty
+                                        ? userProvider.bankAccounts.first
+                                        : languageProvider.translate(
+                                            'wallet_demo',
+                                          ),
+                                    style: TextStyle(
+                                      color: themeProvider.foregroundColor
+                                          .withValues(alpha: 0.7),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => setState(
+                                      () => _isBalanceVisible =
+                                          !_isBalanceVisible,
+                                    ),
+                                    child: Icon(
+                                      _isBalanceVisible
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                      color: themeProvider.foregroundColor
+                                          .withValues(alpha: 0.5),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Icon(
+                                    Icons.more_horiz_rounded,
+                                    color: themeProvider.foregroundColor
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                _isBalanceVisible
+                                    ? NumberFormat(
+                                        '#,###',
+                                      ).format(_totalBalance)
+                                    : '*********',
+                                style: TextStyle(
+                                  color: themeProvider.foregroundColor,
+                                  fontSize: 38,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -1,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'đ',
+                                style: TextStyle(
+                                  color: Color(0xFFEC5B13),
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 30),
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const DepositScreen(),
+                                  ),
+                                ),
+                                child: _buildActionChip(
+                                  icon: Icons.add_circle_outline_rounded,
+                                  label: 'Nạp tiền',
+                                  color: const Color(0xFFEC5B13),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              _buildActionChip(
+                                icon: Icons.history_rounded,
+                                label: 'Lịch sử',
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: 30),
+              // Analysis QuickView
+              _buildAnalysisSection(themeProvider, transactions),
+              const SizedBox(height: 30),
 
               _buildSectionHeader('Giao dịch gần đây', 'Tất cả', themeProvider),
               const SizedBox(height: 16),
               if (isLoading)
-                const Center(child: CircularProgressIndicator(color: Color(0xFFEC5B13)))
+                const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFEC5B13)),
+                )
               else
                 _buildTransactionList(transactions, themeProvider),
               const SizedBox(height: 100),
@@ -535,29 +929,334 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String? actionText, ThemeProvider themeProvider) {
+  Widget _buildSectionHeader(
+    String title,
+    String? actionText,
+    ThemeProvider themeProvider,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: TextStyle(color: themeProvider.foregroundColor, fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(
+          title,
+          style: TextStyle(
+            color: themeProvider.foregroundColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         if (actionText != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(color: themeProvider.secondaryColor, borderRadius: BorderRadius.circular(8)),
-            child: Text(actionText, style: const TextStyle(color: Color(0xFFF05D15), fontSize: 12, fontWeight: FontWeight.bold)),
+          GestureDetector(
+            onTap: () {
+              if (actionText == 'Tất cả' || title == 'Giao dịch gần đây') {
+                widget.onTabChange?.call(1);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                actionText,
+                style: const TextStyle(
+                  color: Color(0xFFEC5B13),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           )
         else if (title == 'Giao dịch gần đây')
           TextButton(
-            onPressed: () {},
-            child: const Text('Tất cả', style: TextStyle(color: Color(0xFFF05D15), fontWeight: FontWeight.bold)),
+            onPressed: () => widget.onTabChange?.call(1),
+            child: const Text(
+              'Tất cả',
+              style: TextStyle(
+                color: Color(0xFFEC5B13),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
       ],
     );
   }
 
+  Widget _buildHeaderButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    int badgeCount = 0,
+    required ThemeProvider themeProvider,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          height: 48,
+          width: 48,
+          decoration: BoxDecoration(
+            color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+            shape: BoxShape.circle,
+            border: Border.all(color: themeProvider.borderColor),
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: themeProvider.foregroundColor, size: 22),
+            onPressed: onTap,
+          ),
+        ),
+        if (badgeCount > 0)
+          Positioned(
+            right: 2,
+            top: 2,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Color(0xFFEC5B13),
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                badgeCount > 9 ? '9+' : badgeCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 
+  Widget _buildActionChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget _buildTransactionList(List<TransactionModel> transactions, ThemeProvider themeProvider) {
+  Widget _buildAnalysisSection(
+    ThemeProvider themeProvider,
+    List<TransactionModel> transactions,
+  ) {
+    double income = 0;
+    double expense = 0;
+    for (var tx in transactions) {
+      if (tx.type == TransactionType.income)
+        income += tx.amount;
+      else
+        expense += tx.amount;
+    }
+    double total = income + expense;
+    double expensePercent = total > 0 ? expense / total : 0;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: themeProvider.secondaryColor.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: themeProvider.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Phân tích chi tiêu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => widget.onTabChange?.call(3),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEC5B13).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Xem báo cáo',
+                        style: TextStyle(
+                          color: Color(0xFFEC5B13),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Color(0xFFEC5B13),
+                        size: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildAnalysisItem(
+                      'Thu nhập',
+                      income,
+                      Colors.green,
+                      themeProvider,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildAnalysisItem(
+                      'Chi tiêu',
+                      expense,
+                      const Color(0xFFEC5B13),
+                      themeProvider,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                flex: 2,
+                child: SizedBox(
+                  height: 100,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      PieChart(
+                        PieChartData(
+                          sectionsSpace: 0,
+                          centerSpaceRadius: 35,
+                          sections: [
+                            PieChartSectionData(
+                              color: const Color(0xFFEC5B13),
+                              value: expensePercent * 100,
+                              radius: 12,
+                              showTitle: false,
+                            ),
+                            PieChartSectionData(
+                              color: Colors.green.withValues(alpha: 0.2),
+                              value: (1 - expensePercent) * 100,
+                              radius: 8,
+                              showTitle: false,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${(expensePercent * 100).toStringAsFixed(0)}%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            'Đã chi',
+                            style: TextStyle(
+                              color: themeProvider.foregroundColor.withValues(
+                                alpha: 0.5,
+                              ),
+                              fontSize: 8,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalysisItem(
+    String label,
+    double amount,
+    Color color,
+    ThemeProvider themeProvider,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${NumberFormat('#,###').format(amount)}đ',
+          style: TextStyle(
+            color: themeProvider.foregroundColor,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTransactionList(
+    List<TransactionModel> transactions,
+    ThemeProvider themeProvider,
+  ) {
     if (transactions.isEmpty) {
       return FadeInRight(
         duration: const Duration(milliseconds: 600),
@@ -566,16 +1265,23 @@ class _HomeTabState extends State<HomeTab> {
           padding: const EdgeInsets.symmetric(vertical: 40),
           decoration: BoxDecoration(
             color: themeProvider.secondaryColor.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: themeProvider.borderColor),
           ),
           child: Column(
             children: [
-              Icon(Icons.inbox_rounded, size: 48, color: themeProvider.foregroundColor.withValues(alpha: 0.2)),
+              Icon(
+                Icons.inbox_rounded,
+                size: 48,
+                color: themeProvider.foregroundColor.withValues(alpha: 0.2),
+              ),
               const SizedBox(height: 16),
               Text(
                 'Không có dữ liệu',
-                style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 14),
+                style: TextStyle(
+                  color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
@@ -583,53 +1289,101 @@ class _HomeTabState extends State<HomeTab> {
       );
     }
 
-    return Column(
-      children: transactions.take(5).map((tx) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: transactions.take(5).length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final tx = transactions[index];
+        final isIncome = tx.type == TransactionType.income;
+
+        return FadeInRight(
+          delay: Duration(milliseconds: 100 * index),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: themeProvider.secondaryColor.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: themeProvider.borderColor),
+              color: themeProvider.secondaryColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: themeProvider.borderColor.withValues(alpha: 0.5),
+              ),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: (tx.type == TransactionType.income ? Colors.green : const Color(0xFFEC5B13)).withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+                    color: (isIncome ? Colors.green : const Color(0xFFEC5B13))
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
-                    tx.type == TransactionType.income ? Icons.trending_up : Icons.trending_down,
-                    color: tx.type == TransactionType.income ? Colors.green : const Color(0xFFEC5B13),
+                    isIncome
+                        ? Icons.keyboard_double_arrow_down_rounded
+                        : Icons.keyboard_double_arrow_up_rounded,
+                    color: isIncome ? Colors.green : const Color(0xFFEC5B13),
                     size: 20,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(tx.title, style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold)),
-                      Text(DateFormat('dd/MM/yyyy HH:mm').format(tx.date), style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12)),
+                      Text(
+                        tx.title,
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        DateFormat('dd MMM, HH:mm', 'vi').format(tx.date),
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor.withValues(
+                            alpha: 0.4,
+                          ),
+                          fontSize: 10,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Text(
-                  '${tx.type == TransactionType.income ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ',
-                  style: TextStyle(
-                    color: tx.type == TransactionType.income ? Colors.greenAccent : Colors.redAccent,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${isIncome ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ',
+                      style: TextStyle(
+                        color: isIncome
+                            ? Colors.greenAccent
+                            : themeProvider.foregroundColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (tx.category.isNotEmpty)
+                      Text(
+                        tx.category,
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor.withValues(
+                            alpha: 0.3,
+                          ),
+                          fontSize: 9,
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
           ),
         );
-      }).toList(),
+      },
     );
   }
 }
@@ -664,7 +1418,7 @@ class _TransactionTabState extends State<TransactionTab> {
   Future<void> _exportDatabase(BuildContext context) async {
     try {
       final transactionService = TransactionService();
-      
+
       String format = 'db';
       if (kIsWeb) {
         if (!context.mounted) return;
@@ -674,21 +1428,54 @@ class _TransactionTabState extends State<TransactionTab> {
             final theme = dialogCtx.read<ThemeProvider>();
             return AlertDialog(
               backgroundColor: theme.secondaryColor,
-              title: Text('Chọn định dạng xuất', style: TextStyle(color: theme.foregroundColor)),
+              title: Text(
+                'Chọn định dạng xuất',
+                style: TextStyle(color: theme.foregroundColor),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
-                    leading: Icon(Icons.data_object_rounded, color: const Color(0xFFEC5B13)),
-                    title: Text('JSON', style: TextStyle(color: theme.foregroundColor, fontWeight: FontWeight.bold)),
-                    subtitle: Text('Dùng cho dữ liệu khối', style: TextStyle(color: theme.foregroundColor.withValues(alpha: 0.5), fontSize: 12)),
+                    leading: Icon(
+                      Icons.data_object_rounded,
+                      color: const Color(0xFFEC5B13),
+                    ),
+                    title: Text(
+                      'JSON',
+                      style: TextStyle(
+                        color: theme.foregroundColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Dùng cho dữ liệu khối',
+                      style: TextStyle(
+                        color: theme.foregroundColor.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
                     onTap: () => Navigator.pop(dialogCtx, 'json'),
                   ),
                   const Divider(),
                   ListTile(
-                    leading: Icon(Icons.table_chart_rounded, color: Colors.green),
-                    title: Text('CSV', style: TextStyle(color: theme.foregroundColor, fontWeight: FontWeight.bold)),
-                    subtitle: Text('Dễ dàng mở bằng Excel', style: TextStyle(color: theme.foregroundColor.withValues(alpha: 0.5), fontSize: 12)),
+                    leading: Icon(
+                      Icons.table_chart_rounded,
+                      color: Colors.green,
+                    ),
+                    title: Text(
+                      'CSV',
+                      style: TextStyle(
+                        color: theme.foregroundColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Dễ dàng mở bằng Excel',
+                      style: TextStyle(
+                        color: theme.foregroundColor.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
                     onTap: () => Navigator.pop(dialogCtx, 'csv'),
                   ),
                 ],
@@ -702,21 +1489,28 @@ class _TransactionTabState extends State<TransactionTab> {
 
       final fileExt = kIsWeb ? format : 'db';
       final fileTypeLabel = kIsWeb ? format.toUpperCase() : 'SQLite';
-      
+
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Đang chuẩn bị dữ liệu $fileTypeLabel...')),
       );
 
-      final bytes = await transactionService.exportAllToSqliteBytes(webFormat: format);
-      final fileName = 'chitieu_plus_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.$fileExt';
-      
+      final bytes = await transactionService.exportAllToSqliteBytes(
+        webFormat: format,
+      );
+      final fileName =
+          'chitieu_plus_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.$fileExt';
+
       await DownloadHelper.instance.downloadFile(bytes, fileName);
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(kIsWeb ? 'Đang tải xuống: $fileName' : 'Đã xuất database thành công: $fileName'),
+          content: Text(
+            kIsWeb
+                ? 'Đang tải xuống: $fileName'
+                : 'Đã xuất database thành công: $fileName',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -724,7 +1518,9 @@ class _TransactionTabState extends State<TransactionTab> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi khi xuất dữ liệu: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(
+            'Lỗi khi xuất dữ liệu: ${e.toString().replaceAll('Exception: ', '')}',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -746,9 +1542,16 @@ class _TransactionTabState extends State<TransactionTab> {
             _buildHeader(themeProvider),
             _buildSearchAndFilters(themeProvider),
             Expanded(
-              child: isLoading 
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFFEC5B13)))
-                : _buildGroupedTransactionList(allTransactions, themeProvider),
+              child: isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFEC5B13),
+                      ),
+                    )
+                  : _buildGroupedTransactionList(
+                      allTransactions,
+                      themeProvider,
+                    ),
             ),
           ],
         ),
@@ -763,7 +1566,10 @@ class _TransactionTabState extends State<TransactionTab> {
         child: Row(
           children: [
             IconButton(
-              icon: Icon(Icons.close_rounded, color: themeProvider.foregroundColor),
+              icon: Icon(
+                Icons.close_rounded,
+                color: themeProvider.foregroundColor,
+              ),
               onPressed: () => setState(() {
                 _isSelectionMode = false;
                 _selectedIds.clear();
@@ -772,11 +1578,18 @@ class _TransactionTabState extends State<TransactionTab> {
             const SizedBox(width: 12),
             Text(
               'Đã chọn ${_selectedIds.length}',
-              style: TextStyle(color: themeProvider.foregroundColor, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: themeProvider.foregroundColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Spacer(),
             IconButton(
-              icon: const Icon(Icons.delete_sweep_rounded, color: Colors.redAccent),
+              icon: const Icon(
+                Icons.delete_sweep_rounded,
+                color: Colors.redAccent,
+              ),
               onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
             ),
           ],
@@ -812,18 +1625,28 @@ class _TransactionTabState extends State<TransactionTab> {
                 color: themeProvider.secondaryColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.calendar_today_rounded, color: Colors.white70, size: 20),
+              child: const Icon(
+                Icons.calendar_today_rounded,
+                color: Colors.white70,
+                size: 20,
+              ),
             ),
           ),
           Text(
             'Giao dịch',
-            style: TextStyle(color: themeProvider.foregroundColor, fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: themeProvider.foregroundColor,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const AddTransactionScreen(),
+                ),
               );
             },
             child: Container(
@@ -836,10 +1659,14 @@ class _TransactionTabState extends State<TransactionTab> {
                     color: const Color(0xFFEC5B13).withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ],
               ),
-              child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+              child: const Icon(
+                Icons.add_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
             ),
           ),
         ],
@@ -851,17 +1678,28 @@ class _TransactionTabState extends State<TransactionTab> {
     final ids = _selectedIds.toList();
     final count = ids.length;
     final themeProvider = context.read<ThemeProvider>();
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: themeProvider.secondaryColor,
-        title: Text('Xác nhận xóa', style: TextStyle(color: themeProvider.foregroundColor)),
-        content: Text('Bạn có chắc chắn muốn xóa $count giao dịch đã chọn?', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7))),
+        title: Text(
+          'Xác nhận xóa',
+          style: TextStyle(color: themeProvider.foregroundColor),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn xóa $count giao dịch đã chọn?',
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
           TextButton(
-            onPressed: () => Navigator.pop(context, true), 
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Xóa', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
@@ -875,9 +1713,9 @@ class _TransactionTabState extends State<TransactionTab> {
           _isSelectionMode = false;
           _selectedIds.clear();
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã xóa $count giao dịch')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Đã xóa $count giao dịch')));
       }
     }
   }
@@ -897,8 +1735,13 @@ class _TransactionTabState extends State<TransactionTab> {
               style: TextStyle(color: themeProvider.foregroundColor),
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm giao dịch...',
-                hintStyle: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.4)),
-                prefixIcon: Icon(Icons.search_rounded, color: themeProvider.foregroundColor.withValues(alpha: 0.3)),
+                hintStyle: TextStyle(
+                  color: themeProvider.foregroundColor.withValues(alpha: 0.4),
+                ),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: themeProvider.foregroundColor.withValues(alpha: 0.3),
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 15),
               ),
@@ -914,18 +1757,37 @@ class _TransactionTabState extends State<TransactionTab> {
             child: GestureDetector(
               onTap: () => _exportDatabase(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: themeProvider.secondaryColor,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: themeProvider.borderColor.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: themeProvider.borderColor.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.output_rounded, color: themeProvider.foregroundColor.withValues(alpha: 0.7), size: 14),
+                    Icon(
+                      Icons.output_rounded,
+                      color: themeProvider.foregroundColor.withValues(
+                        alpha: 0.7,
+                      ),
+                      size: 14,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Xuất file', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7), fontSize: 12)),
+                    Text(
+                      'Xuất file',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withValues(
+                          alpha: 0.7,
+                        ),
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -959,13 +1821,17 @@ class _TransactionTabState extends State<TransactionTab> {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEC5B13) : themeProvider.secondaryColor,
+          color: isSelected
+              ? const Color(0xFFEC5B13)
+              : themeProvider.secondaryColor,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : themeProvider.foregroundColor.withValues(alpha: 0.5),
+            color: isSelected
+                ? Colors.white
+                : themeProvider.foregroundColor.withValues(alpha: 0.5),
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),
@@ -974,7 +1840,10 @@ class _TransactionTabState extends State<TransactionTab> {
     );
   }
 
-  Widget _buildGroupedTransactionList(List<TransactionModel> transactions, ThemeProvider themeProvider) {
+  Widget _buildGroupedTransactionList(
+    List<TransactionModel> transactions,
+    ThemeProvider themeProvider,
+  ) {
     // Basic search filtering
     final query = _searchController.text.toLowerCase();
     final now = DateTime.now();
@@ -983,22 +1852,45 @@ class _TransactionTabState extends State<TransactionTab> {
     final monthStart = DateTime(now.year, now.month, 1);
 
     final filtered = transactions.where((tx) {
-      final matchesQuery = tx.title.toLowerCase().contains(query) || tx.category.toLowerCase().contains(query);
-      
+      final matchesQuery =
+          tx.title.toLowerCase().contains(query) ||
+          tx.category.toLowerCase().contains(query);
+
       bool matchesDate = true;
       if (_activeFilter == 'Hôm nay') {
-        matchesDate = tx.date.year == today.year && tx.date.month == today.month && tx.date.day == today.day;
+        matchesDate =
+            tx.date.year == today.year &&
+            tx.date.month == today.month &&
+            tx.date.day == today.day;
       } else if (_activeFilter == 'Tuần này') {
-        matchesDate = tx.date.isAfter(weekStart.subtract(const Duration(seconds: 1)));
+        matchesDate = tx.date.isAfter(
+          weekStart.subtract(const Duration(seconds: 1)),
+        );
       } else if (_activeFilter == 'Tháng này') {
-        matchesDate = tx.date.year == monthStart.year && tx.date.month == monthStart.month;
-      } else if (_activeFilter == 'Tùy chỉnh' && _customStartDate != null && _customEndDate != null) {
-        final start = DateTime(_customStartDate!.year, _customStartDate!.month, _customStartDate!.day);
-        final end = DateTime(_customEndDate!.year, _customEndDate!.month, _customEndDate!.day, 23, 59, 59);
-        matchesDate = tx.date.isAfter(start.subtract(const Duration(seconds: 1))) && 
-                      tx.date.isBefore(end.add(const Duration(seconds: 1)));
+        matchesDate =
+            tx.date.year == monthStart.year &&
+            tx.date.month == monthStart.month;
+      } else if (_activeFilter == 'Tùy chỉnh' &&
+          _customStartDate != null &&
+          _customEndDate != null) {
+        final start = DateTime(
+          _customStartDate!.year,
+          _customStartDate!.month,
+          _customStartDate!.day,
+        );
+        final end = DateTime(
+          _customEndDate!.year,
+          _customEndDate!.month,
+          _customEndDate!.day,
+          23,
+          59,
+          59,
+        );
+        matchesDate =
+            tx.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
+            tx.date.isBefore(end.add(const Duration(seconds: 1)));
       }
-      
+
       return matchesQuery && matchesDate;
     }).toList();
 
@@ -1007,9 +1899,18 @@ class _TransactionTabState extends State<TransactionTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox_rounded, size: 64, color: themeProvider.foregroundColor.withValues(alpha: 0.1)),
+            Icon(
+              Icons.inbox_rounded,
+              size: 64,
+              color: themeProvider.foregroundColor.withValues(alpha: 0.1),
+            ),
             const SizedBox(height: 16),
-            Text('Không có dữ liệu', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.3))),
+            Text(
+              'Không có dữ liệu',
+              style: TextStyle(
+                color: themeProvider.foregroundColor.withValues(alpha: 0.3),
+              ),
+            ),
           ],
         ),
       );
@@ -1033,7 +1934,7 @@ class _TransactionTabState extends State<TransactionTab> {
         final dateKey = sortedKeys[index];
         final dayTxs = grouped[dateKey]!;
         final date = DateTime.parse(dateKey);
-        
+
         double dayTotal = 0;
         for (var tx in dayTxs) {
           if (tx.type == TransactionType.expense) {
@@ -1053,12 +1954,22 @@ class _TransactionTabState extends State<TransactionTab> {
                 children: [
                   Text(
                     _getFriendlyDate(date),
-                    style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 13, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor.withValues(
+                        alpha: 0.6,
+                      ),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '${dayTotal >= 0 ? '+' : ''}${NumberFormat('#,###').format(dayTotal)}đ',
                     style: TextStyle(
-                      color: dayTotal >= 0 ? Colors.green.withValues(alpha: 0.8) : themeProvider.foregroundColor.withValues(alpha: 0.5),
+                      color: dayTotal >= 0
+                          ? Colors.green.withValues(alpha: 0.8)
+                          : themeProvider.foregroundColor.withValues(
+                              alpha: 0.5,
+                            ),
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1089,8 +2000,12 @@ class _TransactionTabState extends State<TransactionTab> {
     return '$prefix${DateFormat('d THÁNG M').format(date).toUpperCase()}';
   }
 
-  Widget _buildTransactionCard(TransactionModel tx, ThemeProvider themeProvider) {
+  Widget _buildTransactionCard(
+    TransactionModel tx,
+    ThemeProvider themeProvider,
+  ) {
     final isSelected = _selectedIds.contains(tx.id);
+    final isIncome = tx.type == TransactionType.income;
 
     return GestureDetector(
       onLongPress: () {
@@ -1113,16 +2028,16 @@ class _TransactionTabState extends State<TransactionTab> {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? const Color(0xFFEC5B13).withValues(alpha: 0.1)
-              : themeProvider.secondaryColor.withValues(alpha: 0.5),
+              : themeProvider.secondaryColor.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? const Color(0xFFEC5B13).withValues(alpha: 0.5)
-                : themeProvider.borderColor,
+                : themeProvider.borderColor.withValues(alpha: 0.5),
           ),
         ),
         child: Row(
@@ -1131,15 +2046,19 @@ class _TransactionTabState extends State<TransactionTab> {
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Icon(
-                  isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                  color: isSelected ? const Color(0xFFEC5B13) : themeProvider.foregroundColor.withValues(alpha: 0.2),
+                  isSelected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: isSelected
+                      ? const Color(0xFFEC5B13)
+                      : themeProvider.foregroundColor.withValues(alpha: 0.2),
                 ),
               ),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _getCategoryColor(tx.category).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
+                color: _getCategoryColor(tx.category).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Stack(
                 clipBehavior: Clip.none,
@@ -1153,24 +2072,39 @@ class _TransactionTabState extends State<TransactionTab> {
                     Positioned(
                       top: -8,
                       right: -8,
-                      child: Icon(Icons.push_pin_rounded, color: Colors.yellowAccent, size: 12),
+                      child: const Icon(
+                        Icons.push_pin_rounded,
+                        color: Colors.yellowAccent,
+                        size: 12,
+                      ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     tx.title,
-                    style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     '${DateFormat('HH:mm').format(tx.date)} • ${tx.category}',
-                    style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.4), fontSize: 12),
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor.withValues(
+                        alpha: 0.4,
+                      ),
+                      fontSize: 10,
+                    ),
                   ),
                 ],
               ),
@@ -1178,67 +2112,126 @@ class _TransactionTabState extends State<TransactionTab> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  '${tx.type == TransactionType.income ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ',
-                  style: TextStyle(
-                    color: tx.type == TransactionType.income ? const Color(0xFF4ADE80) : themeProvider.foregroundColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                if (!_isSelectionMode)
-                  PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert_rounded, color: themeProvider.foregroundColor.withValues(alpha: 0.3), size: 20),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 120),
-                    color: themeProvider.secondaryColor,
-                    onSelected: (value) async {
-                      if (value == 'pin') {
-                        await context.read<TransactionProvider>().togglePin(tx.id, tx.isPinned);
-                      } else if (value == 'delete') {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            backgroundColor: themeProvider.secondaryColor,
-                            title: Text('Xác nhận xóa', style: TextStyle(color: themeProvider.foregroundColor)),
-                            content: Text('Giao dịch này sẽ bị xóa vĩnh viễn.', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7))),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true), 
-                                child: const Text('Xóa', style: TextStyle(color: Colors.redAccent)),
-                              ),
-                            ],
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${isIncome ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ',
+                      style: TextStyle(
+                        color: isIncome
+                            ? const Color(0xFF4ADE80)
+                            : themeProvider.foregroundColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (!_isSelectionMode)
+                      PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert_rounded,
+                          color: themeProvider.foregroundColor.withValues(
+                            alpha: 0.3,
                           ),
-                        );
-                        if (confirm == true && mounted) {
-                          await context.read<TransactionProvider>().deleteTransaction(tx.id);
-                        }
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'pin',
-                        child: Row(
-                          children: [
-                            Icon(tx.isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined, color: Colors.white70, size: 18),
-                            const SizedBox(width: 10),
-                            Text(tx.isPinned ? 'Bỏ ghim' : 'Ghim', style: const TextStyle(color: Colors.white70, fontSize: 14)),
-                          ],
+                          size: 18,
                         ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 120),
+                        color: themeProvider.secondaryColor,
+                        onSelected: (value) async {
+                          if (value == 'pin') {
+                            await context.read<TransactionProvider>().togglePin(
+                              tx.id,
+                              tx.isPinned,
+                            );
+                          } else if (value == 'delete') {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                backgroundColor: themeProvider.secondaryColor,
+                                title: Text(
+                                  'Xác nhận xóa',
+                                  style: TextStyle(
+                                    color: themeProvider.foregroundColor,
+                                  ),
+                                ),
+                                content: Text(
+                                  'Giao dịch này sẽ bị xóa vĩnh viễn.',
+                                  style: TextStyle(
+                                    color: themeProvider.foregroundColor
+                                        .withValues(alpha: 0.7),
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text('Hủy'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text(
+                                      'Xóa',
+                                      style: TextStyle(color: Colors.redAccent),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true && mounted) {
+                              await context
+                                  .read<TransactionProvider>()
+                                  .deleteTransaction(tx.id);
+                            }
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'pin',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  tx.isPinned
+                                      ? Icons.push_pin_rounded
+                                      : Icons.push_pin_outlined,
+                                  color: Colors.white70,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  tx.isPinned ? 'Bỏ ghim' : 'Ghim',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: Colors.redAccent,
+                                  size: 18,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Xóa',
+                                  style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
-                            SizedBox(width: 10),
-                            Text('Xóa', style: TextStyle(color: Colors.redAccent, fontSize: 14)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
+                ),
               ],
             ),
           ],
@@ -1249,21 +2242,31 @@ class _TransactionTabState extends State<TransactionTab> {
 
   IconData _getCategoryIcon(String category) {
     switch (category) {
-      case 'Ăn uống': return Icons.restaurant_rounded;
-      case 'Mua sắm': return Icons.shopping_bag_rounded;
-      case 'Di chuyển': return Icons.directions_car_rounded;
-      case 'Lương': return Icons.account_balance_wallet_rounded;
-      default: return Icons.category_rounded;
+      case 'Ăn uống':
+        return Icons.restaurant_rounded;
+      case 'Mua sắm':
+        return Icons.shopping_bag_rounded;
+      case 'Di chuyển':
+        return Icons.directions_car_rounded;
+      case 'Lương':
+        return Icons.account_balance_wallet_rounded;
+      default:
+        return Icons.category_rounded;
     }
   }
 
   Color _getCategoryColor(String category) {
     switch (category) {
-      case 'Ăn uống': return const Color(0xFFF97316);
-      case 'Mua sắm': return const Color(0xFF3B82F6);
-      case 'Di chuyển': return const Color(0xFFA855F7);
-      case 'Lương': return const Color(0xFF22C55E);
-      default: return Colors.blueGrey;
+      case 'Ăn uống':
+        return const Color(0xFFF97316);
+      case 'Mua sắm':
+        return const Color(0xFF3B82F6);
+      case 'Di chuyển':
+        return const Color(0xFFA855F7);
+      case 'Lương':
+        return const Color(0xFF22C55E);
+      default:
+        return Colors.blueGrey;
     }
   }
 }
@@ -1277,24 +2280,30 @@ class BudgetTab extends StatefulWidget {
 }
 
 class _BudgetTabState extends State<BudgetTab> {
-  double _budgetLimit = 5000000;
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final userProvider = context.watch<UserProvider>();
+    final budgetLimit = userProvider.totalBudget;
     final transactionProvider = context.watch<TransactionProvider>();
     final allTxs = transactionProvider.transactions;
-    
+
     // Calculate current month's expense
     final now = DateTime.now();
     double currentMonthExpense = 0;
-    
+
     final Map<String, double> catSpent = {
-      'Ăn uống': 0, 'Mua sắm': 0, 'Di chuyển': 0, 'Hóa đơn': 0, 'Khác': 0
+      'Ăn uống': 0,
+      'Mua sắm': 0,
+      'Di chuyển': 0,
+      'Hóa đơn': 0,
+      'Khác': 0,
     };
 
     for (var tx in allTxs) {
-      if (tx.type == TransactionType.expense && tx.date.year == now.year && tx.date.month == now.month) {
+      if (tx.type == TransactionType.expense &&
+          tx.date.year == now.year &&
+          tx.date.month == now.month) {
         currentMonthExpense += tx.amount;
         if (catSpent.containsKey(tx.category)) {
           catSpent[tx.category] = catSpent[tx.category]! + tx.amount;
@@ -1304,9 +2313,13 @@ class _BudgetTabState extends State<BudgetTab> {
       }
     }
 
-    final double overBudget = currentMonthExpense > _budgetLimit ? currentMonthExpense - _budgetLimit : 0;
+    final double overBudget = currentMonthExpense > budgetLimit
+        ? currentMonthExpense - budgetLimit
+        : 0;
     final bool isOver = overBudget > 0;
-    final double percent = _budgetLimit > 0 ? (currentMonthExpense / _budgetLimit).clamp(0.0, 1.0) : 0.0;
+    final double percent = budgetLimit > 0
+        ? (currentMonthExpense / budgetLimit).clamp(0.0, 1.0)
+        : 0.0;
 
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
@@ -1318,26 +2331,39 @@ class _BudgetTabState extends State<BudgetTab> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Ngân sách chi tiêu', style: TextStyle(color: themeProvider.foregroundColor, fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Ngân sách chi tiêu',
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   GestureDetector(
                     onTap: () async {
-                      final newLimit = await Navigator.push(
+                      await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const BudgetSettingsScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const BudgetSettingsScreen(),
+                        ),
                       );
-                      if (newLimit != null && newLimit is double && mounted) {
-                        setState(() {
-                          _budgetLimit = newLimit;
-                        });
-                      }
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: themeProvider.secondaryColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text('Điều chỉnh', style: TextStyle(color: Color(0xFFF05D15), fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Điều chỉnh',
+                        style: TextStyle(
+                          color: Color(0xFFF05D15),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -1353,7 +2379,9 @@ class _BudgetTabState extends State<BudgetTab> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+                        color: themeProvider.secondaryColor.withValues(
+                          alpha: 0.5,
+                        ),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: themeProvider.borderColor),
                       ),
@@ -1363,12 +2391,34 @@ class _BudgetTabState extends State<BudgetTab> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Đã tiêu', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 14)),
+                              Text(
+                                'Đã tiêu',
+                                style: TextStyle(
+                                  color: themeProvider.foregroundColor
+                                      .withValues(alpha: 0.6),
+                                  fontSize: 14,
+                                ),
+                              ),
                               if (isOver)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(color: Colors.redAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                                  child: const Text('Vượt ngân sách', style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Text(
+                                    'Vượt ngân sách',
+                                    style: TextStyle(
+                                      color: Colors.redAccent,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),
@@ -1376,7 +2426,9 @@ class _BudgetTabState extends State<BudgetTab> {
                           Text(
                             'đ ${NumberFormat('#,###').format(currentMonthExpense)}',
                             style: TextStyle(
-                              color: isOver ? Colors.redAccent : themeProvider.foregroundColor,
+                              color: isOver
+                                  ? Colors.redAccent
+                                  : themeProvider.foregroundColor,
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1387,8 +2439,13 @@ class _BudgetTabState extends State<BudgetTab> {
                             borderRadius: BorderRadius.circular(6),
                             child: LinearProgressIndicator(
                               value: percent,
-                              backgroundColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
-                              valueColor: AlwaysStoppedAnimation<Color>(isOver ? Colors.redAccent : const Color(0xFFF05D15)),
+                              backgroundColor: themeProvider.foregroundColor
+                                  .withValues(alpha: 0.1),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isOver
+                                    ? Colors.redAccent
+                                    : const Color(0xFFF05D15),
+                              ),
                               minHeight: 12,
                             ),
                           ),
@@ -1396,52 +2453,111 @@ class _BudgetTabState extends State<BudgetTab> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Ngân sách: đ ${NumberFormat('#,###').format(_budgetLimit)}', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 12)),
-                              Text(isOver ? 'Vượt quá đ ${NumberFormat('#,###').format(overBudget)}' : 'Còn lại đ ${NumberFormat('#,###').format(_budgetLimit - currentMonthExpense)}', 
-                                style: TextStyle(color: isOver ? Colors.redAccent : const Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text(
+                                'Ngân sách: đ ${NumberFormat('#,###').format(budgetLimit)}',
+                                style: TextStyle(
+                                  color: themeProvider.foregroundColor
+                                      .withValues(alpha: 0.5),
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                isOver
+                                    ? 'Vượt quá đ ${NumberFormat('#,###').format(overBudget)}'
+                                    : 'Còn lại đ ${NumberFormat('#,###').format(budgetLimit - currentMonthExpense)}',
+                                style: TextStyle(
+                                  color: isOver
+                                      ? Colors.redAccent
+                                      : const Color(0xFF10B981),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 30),
-                    Text('CHI TIẾT HẠNG MỤC', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    Text(
+                      'CHI TIẾT HẠNG MỤC',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withValues(
+                          alpha: 0.6,
+                        ),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     ...catSpent.keys.map((cat) {
-                       if (catSpent[cat]! == 0) return const SizedBox.shrink();
-                       return Padding(
-                         padding: const EdgeInsets.only(bottom: 16),
-                         child: Row(
-                           children: [
-                             Container(
-                               width: 40, height: 40,
-                               decoration: BoxDecoration(color: themeProvider.foregroundColor.withValues(alpha: 0.05), shape: BoxShape.circle),
-                               child: Icon(Icons.category, color: themeProvider.foregroundColor.withValues(alpha: 0.5), size: 20),
-                             ),
-                             const SizedBox(width: 16),
-                             Expanded(
-                               child: Column(
-                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                 children: [
-                                   Text(cat, style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold)),
-                                   const SizedBox(height: 4),
-                                   ClipRRect(
-                                     borderRadius: BorderRadius.circular(2),
-                                     child: LinearProgressIndicator(
-                                       value: _budgetLimit > 0 ? (catSpent[cat]! / _budgetLimit).clamp(0.0, 1.0) : 0,
-                                       backgroundColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
-                                       valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-                                       minHeight: 4,
-                                     ),
-                                   ),
-                                 ],
-                               ),
-                             ),
-                             const SizedBox(width: 16),
-                             Text('đ ${NumberFormat('#,###').format(catSpent[cat])}', style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold)),
-                           ],
-                         ),
-                       );
+                      if (catSpent[cat]! == 0) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: themeProvider.foregroundColor.withValues(
+                                  alpha: 0.05,
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.category,
+                                color: themeProvider.foregroundColor.withValues(
+                                  alpha: 0.5,
+                                ),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    cat,
+                                    style: TextStyle(
+                                      color: themeProvider.foregroundColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(2),
+                                    child: LinearProgressIndicator(
+                                      value: budgetLimit > 0
+                                          ? (catSpent[cat]! / budgetLimit)
+                                                .clamp(0.0, 1.0)
+                                          : 0,
+                                      backgroundColor: themeProvider
+                                          .foregroundColor
+                                          .withValues(alpha: 0.1),
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                            Colors.blue,
+                                          ),
+                                      minHeight: 4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              'đ ${NumberFormat('#,###').format(catSpent[cat])}',
+                              style: TextStyle(
+                                color: themeProvider.foregroundColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
                     }),
                     const SizedBox(height: 100),
                   ],
@@ -1469,13 +2585,18 @@ class _ReportTabState extends State<ReportTab> {
     final themeProvider = context.watch<ThemeProvider>();
     final transactionProvider = context.watch<TransactionProvider>();
     final transactions = transactionProvider.transactions;
-    
+
     // Calculate Chart Data
-    Map<String, double> catTotals = {'Ăn uống': 0, 'Mua sắm': 0, 'Di chuyển': 0, 'Khác': 0};
+    Map<String, double> catTotals = {
+      'Ăn uống': 0,
+      'Mua sắm': 0,
+      'Di chuyển': 0,
+      'Khác': 0,
+    };
     List<double> last7Days = List.filled(7, 0.0);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     for (var tx in transactions) {
       if (tx.type == TransactionType.expense) {
         if (catTotals.containsKey(tx.category)) {
@@ -1492,14 +2613,18 @@ class _ReportTabState extends State<ReportTab> {
     }
 
     double maxVal = last7Days.reduce((a, b) => a > b ? a : b);
-    List<double> barValues = maxVal > 0 ? last7Days.map((v) => (v / maxVal) * 20).toList() : List.filled(7, 0.0);
+    List<double> barValues = maxVal > 0
+        ? last7Days.map((v) => (v / maxVal) * 20).toList()
+        : List.filled(7, 0.0);
     double totalExpense = catTotals.values.reduce((a, b) => a + b);
-    List<double> pieValues = totalExpense > 0 ? [
-      (catTotals['Ăn uống']! / totalExpense) * 100,
-      (catTotals['Mua sắm']! / totalExpense) * 100,
-      (catTotals['Di chuyển']! / totalExpense) * 100,
-      (catTotals['Khác']! / totalExpense) * 100,
-    ] : List.filled(4, 0.0);
+    List<double> pieValues = totalExpense > 0
+        ? [
+            (catTotals['Ăn uống']! / totalExpense) * 100,
+            (catTotals['Mua sắm']! / totalExpense) * 100,
+            (catTotals['Di chuyển']! / totalExpense) * 100,
+            (catTotals['Khác']! / totalExpense) * 100,
+          ]
+        : List.filled(4, 0.0);
 
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
@@ -1511,11 +2636,25 @@ class _ReportTabState extends State<ReportTab> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Báo cáo tài chính', style: TextStyle(color: themeProvider.foregroundColor, fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Báo cáo tài chính',
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: themeProvider.secondaryColor, borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.share_rounded, color: Colors.white, size: 20),
+                    decoration: BoxDecoration(
+                      color: themeProvider.secondaryColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.share_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -1528,26 +2667,50 @@ class _ReportTabState extends State<ReportTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    Text('CƠ CẤU CHI TIÊU', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    Text(
+                      'CƠ CẤU CHI TIÊU',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withValues(
+                          alpha: 0.6,
+                        ),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: themeProvider.secondaryColor.withValues(alpha: 0.4),
+                        color: themeProvider.secondaryColor.withValues(
+                          alpha: 0.4,
+                        ),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: themeProvider.borderColor),
                       ),
                       child: _buildDonutChart(themeProvider, pieValues),
                     ),
                     const SizedBox(height: 35),
-                    Text('XU HƯỚNG CI TIÊU (7 NGÀY)', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    Text(
+                      'XU HƯỚNG CHI TIÊU',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withValues(
+                          alpha: 0.6,
+                        ),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Container(
                       height: 180,
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
                       decoration: BoxDecoration(
-                        color: themeProvider.secondaryColor.withValues(alpha: 0.4),
+                        color: themeProvider.secondaryColor.withValues(
+                          alpha: 0.4,
+                        ),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: themeProvider.borderColor),
                       ),
@@ -1578,14 +2741,46 @@ class _ReportTabState extends State<ReportTab> {
                     sectionsSpace: 0,
                     centerSpaceRadius: 45,
                     sections: [
-                      ...(pieValues[0] == 0 && pieValues[1] == 0 && pieValues[2] == 0 && pieValues[3] == 0 
-                        ? [PieChartSectionData(color: themeProvider.foregroundColor.withValues(alpha: 0.1), value: 100, radius: 16, showTitle: false)]
-                        : [
-                            PieChartSectionData(color: const Color(0xFFFF6D00), value: pieValues[0], radius: 18, showTitle: false),
-                            PieChartSectionData(color: Colors.blue, value: pieValues[1], radius: 16, showTitle: false),
-                            PieChartSectionData(color: Colors.green, value: pieValues[2], radius: 14, showTitle: false),
-                            PieChartSectionData(color: Colors.yellow, value: pieValues[3], radius: 12, showTitle: false),
-                          ]),
+                      ...(pieValues[0] == 0 &&
+                              pieValues[1] == 0 &&
+                              pieValues[2] == 0 &&
+                              pieValues[3] == 0
+                          ? [
+                              PieChartSectionData(
+                                color: themeProvider.foregroundColor.withValues(
+                                  alpha: 0.1,
+                                ),
+                                value: 100,
+                                radius: 16,
+                                showTitle: false,
+                              ),
+                            ]
+                          : [
+                              PieChartSectionData(
+                                color: const Color(0xFFFF6D00),
+                                value: pieValues[0],
+                                radius: 18,
+                                showTitle: false,
+                              ),
+                              PieChartSectionData(
+                                color: Colors.blue,
+                                value: pieValues[1],
+                                radius: 16,
+                                showTitle: false,
+                              ),
+                              PieChartSectionData(
+                                color: Colors.green,
+                                value: pieValues[2],
+                                radius: 14,
+                                showTitle: false,
+                              ),
+                              PieChartSectionData(
+                                color: Colors.yellow,
+                                value: pieValues[3],
+                                radius: 12,
+                                showTitle: false,
+                              ),
+                            ]),
                     ],
                   ),
                   swapAnimationDuration: const Duration(milliseconds: 1200),
@@ -1595,8 +2790,23 @@ class _ReportTabState extends State<ReportTab> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Tổng', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12)),
-                      Text(pieValues[0] == 0 && pieValues[1] == 0 ? '0%' : '100%', style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        'Tổng',
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor.withValues(
+                            alpha: 0.6,
+                          ),
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        pieValues[0] == 0 && pieValues[1] == 0 ? '0%' : '100%',
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1609,10 +2819,38 @@ class _ReportTabState extends State<ReportTab> {
           flex: 3,
           child: Column(
             children: [
-              _buildAllocationItem('Ăn uống', pieValues[0] == 0 ? '0%' : '${pieValues[0].toStringAsFixed(0)}%', const Color(0xFFFF6D00), themeProvider),
-              _buildAllocationItem('Mua sắm', pieValues[1] == 0 ? '0%' : '${pieValues[1].toStringAsFixed(0)}%', Colors.blue, themeProvider),
-              _buildAllocationItem('Di chuyển', pieValues[2] == 0 ? '0%' : '${pieValues[2].toStringAsFixed(0)}%', Colors.green, themeProvider),
-              _buildAllocationItem('Khác', pieValues[3] == 0 ? '0%' : '${pieValues[3].toStringAsFixed(0)}%', Colors.yellow, themeProvider),
+              _buildAllocationItem(
+                'Ăn uống',
+                pieValues[0] == 0
+                    ? '0%'
+                    : '${pieValues[0].toStringAsFixed(0)}%',
+                const Color(0xFFFF6D00),
+                themeProvider,
+              ),
+              _buildAllocationItem(
+                'Mua sắm',
+                pieValues[1] == 0
+                    ? '0%'
+                    : '${pieValues[1].toStringAsFixed(0)}%',
+                Colors.blue,
+                themeProvider,
+              ),
+              _buildAllocationItem(
+                'Di chuyển',
+                pieValues[2] == 0
+                    ? '0%'
+                    : '${pieValues[2].toStringAsFixed(0)}%',
+                Colors.green,
+                themeProvider,
+              ),
+              _buildAllocationItem(
+                'Khác',
+                pieValues[3] == 0
+                    ? '0%'
+                    : '${pieValues[3].toStringAsFixed(0)}%',
+                Colors.yellow,
+                themeProvider,
+              ),
             ],
           ),
         ),
@@ -1620,7 +2858,12 @@ class _ReportTabState extends State<ReportTab> {
     );
   }
 
-  Widget _buildAllocationItem(String title, String percent, Color color, ThemeProvider themeProvider) {
+  Widget _buildAllocationItem(
+    String title,
+    String percent,
+    Color color,
+    ThemeProvider themeProvider,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -1628,12 +2871,29 @@ class _ReportTabState extends State<ReportTab> {
         children: [
           Row(
             children: [
-              Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
               const SizedBox(width: 10),
-              Text(title, style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7), fontSize: 14)),
+              Text(
+                title,
+                style: TextStyle(
+                  color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
-          Text(percent, style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold, fontSize: 14)),
+          Text(
+            percent,
+            style: TextStyle(
+              color: themeProvider.foregroundColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );
@@ -1653,14 +2913,29 @@ class _ReportTabState extends State<ReportTab> {
                 const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
                 return Padding(
                   padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(days[value.toInt() % days.length], style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    days[value.toInt() % days.length],
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor.withValues(
+                        alpha: 0.6,
+                      ),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 );
               },
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
@@ -1688,7 +2963,11 @@ class _ReportTabState extends State<ReportTab> {
           color: themeProvider.foregroundColor.withValues(alpha: 0.1),
           width: 14,
           borderRadius: BorderRadius.circular(4),
-          backDrawRodData: BackgroundBarChartRodData(show: true, toY: 20, color: themeProvider.backgroundColor.withValues(alpha: 0.3)),
+          backDrawRodData: BackgroundBarChartRodData(
+            show: true,
+            toY: 20,
+            color: themeProvider.backgroundColor.withValues(alpha: 0.3),
+          ),
         ),
       ],
     );
@@ -1704,7 +2983,6 @@ class SettingsTab extends StatefulWidget {
 }
 
 class _SettingsTabState extends State<SettingsTab> {
-
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
@@ -1722,18 +3000,25 @@ class _SettingsTabState extends State<SettingsTab> {
                   child: Text(
                     'Cài đặt',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: themeProvider.foregroundColor, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 Container(width: 40),
               ],
             ),
           ),
-          
+
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1744,7 +3029,9 @@ class _SettingsTabState extends State<SettingsTab> {
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: themeProvider.secondaryColor.withValues(alpha: 0.4),
+                        color: themeProvider.secondaryColor.withValues(
+                          alpha: 0.4,
+                        ),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: themeProvider.borderColor),
                       ),
@@ -1753,9 +3040,11 @@ class _SettingsTabState extends State<SettingsTab> {
                           CircleAvatar(
                             radius: 35,
                             backgroundColor: const Color(0xFFFFD180),
-                            backgroundImage: userProvider.photoUrl.isNotEmpty 
-                                ? NetworkImage(userProvider.photoUrl) 
-                                : const NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Felix'),
+                            backgroundImage: userProvider.photoUrl.isNotEmpty
+                                ? NetworkImage(userProvider.photoUrl)
+                                : const NetworkImage(
+                                    'https://api.dicebear.com/7.x/avataaars/png?seed=Felix',
+                                  ),
                           ),
                           const SizedBox(width: 20),
                           Expanded(
@@ -1763,13 +3052,25 @@ class _SettingsTabState extends State<SettingsTab> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  userProvider.name.isNotEmpty ? userProvider.name : 'Nguyễn Văn A',
-                                  style: TextStyle(color: themeProvider.foregroundColor, fontSize: 18, fontWeight: FontWeight.bold),
+                                  userProvider.name.isNotEmpty
+                                      ? userProvider.name
+                                      : 'Nguyễn Văn A',
+                                  style: TextStyle(
+                                    color: themeProvider.foregroundColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  userProvider.email.isNotEmpty ? userProvider.email : 'van.a@example.com',
-                                  style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 14),
+                                  userProvider.email.isNotEmpty
+                                      ? userProvider.email
+                                      : 'van.a@example.com',
+                                  style: TextStyle(
+                                    color: themeProvider.foregroundColor
+                                        .withValues(alpha: 0.6),
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1789,21 +3090,23 @@ class _SettingsTabState extends State<SettingsTab> {
                         iconColor: themeProvider.foregroundColor,
                         iconBgColor: const Color(0xFFEC5B13),
                         title: 'Thông tin tài khoản',
-                        onTap: () {
-                 
-                        },
+                        onTap: () {},
                       ),
                       _buildDivider(themeProvider),
                       _buildSettingsItem(
                         themeProvider: themeProvider,
                         icon: Icons.smart_toy_rounded,
                         iconColor: const Color(0xFFEC5B13),
-                        iconBgColor: const Color(0xFFEC5B13).withValues(alpha: 0.2),
+                        iconBgColor: const Color(
+                          0xFFEC5B13,
+                        ).withValues(alpha: 0.2),
                         title: 'Chat với trợ lý ảo',
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const AiChatScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const AiChatScreen(),
+                            ),
                           );
                         },
                       ),
@@ -1815,13 +3118,20 @@ class _SettingsTabState extends State<SettingsTab> {
                         iconBgColor: Colors.blueAccent.withValues(alpha: 0.2),
                         title: 'Mở trong trình duyệt',
                         onTap: () async {
-                          final url = Uri.parse('https://chitieuplus-app.web.app');
+                          final url = Uri.parse(
+                            'https://chitieuplus-app.web.app',
+                          );
                           if (await canLaunchUrl(url)) {
-                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                            await launchUrl(
+                              url,
+                              mode: LaunchMode.externalApplication,
+                            );
                           } else {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Không thể mở liên kết')),
+                                const SnackBar(
+                                  content: Text('Không thể mở liên kết'),
+                                ),
                               );
                             }
                           }
@@ -1838,9 +3148,19 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.language_rounded,
                         iconColor: themeProvider.foregroundColor,
-                        iconBgColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
                         title: 'Ngôn ngữ',
-                        trailing: Text('Tiếng Việt', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 14)),
+                        trailing: Text(
+                          'Tiếng Việt',
+                          style: TextStyle(
+                            color: themeProvider.foregroundColor.withValues(
+                              alpha: 0.5,
+                            ),
+                            fontSize: 14,
+                          ),
+                        ),
                         onTap: () {},
                       ),
                       _buildDivider(themeProvider),
@@ -1848,7 +3168,9 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.dark_mode_rounded,
                         iconColor: themeProvider.foregroundColor,
-                        iconBgColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
                         title: 'Chế độ sáng/tối',
                         value: themeProvider.isDarkMode,
                         onChanged: (val) => themeProvider.toggleDarkMode(val),
@@ -1858,10 +3180,13 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.visibility_rounded,
                         iconColor: themeProvider.foregroundColor,
-                        iconBgColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
                         title: 'Chế độ bảo vệ mắt',
                         value: themeProvider.isEyeProtection,
-                        onChanged: (val) => themeProvider.toggleEyeProtection(val),
+                        onChanged: (val) =>
+                            themeProvider.toggleEyeProtection(val),
                       ),
                     ],
                   ),
@@ -1874,7 +3199,9 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.notifications_rounded,
                         iconColor: themeProvider.foregroundColor,
-                        iconBgColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
                         title: 'Nhắc nhở thông báo',
                         onTap: () {},
                       ),
@@ -1889,7 +3216,9 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.mail_rounded,
                         iconColor: themeProvider.foregroundColor,
-                        iconBgColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
                         title: 'Liên hệ',
                         onTap: () {},
                       ),
@@ -1898,7 +3227,9 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.chat_bubble_rounded,
                         iconColor: themeProvider.foregroundColor,
-                        iconBgColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
                         title: 'Phản hồi',
                         onTap: () {},
                       ),
@@ -1907,13 +3238,16 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.policy_rounded,
                         iconColor: themeProvider.foregroundColor,
-                        iconBgColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
                         title: 'Chính sách & Điều khoản',
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const TermsAndPrivacyScreen(),
+                              builder: (context) =>
+                                  const TermsAndPrivacyScreen(),
                             ),
                           );
                         },
@@ -1941,10 +3275,12 @@ class _SettingsTabState extends State<SettingsTab> {
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.remove('is_bypassed_auth');
                           await prefs.remove('bypassed_email');
-                          
+
                           if (context.mounted) {
                             Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                              MaterialPageRoute(
+                                builder: (context) => const AuthWrapper(),
+                              ),
                               (route) => false,
                             );
                           }
@@ -1975,26 +3311,42 @@ class _SettingsTabState extends State<SettingsTab> {
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.red),
             const SizedBox(width: 10),
-            Text('Xóa tất cả dữ liệu?', style: TextStyle(color: themeProvider.foregroundColor)),
+            Text(
+              'Xóa tất cả dữ liệu?',
+              style: TextStyle(color: themeProvider.foregroundColor),
+            ),
           ],
         ),
         content: Text(
           'Hành động này sẽ xóa vĩnh viễn toàn bộ giao dịch của bạn trên cả Firestore và Realtime Database. Bạn chắc chắn chứ?',
-          style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7), fontSize: 16),
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+            fontSize: 16,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Hủy', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7))),
+            child: Text(
+              'Hủy',
+              style: TextStyle(
+                color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('Xóa tất cả', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Xóa tất cả',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -2003,7 +3355,7 @@ class _SettingsTabState extends State<SettingsTab> {
     if (confirm == true && mounted) {
       try {
         await provider.deleteAllTransactions();
-        
+
         if (mounted) {
           provider.refresh();
           messenger.showSnackBar(
@@ -2031,26 +3383,37 @@ class _SettingsTabState extends State<SettingsTab> {
       padding: const EdgeInsets.only(left: 8.0, bottom: 12.0),
       child: Text(
         title.toUpperCase(),
-        style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        style: TextStyle(
+          color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }
 
-  Widget _buildCard({required List<Widget> children, required ThemeProvider themeProvider}) {
+  Widget _buildCard({
+    required List<Widget> children,
+    required ThemeProvider themeProvider,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: themeProvider.secondaryColor.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: themeProvider.borderColor),
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
   Widget _buildDivider(ThemeProvider themeProvider) {
-    return Divider(height: 1, thickness: 1, color: themeProvider.borderColor, indent: 64);
+    return Divider(
+      height: 1,
+      thickness: 1,
+      color: themeProvider.borderColor,
+      indent: 64,
+    );
   }
 
   Widget _buildSettingsItem({
@@ -2073,16 +3436,31 @@ class _SettingsTabState extends State<SettingsTab> {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(title, style: TextStyle(color: themeProvider.foregroundColor, fontSize: 16, fontWeight: FontWeight.w500)),
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: themeProvider.foregroundColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
             ?trailing,
             if (trailing != null && showArrow) const SizedBox(width: 8),
-            if (showArrow) Icon(Icons.chevron_right_rounded, color: themeProvider.foregroundColor.withValues(alpha: 0.4), size: 24),
+            if (showArrow)
+              Icon(
+                Icons.chevron_right_rounded,
+                color: themeProvider.foregroundColor.withValues(alpha: 0.4),
+                size: 24,
+              ),
           ],
         ),
       ),
@@ -2105,25 +3483,37 @@ class _SettingsTabState extends State<SettingsTab> {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(title, style: TextStyle(color: themeProvider.foregroundColor, fontSize: 16, fontWeight: FontWeight.w500)),
+            child: Text(
+              title,
+              style: TextStyle(
+                color: themeProvider.foregroundColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           Switch(
             value: value,
             onChanged: onChanged,
             activeThumbColor: const Color(0xFFEC5B13),
             activeTrackColor: const Color(0xFFEC5B13).withValues(alpha: 0.5),
-            inactiveThumbColor: themeProvider.foregroundColor.withValues(alpha: 0.4),
-            inactiveTrackColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+            inactiveThumbColor: themeProvider.foregroundColor.withValues(
+              alpha: 0.4,
+            ),
+            inactiveTrackColor: themeProvider.foregroundColor.withValues(
+              alpha: 0.1,
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-

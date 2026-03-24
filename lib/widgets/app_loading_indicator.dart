@@ -13,9 +13,6 @@ class AppLoadingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LoadingAnimationWidget.threeArchedCircle(
-      color: color,
-      size: size,
-    );
+    return LoadingAnimationWidget.threeArchedCircle(color: color, size: size);
   }
 }

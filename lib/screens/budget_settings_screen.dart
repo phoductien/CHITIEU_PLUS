@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/theme_provider.dart';
+import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:intl/intl.dart';
 
 class BudgetSettingsScreen extends StatefulWidget {
@@ -11,16 +12,37 @@ class BudgetSettingsScreen extends StatefulWidget {
 }
 
 class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
-  double _totalBudget = 1000000;
-  
-  // Fake budgets for now
-  Map<String, double> _categoryBudgets = {
-    'Ăn uống': 0,
-    'Mua sắm': 0,
-    'Di chuyển': 0,
-    'Hóa đơn': 0,
-    'Khác': 0,
-  };
+  late double _totalBudget;
+  late Map<String, double> _categoryBudgets;
+  late TextEditingController _totalBudgetController;
+
+  @override
+  void initState() {
+    super.initState();
+    final userProvider = context.read<UserProvider>();
+    _totalBudget = userProvider.totalBudget;
+    _categoryBudgets = Map.from(userProvider.categoryBudgets);
+
+    // Initial default categories if empty
+    if (_categoryBudgets.isEmpty) {
+      _categoryBudgets = {
+        'Ăn uống': 0,
+        'Mua sắm': 0,
+        'Di chuyển': 0,
+        'Hóa đơn': 0,
+        'Khác': 0,
+      };
+    }
+    _totalBudgetController = TextEditingController(
+      text: NumberFormat('#,###').format(_totalBudget),
+    );
+  }
+
+  @override
+  void dispose() {
+    _totalBudgetController.dispose();
+    super.dispose();
+  }
 
   final Map<String, IconData> _catIcons = {
     'Ăn uống': Icons.restaurant,
@@ -43,7 +65,7 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
@@ -51,12 +73,20 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: themeProvider.foregroundColor, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: themeProvider.foregroundColor,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Thiết lập ngân sách',
-          style: TextStyle(color: themeProvider.foregroundColor, fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+            color: themeProvider.foregroundColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
       ),
       body: Column(
@@ -73,14 +103,18 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
                   Text(
                     'PHÂN BỔ THEO HẠNG MỤC',
                     style: TextStyle(
-                      color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+                      color: themeProvider.foregroundColor.withValues(
+                        alpha: 0.6,
+                      ),
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                       letterSpacing: 1.2,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ..._categoryBudgets.keys.map((cat) => _buildCategorySlider(cat, themeProvider)).toList(),
+                  ..._categoryBudgets.keys.map(
+                    (cat) => _buildCategorySlider(cat, themeProvider),
+                  ),
                 ],
               ),
             ),
@@ -91,15 +125,27 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context, _totalBudget);
+                onPressed: () async {
+                  final userProvider = context.read<UserProvider>();
+                  await userProvider.setTotalBudget(_totalBudget);
+                  await userProvider.setCategoryBudgets(_categoryBudgets);
+                  if (context.mounted) Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFEC5B13),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   elevation: 0,
                 ),
-                child: const Text('Lưu thiết lập', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Lưu thiết lập',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
@@ -121,29 +167,56 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
         children: [
           Text(
             'TỔNG NGÂN SÁCH DỰ KIẾN',
-            style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              const Text('đ', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text(
+                'đ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  controller: TextEditingController(text: NumberFormat('#,###').format(_totalBudget))..selection = TextSelection.collapsed(offset: NumberFormat('#,###').format(_totalBudget).length),
-                  onSubmitted: (val) {
-                    setState(() {
-                      _totalBudget = double.tryParse(val.replaceAll(',', '')) ?? _totalBudget;
-                    });
+                  controller: _totalBudgetController,
+                  onChanged: (val) {
+                    final normalized = val.replaceAll(',', '');
+                    final parsed = double.tryParse(normalized);
+                    if (parsed != null) {
+                      setState(() {
+                        _totalBudget = parsed;
+                      });
+                      // Update selection
+                      final formatted = NumberFormat('#,###').format(parsed);
+                      _totalBudgetController.value = TextEditingValue(
+                        text: formatted,
+                        selection: TextSelection.collapsed(
+                          offset: formatted.length,
+                        ),
+                      );
+                    }
                   },
                 ),
               ),
@@ -153,17 +226,38 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('ĐÃ PHÂN BỔ', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 12)),
-              Text('đ ${NumberFormat('#,###').format(_allocated)}', style: TextStyle(color: themeProvider.foregroundColor, fontSize: 14, fontWeight: FontWeight.bold)),
+              Text(
+                'ĐÃ PHÂN BỔ',
+                style: TextStyle(
+                  color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                'đ ${NumberFormat('#,###').format(_allocated)}',
+                style: TextStyle(
+                  color: themeProvider.foregroundColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: _totalBudget > 0 ? (_allocated / _totalBudget).clamp(0.0, 1.0) : 0,
-              backgroundColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(_allocated > _totalBudget ? Colors.redAccent : const Color(0xFF10B981)),
+              value: _totalBudget > 0
+                  ? (_allocated / _totalBudget).clamp(0.0, 1.0)
+                  : 0,
+              backgroundColor: themeProvider.foregroundColor.withValues(
+                alpha: 0.1,
+              ),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                _allocated > _totalBudget
+                    ? Colors.redAccent
+                    : const Color(0xFF10B981),
+              ),
               minHeight: 8,
             ),
           ),
@@ -186,13 +280,27 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
                   color: _catColors[category]!.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(_catIcons[category], color: _catColors[category], size: 18),
+                child: Icon(
+                  _catIcons[category],
+                  color: _catColors[category],
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 12),
-              Text(category, style: TextStyle(color: themeProvider.foregroundColor, fontSize: 16, fontWeight: FontWeight.w500)),
+              Text(
+                category,
+                style: TextStyle(
+                  color: themeProvider.foregroundColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: themeProvider.secondaryColor.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
@@ -201,12 +309,27 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('đ', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 12)),
+                    Text(
+                      'đ',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withValues(
+                          alpha: 0.5,
+                        ),
+                        fontSize: 12,
+                      ),
+                    ),
                     const SizedBox(width: 4),
-                    Text(NumberFormat('#,###').format(_categoryBudgets[category]), style: TextStyle(color: themeProvider.foregroundColor, fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text(
+                      NumberFormat('#,###').format(_categoryBudgets[category]),
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -214,7 +337,9 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
             data: SliderTheme.of(context).copyWith(
               trackHeight: 4,
               activeTrackColor: const Color(0xFFF05D15),
-              inactiveTrackColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+              inactiveTrackColor: themeProvider.foregroundColor.withValues(
+                alpha: 0.1,
+              ),
               thumbColor: Colors.white,
               overlayColor: const Color(0xFFF05D15).withValues(alpha: 0.2),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),

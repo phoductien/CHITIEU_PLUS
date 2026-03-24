@@ -38,22 +38,22 @@ class ChatSession {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'category': category,
-        'messages': messages,
-        'createdAt': createdAt.toIso8601String(),
-        'isPinned': isPinned,
-      };
+    'id': id,
+    'title': title,
+    'category': category,
+    'messages': messages,
+    'createdAt': createdAt.toIso8601String(),
+    'isPinned': isPinned,
+  };
 
   factory ChatSession.fromJson(Map<String, dynamic> json) => ChatSession(
-        id: json['id'],
-        title: json['title'],
-        category: json['category'] ?? 'Khác',
-        messages: List<Map<String, dynamic>>.from(json['messages']),
-        createdAt: DateTime.parse(json['createdAt']),
-        isPinned: json['isPinned'] ?? false,
-      );
+    id: json['id'],
+    title: json['title'],
+    category: json['category'] ?? 'Khác',
+    messages: List<Map<String, dynamic>>.from(json['messages']),
+    createdAt: DateTime.parse(json['createdAt']),
+    isPinned: json['isPinned'] ?? false,
+  );
 }
 
 class AiChatScreen extends StatefulWidget {
@@ -158,7 +158,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
     final result = await connectivity.checkConnectivity();
     _updateConnectionStatus(result);
 
-    _connectivitySubscription = connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    _connectivitySubscription = connectivity.onConnectivityChanged.listen(
+      _updateConnectionStatus,
+    );
   }
 
   void _updateConnectionStatus(List<ConnectivityResult> results) {
@@ -214,8 +216,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
         messages: [
           {
             'role': 'ai',
-            'text': 'Chào bạn, tôi là trợ lý ảo ChiTieuPlus. Tôi có thể giúp gì cho bạn hôm nay?',
-          }
+            'text':
+                'Chào bạn, tôi là trợ lý ảo ChiTieuPlus. Tôi có thể giúp gì cho bạn hôm nay?',
+          },
         ],
         createdAt: DateTime.now(),
       );
@@ -235,7 +238,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
   Future<void> _saveSessions() async {
     final prefs = await SharedPreferences.getInstance();
-    final String encoded = jsonEncode(_sessions.map((s) => s.toJson()).toList());
+    final String encoded = jsonEncode(
+      _sessions.map((s) => s.toJson()).toList(),
+    );
     await prefs.setString(_prefsKey, encoded);
   }
 
@@ -272,7 +277,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Đổi tên cuộc trò chuyện', style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Đổi tên cuộc trò chuyện',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -280,12 +288,19 @@ class _AiChatScreenState extends State<AiChatScreen> {
           decoration: InputDecoration(
             hintText: 'Nhập tên mới...',
             hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-            focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFEC5B13))),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white24),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFFEC5B13)),
+            ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
           TextButton(
             onPressed: () {
               if (controller.text.trim().isNotEmpty) {
@@ -296,7 +311,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Lưu', style: TextStyle(color: Color(0xFFEC5B13))),
+            child: const Text(
+              'Lưu',
+              style: TextStyle(color: Color(0xFFEC5B13)),
+            ),
           ),
         ],
       ),
@@ -319,15 +337,27 @@ class _AiChatScreenState extends State<AiChatScreen> {
         backgroundColor: const Color(0xFF1E293B),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titlePadding: EdgeInsets.zero,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 20,
+        ),
         title: Container(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back, color: Colors.white70)),
-              const Text('URL trang web và YouTube', style: TextStyle(color: Colors.white, fontSize: 18)),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back, color: Colors.white70),
+              ),
+              const Text(
+                'URL trang web và YouTube',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
               const Spacer(),
-              IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white70)),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: Colors.white70),
+              ),
             ],
           ),
         ),
@@ -336,13 +366,17 @@ class _AiChatScreenState extends State<AiChatScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Dán URL trang web và YouTube vào bên dưới để tải lên dưới dạng một nguồn.', 
-                style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const Text(
+                'Dán URL trang web và YouTube vào bên dưới để tải lên dưới dạng một nguồn.',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
               const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: Colors.blueAccent.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: TextField(
                   controller: urlInputController,
@@ -363,16 +397,26 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 'Không hỗ trợ bài viết có tính phí.',
                 'Hiện chỉ nhập được bản chép lời của video trên YouTube.',
                 'Chỉ hỗ trợ video công khai trên YouTube.',
-              ].map((text) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('• ', style: TextStyle(color: Colors.white54)),
-                    Expanded(child: Text(text, style: const TextStyle(color: Colors.white54, fontSize: 11))),
-                  ],
+              ].map(
+                (text) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('• ', style: TextStyle(color: Colors.white54)),
+                      Expanded(
+                        child: Text(
+                          text,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              )),
+              ),
             ],
           ),
         ),
@@ -381,12 +425,15 @@ class _AiChatScreenState extends State<AiChatScreen> {
             onPressed: () async {
               final content = urlInputController.text.trim();
               if (content.isEmpty) return;
-              
+
               Navigator.pop(context);
               setState(() => _isLoading = true);
 
-              final urls = content.split(RegExp(r'\s+')).where((u) => u.startsWith('http')).toList();
-              
+              final urls = content
+                  .split(RegExp(r'\s+'))
+                  .where((u) => u.startsWith('http'))
+                  .toList();
+
               for (var url in urls) {
                 final result = await UrlProcessorService().processUrl(url);
                 setState(() {
@@ -399,13 +446,15 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   });
                 });
               }
-              
+
               setState(() => _isLoading = false);
             },
             style: TextButton.styleFrom(
               backgroundColor: Colors.white12,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
             child: const Text('Chèn', style: TextStyle(color: Colors.white70)),
           ),
@@ -420,11 +469,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
     if (_currentSession == null) return;
 
     final isNewChat = _currentSession!.messages.length <= 1;
-    final sentAttachments = List<Map<String, dynamic>>.from(_selectedAttachments);
+    final sentAttachments = List<Map<String, dynamic>>.from(
+      _selectedAttachments,
+    );
 
     setState(() {
       _currentSession!.messages.add({
-        'role': 'user', 
+        'role': 'user',
         'text': text,
         'hasAttachments': sentAttachments.isNotEmpty,
         'attachmentNames': sentAttachments.map((a) => a['name']).toList(),
@@ -432,35 +483,37 @@ class _AiChatScreenState extends State<AiChatScreen> {
       _isLoading = true;
       _selectedAttachments.clear();
     });
-    
+
     _saveSessions();
     _textController.clear();
     _scrollToBottom();
 
     // Lấy lịch sử giao dịch để làm ngữ cảnh
-    final transactions = Provider.of<TransactionProvider>(context, listen: false).transactions;
+    final transactions = Provider.of<TransactionProvider>(
+      context,
+      listen: false,
+    ).transactions;
     final now = DateTime.now();
-    final historyContext = "Ngày hiện tại: ${DateFormat('dd/MM/yyyy HH:mm').format(now)}\n${transactions.isEmpty 
-          ? "Người dùng hiện chưa có giao dịch nào recorded."
-          : "Lịch sử giao dịch gần đây:\n${transactions.take(30).map((t) => 
-              "- ${DateFormat('dd/MM/yyyy').format(t.date)}: ${t.type == TransactionType.expense ? 'Chi' : 'Thu'} ${NumberFormat("#,###").format(t.amount)}đ cho ${t.title} (${t.category})"
-            ).join("\n")}"}";
+    final historyContext =
+        "Ngày hiện tại: ${DateFormat('dd/MM/yyyy HH:mm').format(now)}\n${transactions.isEmpty ? "Người dùng hiện chưa có giao dịch nào recorded." : "Lịch sử giao dịch gần đây:\n${transactions.take(30).map((t) => "- ${DateFormat('dd/MM/yyyy').format(t.date)}: ${t.type == TransactionType.expense ? 'Chi' : 'Thu'} ${NumberFormat("#,###").format(t.amount)}đ cho ${t.title} (${t.category})").join("\n")}"}";
 
     final response = await AiService().sendMessage(
-      text.isEmpty && sentAttachments.isNotEmpty ? "Hãy phân tích những nội dung này giúp tôi." : text,
+      text.isEmpty && sentAttachments.isNotEmpty
+          ? "Hãy phân tích những nội dung này giúp tôi."
+          : text,
       attachments: sentAttachments.where((a) => a['bytes'] != null).toList(),
       contextStrings: [
         historyContext,
         ...sentAttachments
             .where((a) => a['isUrl'] == true)
-            .map((a) => "Nội dung từ URL (${a['url']}):\n${a['content']}")
+            .map((a) => "Nội dung từ URL (${a['url']}):\n${a['content']}"),
       ],
     );
 
     if (mounted) {
       String displayMessage = response;
       Map<String, dynamic>? transactionData;
-      
+
       try {
         final decoded = json.decode(response);
         displayMessage = decoded['message'] ?? response;
@@ -476,12 +529,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
         if (response == "LIMIT_EXCEEDED") {
           _checkAiLimit();
           _currentSession!.messages.add({
-            'role': 'ai', 
-            'text': 'Giới hạn API đã đạt cho Model này. Vui lòng chờ hoặc đổi sang Model khác.',
+            'role': 'ai',
+            'text':
+                'Giới hạn API đã đạt cho Model này. Vui lòng chờ hoặc đổi sang Model khác.',
           });
         } else {
           _currentSession!.messages.add({
-            'role': 'ai', 
+            'role': 'ai',
             'text': displayMessage,
             'transaction': transactionData,
           });
@@ -491,8 +545,12 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
       if (isNewChat) {
         final results = await Future.wait([
-          AiService().generateTitle(text.isNotEmpty ? text : "Phân tích nội dung"),
-          AiService().generateCategory(text.isNotEmpty ? text : "Phân tích nội dung"),
+          AiService().generateTitle(
+            text.isNotEmpty ? text : "Phân tích nội dung",
+          ),
+          AiService().generateCategory(
+            text.isNotEmpty ? text : "Phân tích nội dung",
+          ),
         ]);
         setState(() {
           _currentSession!.title = results[0];
@@ -537,13 +595,18 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
   String _getMimeType(String? ext) {
     switch (ext?.toLowerCase()) {
-      case 'pdf': return 'application/pdf';
-      case 'txt': return 'text/plain';
+      case 'pdf':
+        return 'application/pdf';
+      case 'txt':
+        return 'text/plain';
       case 'doc':
-      case 'docx': return 'application/msword';
+      case 'docx':
+        return 'application/msword';
       case 'xls':
-      case 'xlsx': return 'application/vnd.ms-excel';
-      default: return 'application/octet-stream';
+      case 'xlsx':
+        return 'application/vnd.ms-excel';
+      default:
+        return 'application/octet-stream';
     }
   }
 
@@ -562,7 +625,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Không thể truy cập Micro. Vui lòng cấp quyền.')),
+            const SnackBar(
+              content: Text('Không thể truy cập Micro. Vui lòng cấp quyền.'),
+            ),
           );
         }
       }
@@ -589,49 +654,103 @@ class _AiChatScreenState extends State<AiChatScreen> {
   void _showModelSelector() {
     final aiService = AiService();
     final currentVersion = aiService.currentVersion;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Chọn Phiên bản Gemini', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Chọn Phiên bản Gemini',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Phiên bản AI', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+              const Text(
+                'Phiên bản AI',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 12),
-              _buildVersionOption('Gemini 3.x (Đời mới)', '3.0', 'Flash 3, Pro 3.1', currentVersion),
-              _buildVersionOption('Gemini 2.5 (Ổn định)', '2.5', 'Flash 2.5, Pro 1.5', currentVersion),
-              _buildVersionOption('Gemini 2.0 (Thử nghiệm)', '2.0', 'Flash 2, Pro 2 Exp', currentVersion),
+              _buildVersionOption(
+                'Gemini 3.x (Đời mới)',
+                '3.0',
+                'Flash 3, Pro 3.1',
+                currentVersion,
+              ),
+              _buildVersionOption(
+                'Gemini 2.5 (Ổn định)',
+                '2.5',
+                'Flash 2.5, Pro 1.5',
+                currentVersion,
+              ),
+              _buildVersionOption(
+                'Gemini 2.0 (Thử nghiệm)',
+                '2.0',
+                'Flash 2, Pro 2 Exp',
+                currentVersion,
+              ),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0),
                 child: Divider(color: Colors.white10),
               ),
-              const Text('Thông tin phân nhóm', 
-                style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+              const Text(
+                'Thông tin phân nhóm',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 12),
-              _buildTierDescription('Gemini Fast (Nhanh)', 'Tối ưu cho tốc độ phản hồi gần như tức thì, phù hợp ghi chép và tóm tắt nhanh.'),
-              _buildTierDescription('Gemini Thinking (Tư duy)', 'Khả năng suy luận Chain-of-Thought, giúp giải toán, lập trình và gỡ lỗi chính xác.'),
-              _buildTierDescription('Gemini Pro (Nâng cao)', 'Mô hình mạnh mẽ nhất, hiểu ngữ cảnh đa phương thức và sáng tạo chuyên sâu.'),
+              _buildTierDescription(
+                'Gemini Fast (Nhanh)',
+                'Tối ưu cho tốc độ phản hồi gần như tức thì, phù hợp ghi chép và tóm tắt nhanh.',
+              ),
+              _buildTierDescription(
+                'Gemini Thinking (Tư duy)',
+                'Khả năng suy luận Chain-of-Thought, giúp giải toán, lập trình và gỡ lỗi chính xác.',
+              ),
+              _buildTierDescription(
+                'Gemini Pro (Nâng cao)',
+                'Mô hình mạnh mẽ nhất, hiểu ngữ cảnh đa phương thức và sáng tạo chuyên sâu.',
+              ),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0),
                 child: Divider(color: Colors.white10),
               ),
-              Text('Đang sử dụng model: ${AiService().currentModelName}', 
-                style: const TextStyle(color: Colors.white38, fontSize: 11, fontStyle: FontStyle.italic)),
+              Text(
+                'Đang sử dụng model: ${AiService().currentModelName}',
+                style: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đóng'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildVersionOption(String title, String version, String subtitle, String currentVersion) {
+  Widget _buildVersionOption(
+    String title,
+    String version,
+    String subtitle,
+    String currentVersion,
+  ) {
     final isSelected = currentVersion == version;
     return ListTile(
       onTap: () async {
@@ -642,13 +761,31 @@ class _AiChatScreenState extends State<AiChatScreen> {
         setState(() => _isLoading = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Đã chuyển sang phiên bản $title'), backgroundColor: Colors.teal),
+            SnackBar(
+              content: Text('Đã chuyển sang phiên bản $title'),
+              backgroundColor: Colors.teal,
+            ),
           );
         }
       },
-      title: Text(title, style: TextStyle(color: isSelected ? Colors.tealAccent : Colors.white70, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 11)),
-      trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: Colors.tealAccent, size: 18) : null,
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isSelected ? Colors.tealAccent : Colors.white70,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: Colors.white38, fontSize: 11),
+      ),
+      trailing: isSelected
+          ? const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.tealAccent,
+              size: 18,
+            )
+          : null,
     );
   }
 
@@ -658,9 +795,23 @@ class _AiChatScreenState extends State<AiChatScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.tealAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.tealAccent,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(desc, style: const TextStyle(color: Colors.white54, fontSize: 11, height: 1.4)),
+          Text(
+            desc,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );
@@ -669,7 +820,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   Widget _buildModelQuickToggles() {
     final currentTier = AiService().currentTier;
     final currentVersion = AiService().currentVersion;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -684,7 +835,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
             ),
             child: Text(
               'v$currentVersion',
-              style: const TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -695,7 +850,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               child: Row(
                 children: ['Nhanh', 'Tư duy', 'Pro'].map((tier) {
                   final isSelected = currentTier == tier;
-                  
+
                   Color accentColor;
                   IconData icon;
                   switch (tier) {
@@ -726,9 +881,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     },
                     child: Container(
                       margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSelected ? accentColor.withValues(alpha: 0.2) : const Color(0xFF1E293B),
+                        color: isSelected
+                            ? accentColor.withValues(alpha: 0.2)
+                            : const Color(0xFF1E293B),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected ? accentColor : Colors.white10,
@@ -737,14 +897,20 @@ class _AiChatScreenState extends State<AiChatScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(icon, color: isSelected ? accentColor : Colors.white54, size: 16),
+                          Icon(
+                            icon,
+                            color: isSelected ? accentColor : Colors.white54,
+                            size: 16,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             tier,
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.white54,
                               fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ],
@@ -775,7 +941,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
@@ -794,14 +960,21 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 _currentSession?.title ?? 'Trợ lý AI',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             if (!_isOnline)
               const Padding(
                 padding: EdgeInsets.only(left: 8.0),
                 child: Chip(
-                  label: Text('Ngoại tuyến', style: TextStyle(color: Colors.white, fontSize: 10)),
+                  label: Text(
+                    'Ngoại tuyến',
+                    style: TextStyle(color: Colors.white, fontSize: 10),
+                  ),
                   backgroundColor: Colors.redAccent,
                   padding: EdgeInsets.zero,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -817,7 +990,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded),
             color: themeProvider.secondaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             onSelected: (value) {
               if (_currentSession == null) return;
               switch (value) {
@@ -841,13 +1016,19 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      _currentSession?.isPinned == true ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                      _currentSession?.isPinned == true
+                          ? Icons.push_pin_rounded
+                          : Icons.push_pin_outlined,
                       color: Colors.redAccent,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    Text(_currentSession?.isPinned == true ? 'Bỏ ghim' : 'Ghim cuộc trò chuyện', 
-                      style: const TextStyle(color: Colors.redAccent)),
+                    Text(
+                      _currentSession?.isPinned == true
+                          ? 'Bỏ ghim'
+                          : 'Ghim cuộc trò chuyện',
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
                   ],
                 ),
               ),
@@ -855,9 +1036,16 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 value: 'rename',
                 child: Row(
                   children: [
-                    const Icon(Icons.edit_note_rounded, color: Colors.blueAccent, size: 20),
+                    const Icon(
+                      Icons.edit_note_rounded,
+                      color: Colors.blueAccent,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
-                    const Text('Đổi tên', style: TextStyle(color: Colors.blueAccent)),
+                    const Text(
+                      'Đổi tên',
+                      style: TextStyle(color: Colors.blueAccent),
+                    ),
                   ],
                 ),
               ),
@@ -865,9 +1053,16 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 value: 'model',
                 child: Row(
                   children: [
-                    const Icon(Icons.psychology_rounded, color: Colors.tealAccent, size: 20),
+                    const Icon(
+                      Icons.psychology_rounded,
+                      color: Colors.tealAccent,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
-                    const Text('Chọn Model AI (v2+)', style: TextStyle(color: Colors.tealAccent)),
+                    const Text(
+                      'Chọn Model AI (v2+)',
+                      style: TextStyle(color: Colors.tealAccent),
+                    ),
                   ],
                 ),
               ),
@@ -875,9 +1070,16 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 value: 'delete',
                 child: Row(
                   children: [
-                    const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                    const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
-                    const Text('Xóa hội thoại này', style: TextStyle(color: Colors.redAccent)),
+                    const Text(
+                      'Xóa hội thoại này',
+                      style: TextStyle(color: Colors.redAccent),
+                    ),
                   ],
                 ),
               ),
@@ -888,357 +1090,556 @@ class _AiChatScreenState extends State<AiChatScreen> {
       ),
       drawer: _buildDrawer(),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: themeProvider.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: themeProvider.backgroundGradient),
         child: SelectionArea(
           child: Column(
-          children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-              itemCount: (_currentSession?.messages.length ?? 0) + 1, // +1 for the top header
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildChatHeader();
-                }
-                
-                final message = _currentSession!.messages[index - 1];
-                final isUser = message['role'] == 'user';
-                return FadeInUp(
-                  duration: const Duration(milliseconds: 300),
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 24.0),
-                    child: Row(
-                      mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (!isUser) ...[
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: const Color(0xFF1E293B),
-                            child: Icon(Icons.smart_toy_rounded, color: Colors.tealAccent.shade400, size: 20),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(16.0),
-                                decoration: BoxDecoration(
-                                  color: isUser ? const Color(0xFFEC5B13) : const Color(0xFF1E293B),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: const Radius.circular(16),
-                                    topRight: const Radius.circular(16),
-                                    bottomLeft: Radius.circular(isUser ? 16 : 4),
-                                    bottomRight: Radius.circular(isUser ? 4 : 16),
-                                  ),
-                                ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (message['hasAttachments'] == true)
-                                        Padding(
-                                          padding: const EdgeInsets.only(bottom: 8.0),
-                                          child: Wrap(
-                                            spacing: 8,
-                                            children: (message['attachmentNames'] as List).map((name) {
-                                              return Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white12,
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    const Icon(Icons.attach_file_rounded, color: Colors.white70, size: 14),
-                                                    const SizedBox(width: 4),
-                                                    Text(name.toString(), style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                                                  ],
-                                                ),
-                                              );
-                                            }).toList(),
-                                          ),
-                                        ),
-                                      Text(
-                                        message['text'] ?? '',
-                                        style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.4),
-                                      ),
-                                      if (!isUser && message['text'] != null)
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: IconButton(
-                                            onPressed: () => _copyToClipboard(message['text']),
-                                            icon: const Icon(Icons.copy_rounded, color: Colors.white38, size: 16),
-                                            tooltip: 'Sao chép',
-                                          ),
-                                        ),
-                                      if (message['transaction'] != null)
-                                        _buildTransactionCard(message['transaction'], index - 1),
-                                    ],
-                                  ),
-                                ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Bây giờ', // In a real app, format actual message time
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10),
-                              ),
-                            ],
-                          ),
-                        ),
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 24.0,
+                  ),
+                  itemCount:
+                      (_currentSession?.messages.length ?? 0) +
+                      1, // +1 for the top header
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _buildChatHeader();
+                    }
 
-                        if (isUser) ...[
-                          const SizedBox(width: 8),
-                          const CircleAvatar(
-                            radius: 16,
-                            backgroundColor: Colors.white24,
-                            child: Icon(Icons.person, color: Colors.white, size: 20),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          if (_isLoading)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFEC5B13)),
-                  ),
-                  const SizedBox(width: 12),
-                  Text('AI đang soạn câu trả lời...', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
-                ],
-              ),
-            ),
-          
-          // Bottom Input Area
-          Container(
-            padding: const EdgeInsets.only(top: 12, bottom: 24, left: 16, right: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B).withValues(alpha: 0.5),
-              border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
-            ),
-            child: Column(
-              children: [
-                // Attachment Preview
-                if (_selectedAttachments.isNotEmpty)
-                  Container(
-                    height: 60,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _selectedAttachments.length,
-                      itemBuilder: (context, index) {
-                        final att = _selectedAttachments[index];
-                        return Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1E293B),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFEC5B13).withValues(alpha: 0.3)),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                              att['isUrl'] == true 
-                                ? (att['isYouTube'] == true ? Icons.play_circle_fill_rounded : Icons.link_rounded)
-                                : (att['isImage'] ? Icons.image_rounded : Icons.insert_drive_file_rounded), 
-                              color: att['isYouTube'] == true ? Colors.red : const Color(0xFFEC5B13), 
-                              size: 18
-                            ),
+                    final message = _currentSession!.messages[index - 1];
+                    final isUser = message['role'] == 'user';
+                    return FadeInUp(
+                      duration: const Duration(milliseconds: 300),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 24.0),
+                        child: Row(
+                          mainAxisAlignment: isUser
+                              ? MainAxisAlignment.end
+                              : MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (!isUser) ...[
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor: const Color(0xFF1E293B),
+                                child: Icon(
+                                  Icons.smart_toy_rounded,
+                                  color: Colors.tealAccent.shade400,
+                                  size: 20,
+                                ),
+                              ),
                               const SizedBox(width: 8),
-                              SizedBox(
-                                width: 80,
-                                child: Text(att['name'], 
-                                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                            ],
+
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: isUser
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(16.0),
+                                    decoration: BoxDecoration(
+                                      color: isUser
+                                          ? const Color(0xFFEC5B13)
+                                          : const Color(0xFF1E293B),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: const Radius.circular(16),
+                                        topRight: const Radius.circular(16),
+                                        bottomLeft: Radius.circular(
+                                          isUser ? 16 : 4,
+                                        ),
+                                        bottomRight: Radius.circular(
+                                          isUser ? 4 : 16,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (message['hasAttachments'] == true)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 8.0,
+                                            ),
+                                            child: Wrap(
+                                              spacing: 8,
+                                              children: (message['attachmentNames'] as List).map((
+                                                name,
+                                              ) {
+                                                return Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 6,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white12,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      const Icon(
+                                                        Icons
+                                                            .attach_file_rounded,
+                                                        color: Colors.white70,
+                                                        size: 14,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        name.toString(),
+                                                        style: const TextStyle(
+                                                          color: Colors.white70,
+                                                          fontSize: 11,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ),
+                                        Text(
+                                          message['text'] ?? '',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            height: 1.4,
+                                          ),
+                                        ),
+                                        if (!isUser && message['text'] != null)
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: IconButton(
+                                              onPressed: () => _copyToClipboard(
+                                                message['text'],
+                                              ),
+                                              icon: const Icon(
+                                                Icons.copy_rounded,
+                                                color: Colors.white38,
+                                                size: 16,
+                                              ),
+                                              tooltip: 'Sao chép',
+                                            ),
+                                          ),
+                                        if (message['transaction'] != null)
+                                          _buildTransactionCard(
+                                            message['transaction'],
+                                            index - 1,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Bây giờ', // In a real app, format actual message time
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.close_rounded, color: Colors.red, size: 16),
-                                onPressed: () => setState(() => _selectedAttachments.removeAt(index)),
+                            ),
+
+                            if (isUser) ...[
+                              const SizedBox(width: 8),
+                              const CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Colors.white24,
+                                child: Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
                             ],
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (_isLoading)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 8.0,
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFFEC5B13),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'AI đang soạn câu trả lời...',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Bottom Input Area
+              Container(
+                padding: const EdgeInsets.only(
+                  top: 12,
+                  bottom: 24,
+                  left: 16,
+                  right: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.05),
                     ),
                   ),
+                ),
+                child: Column(
+                  children: [
+                    // Attachment Preview
+                    if (_selectedAttachments.isNotEmpty)
+                      Container(
+                        height: 60,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _selectedAttachments.length,
+                          itemBuilder: (context, index) {
+                            final att = _selectedAttachments[index];
+                            return Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1E293B),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFFEC5B13,
+                                  ).withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    att['isUrl'] == true
+                                        ? (att['isYouTube'] == true
+                                              ? Icons.play_circle_fill_rounded
+                                              : Icons.link_rounded)
+                                        : (att['isImage']
+                                              ? Icons.image_rounded
+                                              : Icons
+                                                    .insert_drive_file_rounded),
+                                    color: att['isYouTube'] == true
+                                        ? Colors.red
+                                        : const Color(0xFFEC5B13),
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      att['name'],
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      color: Colors.red,
+                                      size: 16,
+                                    ),
+                                    onPressed: () => setState(
+                                      () =>
+                                          _selectedAttachments.removeAt(index),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
 
-                if (_lockoutTime != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.orangeAccent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
+                    if (_lockoutTime != null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.orangeAccent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Giới hạn model đã đạt. Vui lòng chờ:',
+                              style: TextStyle(
+                                color: Colors.orangeAccent.shade100,
+                                fontSize: 11,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _formatDuration(
+                                _lockoutTime!.difference(DateTime.now()),
+                              ),
+                              style: const TextStyle(
+                                color: Colors.orangeAccent,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _showModelSelector,
+                              child: const Text(
+                                'Đổi Model khác',
+                                style: TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontSize: 12,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    if (!_isOnline)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Đã mất kết nối mạng. AI đang ngoại tuyến.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                    // Model Selection Quick Toggles
+                    if (_isOnline) _buildModelQuickToggles(),
+
+                    // Suggested Prompts
+                    if (_isOnline)
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          children: _currentSuggestions
+                              .map((prompt) => _buildSuggestedPrompt(prompt))
+                              .toList(),
+                        ),
+                      ),
+                    const SizedBox(height: 12),
+
+                    // Text Input
+                    Row(
                       children: [
-                        Text(
-                          'Giới hạn model đã đạt. Vui lòng chờ:',
-                          style: TextStyle(color: Colors.orangeAccent.shade100, fontSize: 11),
+                        IconButton(
+                          icon: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E293B),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.link_rounded,
+                                  color: Colors.white70,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.play_circle_fill_rounded,
+                                  color: Colors.red,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                const Text(
+                                  'Trang web',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          onPressed: _isOnline ? _showUrlDialog : null,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _formatDuration(_lockoutTime!.difference(DateTime.now())),
-                          style: const TextStyle(color: Colors.orangeAccent, fontSize: 16, fontWeight: FontWeight.bold),
+                        IconButton(
+                          icon: Icon(
+                            Icons.add_circle_outline_rounded,
+                            color: Colors.white.withValues(
+                              alpha: _isOnline ? 0.5 : 0.2,
+                            ),
+                          ),
+                          onPressed: _isOnline ? _pickFile : null,
                         ),
-                        TextButton(
-                          onPressed: _showModelSelector,
-                          child: const Text('Đổi Model khác', style: TextStyle(color: Colors.blueAccent, fontSize: 12, decoration: TextDecoration.underline)),
+                        IconButton(
+                          icon: Icon(
+                            Icons.image_outlined,
+                            color: Colors.white.withValues(
+                              alpha: _isOnline ? 0.5 : 0.2,
+                            ),
+                          ),
+                          onPressed: _isOnline ? _pickImage : null,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E293B),
+                              borderRadius: BorderRadius.circular(24.0),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _textController,
+                                    enabled: _isOnline && _lockoutTime == null,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      hintText: !_isOnline
+                                          ? 'Vui lòng kiểm tra kết nối...'
+                                          : (_lockoutTime != null
+                                                ? 'AI đang bị giới hạn...'
+                                                : (_isListening
+                                                      ? 'Đang nghe...'
+                                                      : 'Hỏi tôi bất cứ điều gì...')),
+                                      hintStyle: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 14,
+                                          ),
+                                    ),
+                                    onSubmitted: (_) =>
+                                        (_isOnline && _lockoutTime == null)
+                                        ? _sendMessage()
+                                        : null,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    _isListening
+                                        ? Icons.mic_rounded
+                                        : Icons.mic_none_rounded,
+                                    color: (!_isOnline || _lockoutTime != null)
+                                        ? Colors.grey
+                                        : (_isListening
+                                              ? const Color(0xFFEC5B13)
+                                              : Colors.white.withValues(
+                                                  alpha: 0.4,
+                                                )),
+                                  ),
+                                  onPressed: (_isOnline && _lockoutTime == null)
+                                      ? _toggleListening
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // Send Button
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: (_isOnline && _lockoutTime == null)
+                                ? const Color(0xFFEC5B13)
+                                : Colors.grey.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                            boxShadow: (_isOnline && _lockoutTime == null)
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFFEC5B13,
+                                      ).withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.send_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            onPressed: _isOnline ? _sendMessage : null,
+                          ),
                         ),
                       ],
-                    ),
-                  ),
-
-                if (!_isOnline)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'Đã mất kết nối mạng. AI đang ngoại tuyến.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                // Model Selection Quick Toggles
-                if (_isOnline) _buildModelQuickToggles(),
-
-                // Suggested Prompts
-                if (_isOnline)
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      children: _currentSuggestions.map((prompt) => _buildSuggestedPrompt(prompt)).toList(),
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                
-                // Text Input
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.link_rounded, color: Colors.white70, size: 16),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.play_circle_fill_rounded, color: Colors.red, size: 14),
-                            const SizedBox(width: 4),
-                            const Text('Trang web', style: TextStyle(color: Colors.white, fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                      onPressed: _isOnline ? _showUrlDialog : null,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.add_circle_outline_rounded, color: Colors.white.withValues(alpha: _isOnline ? 0.5 : 0.2)),
-                      onPressed: _isOnline ? _pickFile : null,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.image_outlined, color: Colors.white.withValues(alpha: _isOnline ? 0.5 : 0.2)),
-                      onPressed: _isOnline ? _pickImage : null,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(24.0),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _textController,
-                                enabled: _isOnline && _lockoutTime == null,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: !_isOnline 
-                                    ? 'Vui lòng kiểm tra kết nối...' 
-                                    : (_lockoutTime != null ? 'AI đang bị giới hạn...' : (_isListening ? 'Đang nghe...' : 'Hỏi tôi bất cứ điều gì...')),
-                                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                                ),
-                                onSubmitted: (_) => (_isOnline && _lockoutTime == null) ? _sendMessage() : null,
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                _isListening ? Icons.mic_rounded : Icons.mic_none_rounded, 
-                                color: (!_isOnline || _lockoutTime != null) 
-                                  ? Colors.grey 
-                                  : (_isListening ? const Color(0xFFEC5B13) : Colors.white.withValues(alpha: 0.4))
-                              ),
-                              onPressed: (_isOnline && _lockoutTime == null) ? _toggleListening : null,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    
-                    // Send Button
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: (_isOnline && _lockoutTime == null) ? const Color(0xFFEC5B13) : Colors.grey.withValues(alpha: 0.3),
-                        shape: BoxShape.circle,
-                        boxShadow: (_isOnline && _lockoutTime == null) ? [
-                          BoxShadow(color: const Color(0xFFEC5B13).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4)),
-                        ] : null
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                        onPressed: _isOnline ? _sendMessage : null,
-                      ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-    )
     );
   }
 
   List<Widget> _buildGroupedSessions() {
     final Map<String, List<ChatSession>> grouped = {};
-    
+
     // Ghép các session theo category
     for (var session in _sessions) {
       final cat = session.category;
@@ -1249,7 +1650,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     }
 
     final List<Widget> items = [];
-    
+
     // Tạo danh sách widget grouped
     grouped.forEach((category, sessions) {
       items.add(
@@ -1258,23 +1659,27 @@ class _AiChatScreenState extends State<AiChatScreen> {
           child: Text(
             category.toUpperCase(),
             style: const TextStyle(
-              color: Color(0xFFEC5B13), 
-              fontSize: 11, 
-              fontWeight: FontWeight.bold, 
-              letterSpacing: 1.2
+              color: Color(0xFFEC5B13),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
             ),
           ),
         ),
       );
-      
+
       for (var session in sessions) {
         final isSelected = _currentSession?.id == session.id;
         items.add(
           ListTile(
             dense: true,
             leading: Icon(
-              session.isPinned ? Icons.push_pin_rounded : Icons.chat_bubble_outline_rounded, 
-              color: session.isPinned ? const Color(0xFFEC5B13) : Colors.white38, 
+              session.isPinned
+                  ? Icons.push_pin_rounded
+                  : Icons.chat_bubble_outline_rounded,
+              color: session.isPinned
+                  ? const Color(0xFFEC5B13)
+                  : Colors.white38,
               size: 16,
             ),
             title: Text(
@@ -1283,11 +1688,19 @@ class _AiChatScreenState extends State<AiChatScreen> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: isSelected ? const Color(0xFFEC5B13) : Colors.white70,
-                fontWeight: isSelected || session.isPinned ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isSelected || session.isPinned
+                    ? FontWeight.bold
+                    : FontWeight.normal,
                 fontSize: 13,
               ),
             ),
-            trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: Color(0xFFEC5B13), size: 14) : null,
+            trailing: isSelected
+                ? const Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFFEC5B13),
+                    size: 14,
+                  )
+                : null,
             onTap: () => _switchSession(session),
           ),
         );
@@ -1305,7 +1718,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
     final String category = data['category'] ?? 'Khác';
 
     final bool isTrialWallet = title.toLowerCase().contains('ví dùng thử');
-    final Color accentColor = isTrialWallet ? Colors.cyanAccent : (isConfirmed ? Colors.greenAccent : const Color(0xFFEC5B13));
+    final Color accentColor = isTrialWallet
+        ? Colors.cyanAccent
+        : (isConfirmed ? Colors.greenAccent : const Color(0xFFEC5B13));
 
     return Container(
       margin: const EdgeInsets.only(top: 12),
@@ -1321,13 +1736,19 @@ class _AiChatScreenState extends State<AiChatScreen> {
           Row(
             children: [
               Icon(
-                isTrialWallet ? Icons.account_balance_wallet_rounded : (isConfirmed ? Icons.check_circle_rounded : Icons.receipt_long_rounded),
+                isTrialWallet
+                    ? Icons.account_balance_wallet_rounded
+                    : (isConfirmed
+                          ? Icons.check_circle_rounded
+                          : Icons.receipt_long_rounded),
                 color: accentColor,
                 size: 18,
               ),
               const SizedBox(width: 8),
               Text(
-                isTrialWallet ? 'Nạp tiền từ Ví dùng thử' : (isConfirmed ? 'Đã lưu giao dịch' : 'Xác nhận giao dịch'),
+                isTrialWallet
+                    ? 'Nạp tiền từ Ví dùng thử'
+                    : (isConfirmed ? 'Đã lưu giao dịch' : 'Xác nhận giao dịch'),
                 style: TextStyle(
                   color: accentColor,
                   fontSize: 13,
@@ -1338,7 +1759,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
           ),
           const Divider(color: Colors.white10, height: 16),
           _buildInfoRow('Nội dung:', title),
-          _buildInfoRow('Số tiền:', '${amount.toStringAsFixed(0)}đ', valueColor: type == 'expense' ? Colors.redAccent : Colors.greenAccent),
+          _buildInfoRow(
+            'Số tiền:',
+            '${amount.toStringAsFixed(0)}đ',
+            valueColor: type == 'expense'
+                ? Colors.redAccent
+                : Colors.greenAccent,
+          ),
           _buildInfoRow('Hạng mục:', category),
           if (!isConfirmed) ...[
             const SizedBox(height: 12),
@@ -1348,10 +1775,15 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 onPressed: () => _saveTransaction(data, messageIndex),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFEC5B13),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                 ),
-                child: const Text('Lưu giao dịch', style: TextStyle(color: Colors.white, fontSize: 13)),
+                child: const Text(
+                  'Lưu giao dịch',
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
               ),
             ),
           ],
@@ -1366,8 +1798,18 @@ class _AiChatScreenState extends State<AiChatScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-          Text(value, style: TextStyle(color: valueColor ?? Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor ?? Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -1392,7 +1834,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
         amount: (data['amount'] ?? 0).toDouble(),
         category: data['category'] ?? 'Khác',
         date: DateTime.now(),
-        type: data['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+        type: data['type'] == 'income'
+            ? TransactionType.income
+            : TransactionType.expense,
         note: data['note'],
         wallet: data['wallet'] ?? 'main',
       );
@@ -1403,13 +1847,15 @@ class _AiChatScreenState extends State<AiChatScreen> {
       if (mounted) {
         context.read<NotificationProvider>().addNotification(
           title: 'Giao dịch thành công',
-          body: 'Đã lưu "${transaction.title}" với số tiền ${NumberFormat('#,###', 'vi_VN').format(transaction.amount)}đ',
+          body:
+              'Đã lưu "${transaction.title}" với số tiền ${NumberFormat('#,###', 'vi_VN').format(transaction.amount)}đ',
           type: NotificationType.transaction,
         );
       }
 
       setState(() {
-        _currentSession!.messages[messageIndex]['transaction']['isConfirmed'] = true;
+        _currentSession!.messages[messageIndex]['transaction']['isConfirmed'] =
+            true;
         _isLoading = false;
       });
       _saveSessions();
@@ -1424,7 +1870,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      
+
       // Add Failure Notification
       if (mounted) {
         context.read<NotificationProvider>().addNotification(
@@ -1435,15 +1881,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi lưu: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi khi lưu: $e')));
       }
     }
   }
 
   Widget _buildDrawer() {
-
     return Drawer(
       backgroundColor: const Color(0xFF0F172A),
       child: Column(
@@ -1454,31 +1899,50 @@ class _AiChatScreenState extends State<AiChatScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.smart_toy_rounded, color: Color(0xFFEC5B13), size: 40),
+                  const Icon(
+                    Icons.smart_toy_rounded,
+                    color: Color(0xFFEC5B13),
+                    size: 40,
+                  ),
                   const SizedBox(height: 12),
-                  const Text('Lịch sử trò chuyện', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Lịch sử trò chuyện',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.add_comment_rounded, color: Color(0xFFEC5B13)),
-            title: const Text('Cuộc trò chuyện mới', style: TextStyle(color: Colors.white)),
+            leading: const Icon(
+              Icons.add_comment_rounded,
+              color: Color(0xFFEC5B13),
+            ),
+            title: const Text(
+              'Cuộc trò chuyện mới',
+              style: TextStyle(color: Colors.white),
+            ),
             onTap: () {
               Navigator.pop(context);
               _startNewChat();
             },
           ),
           const Divider(color: Colors.white10),
-          Expanded(
-            child: ListView(
-              children: _buildGroupedSessions(),
-            ),
-          ),
+          Expanded(child: ListView(children: _buildGroupedSessions())),
           const Divider(color: Colors.white10),
           ListTile(
-            leading: const Icon(Icons.delete_sweep_rounded, color: Colors.redAccent),
-            title: const Text('Xóa tất cả', style: TextStyle(color: Colors.redAccent)),
+            leading: const Icon(
+              Icons.delete_sweep_rounded,
+              color: Colors.redAccent,
+            ),
+            title: const Text(
+              'Xóa tất cả',
+              style: TextStyle(color: Colors.redAccent),
+            ),
             onTap: () {
               Navigator.pop(context);
               _showDeleteAllDialog();
@@ -1496,15 +1960,24 @@ class _AiChatScreenState extends State<AiChatScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
         title: const Text('Xóa tất cả?', style: TextStyle(color: Colors.white)),
-        content: const Text('Hành động này sẽ xóa vĩnh viễn toàn bộ lịch sử trò chuyện.', style: TextStyle(color: Colors.white70)),
+        content: const Text(
+          'Hành động này sẽ xóa vĩnh viễn toàn bộ lịch sử trò chuyện.',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _clearAll();
             },
-            child: const Text('Xóa hết', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Xóa hết',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
@@ -1523,15 +1996,23 @@ class _AiChatScreenState extends State<AiChatScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
-            child: const Icon(Icons.smart_toy_rounded, color: Color(0xFFEC5B13), size: 32),
+            child: const Icon(
+              Icons.smart_toy_rounded,
+              color: Color(0xFFEC5B13),
+              size: 32,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
-            _currentSession?.messages.length == 1 
-              ? 'Hôm nay tôi có thể giúp gì cho tình hình tài chính của bạn?'
-              : 'Tiếp tục cuộc trò chuyện về ${_currentSession?.title.toLowerCase()}',
+            _currentSession?.messages.length == 1
+                ? 'Hôm nay tôi có thể giúp gì cho tình hình tài chính của bạn?'
+                : 'Tiếp tục cuộc trò chuyện về ${_currentSession?.title.toLowerCase()}',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13, height: 1.5),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 13,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -1554,11 +2035,15 @@ class _AiChatScreenState extends State<AiChatScreen> {
         ),
         child: Text(
           text,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 13,
+          ),
         ),
       ),
     );
   }
+
   String _formatDuration(Duration d) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String hours = twoDigits(d.inHours);

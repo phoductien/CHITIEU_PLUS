@@ -13,17 +13,16 @@ class ResetSuccessScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF022C4F),
-              Color(0xFF02467D),
-              Color(0xFF0174D7),
-            ],
+            colors: [Color(0xFF022C4F), Color(0xFF02467D), Color(0xFF0174D7)],
             stops: [0.0, 0.4, 1.0],
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 32.0,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -54,23 +53,41 @@ class ResetSuccessScreen extends StatelessWidget {
                         color: Colors.green,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.check, color: Colors.white, size: 40),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 40,
+                      ),
                     ),
                     // Small floating dots for "wow" effect
                     Positioned(
                       top: 10,
                       right: 10,
-                      child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.orange, shape: BoxShape.circle)),
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
                     Positioned(
                       bottom: 20,
                       left: 0,
-                      child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.blueAccent, shape: BoxShape.circle)),
+                      child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Colors.blueAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 48),
-                
+
                 const Text(
                   'Thành công!',
                   style: TextStyle(
@@ -80,7 +97,7 @@ class ResetSuccessScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 Text(
                   'Mật khẩu của bạn đã được thay đổi thành công. Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.',
                   textAlign: TextAlign.center,
@@ -91,7 +108,7 @@ class ResetSuccessScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 64),
-                
+
                 // Login Now Button
                 ElevatedButton(
                   onPressed: () {
@@ -114,7 +131,7 @@ class ResetSuccessScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 48.0),
                   child: Text(

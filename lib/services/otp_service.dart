@@ -22,14 +22,16 @@ class OTPService {
   Future<bool> sendOTP(String email) async {
     _targetEmail = email;
     _currentOTP = _generateRandomOTP();
-    _expiryTime = DateTime.now().add(const Duration(minutes: otpValidityMinutes));
-    
+    _expiryTime = DateTime.now().add(
+      const Duration(minutes: otpValidityMinutes),
+    );
+
     debugPrint('------------------------------------------');
     debugPrint('[OTP SERVICE] Sending OTP to: $email');
     debugPrint('[OTP SERVICE] Code: $_currentOTP');
     debugPrint('[OTP SERVICE] Expires at: $_expiryTime');
     debugPrint('------------------------------------------');
-    
+
     try {
       final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
       final response = await http.post(
@@ -48,7 +50,7 @@ class OTPService {
             'company_name': 'ChiTieuPlus',
             'expiry_time': '5 phút',
             'reply_to': 'no-reply@chitieuplus.com',
-          }
+          },
         }),
       );
 
@@ -58,7 +60,7 @@ class OTPService {
       } else {
         debugPrint('[OTP SERVICE] Failed to send email: ${response.body}');
         // We still return true here so the UI can proceed for testing even if EmailJS limit is reached.
-        return true; 
+        return true;
       }
     } catch (e) {
       debugPrint('[OTP SERVICE] Error sending email: $e');
@@ -69,22 +71,22 @@ class OTPService {
   /// Verifies the provided OTP
   bool verifyOTP(String otp) {
     if (_currentOTP == null || _expiryTime == null) return false;
-    
+
     if (DateTime.now().isAfter(_expiryTime!)) {
       debugPrint('[OTP SERVICE] OTP Expired');
       _currentOTP = null;
       return false;
     }
-    
+
     bool isValid = _currentOTP == otp;
     if (isValid) {
       debugPrint('[OTP SERVICE] OTP Verified Successfully');
-      // We don't nullify here yet, might be needed for the reset step 
+      // We don't nullify here yet, might be needed for the reset step
       // but usually, verification token is preferred.
     } else {
       debugPrint('[OTP SERVICE] Invalid OTP provided');
     }
-    
+
     return isValid;
   }
 
@@ -98,7 +100,7 @@ class OTPService {
   }
 
   String? get currentEmail => _targetEmail;
-  
+
   void clear() {
     _currentOTP = null;
     _targetEmail = null;

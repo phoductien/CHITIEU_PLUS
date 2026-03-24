@@ -64,7 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '971401377167',
     projectId: 'chitieuplus-app',
     storageBucket: 'chitieuplus-app.firebasestorage.app',
-    iosClientId: '971401377167-8iibu3pofmftlmdmncsl3stu2brbetbf.apps.googleusercontent.com',
+    iosClientId:
+        '971401377167-8iibu3pofmftlmdmncsl3stu2brbetbf.apps.googleusercontent.com',
     iosBundleId: 'com.example.chitieuPlus',
   );
 
@@ -74,7 +75,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '971401377167',
     projectId: 'chitieuplus-app',
     storageBucket: 'chitieuplus-app.firebasestorage.app',
-    iosClientId: '971401377167-8iibu3pofmftlmdmncsl3stu2brbetbf.apps.googleusercontent.com',
+    iosClientId:
+        '971401377167-8iibu3pofmftlmdmncsl3stu2brbetbf.apps.googleusercontent.com',
     iosBundleId: 'com.example.chitieuPlus',
   );
 

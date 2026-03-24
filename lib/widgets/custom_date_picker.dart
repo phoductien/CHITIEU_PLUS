@@ -33,7 +33,7 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
 
   Future<void> _selectDate(BuildContext context, bool isStart) async {
     final themeProvider = context.read<ThemeProvider>();
-    
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: isStart ? _startDate : _endDate,
@@ -75,7 +75,7 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    
+
     return Dialog(
       backgroundColor: themeProvider.secondaryColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -121,7 +121,12 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Hủy', style: TextStyle(color: themeProvider.foregroundColor.withOpacity(0.6))),
+                  child: Text(
+                    'Hủy',
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor.withOpacity(0.6),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
@@ -132,10 +137,18 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFEC5B13),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
-                  child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Áp dụng',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),

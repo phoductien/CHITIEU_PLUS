@@ -12,6 +12,7 @@ import '../screens/ai_chat_screen.dart';
 import '../screens/terms_and_privacy_screen.dart';
 import '../screens/eye_protection_screen.dart';
 import '../screens/user_profile_screen.dart';
+import '../screens/bank_accounts_screen.dart';
 import 'dart:convert';
 
 class MainDrawer extends StatelessWidget {
@@ -41,16 +42,29 @@ class MainDrawer extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const UserProfileScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const UserProfileScreen(),
+                        ),
+                      );
                     },
                     child: CircleAvatar(
                       radius: 30,
                       backgroundColor: const Color(0xFFFFD180),
-                      backgroundImage: userProvider.photoUrl.isEmpty 
-                          ? const NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Felix') as ImageProvider
-                          : (userProvider.photoUrl.startsWith('data:image/') 
-                              ? MemoryImage(base64Decode(userProvider.photoUrl.split(',').last)) 
-                              : NetworkImage(userProvider.photoUrl)) as ImageProvider,
+                      backgroundImage: userProvider.photoUrl.isEmpty
+                          ? const NetworkImage(
+                                  'https://api.dicebear.com/7.x/avataaars/png?seed=Felix',
+                                )
+                                as ImageProvider
+                          : (userProvider.photoUrl.startsWith('data:image/')
+                                    ? MemoryImage(
+                                        base64Decode(
+                                          userProvider.photoUrl.split(',').last,
+                                        ),
+                                      )
+                                    : NetworkImage(userProvider.photoUrl))
+                                as ImageProvider,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -59,19 +73,25 @@ class MainDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          userProvider.name.isNotEmpty ? userProvider.name : 'Khách',
+                          userProvider.name.isNotEmpty
+                              ? userProvider.name
+                              : 'Khách',
                           style: TextStyle(
-                            color: themeProvider.foregroundColor, 
-                            fontSize: 18, 
-                            fontWeight: FontWeight.bold
+                            color: themeProvider.foregroundColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          userProvider.email.isNotEmpty ? userProvider.email : 'guest@chitieuplus.internal',
+                          userProvider.email.isNotEmpty
+                              ? userProvider.email
+                              : 'guest@chitieuplus.internal',
                           style: TextStyle(
-                            color: themeProvider.foregroundColor.withValues(alpha: 0.6), 
-                            fontSize: 13
+                            color: themeProvider.foregroundColor.withValues(
+                              alpha: 0.6,
+                            ),
+                            fontSize: 13,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -81,7 +101,7 @@ class MainDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Drawer Items
             Expanded(
               child: SingleChildScrollView(
@@ -100,7 +120,9 @@ class MainDrawer extends StatelessWidget {
                         Navigator.pop(context); // close drawer
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const AiChatScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const AiChatScreen(),
+                          ),
                         );
                       },
                     ),
@@ -124,45 +146,68 @@ class MainDrawer extends StatelessWidget {
                       icon: Icons.open_in_browser_rounded,
                       title: 'Mở trang web',
                       onTap: () async {
-                        final url = Uri.parse('https://chitieuplus-app.web.app');
+                        final url = Uri.parse(
+                          'https://chitieuplus-app.web.app',
+                        );
                         if (await canLaunchUrl(url)) {
-                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
                         } else {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Không thể mở liên kết')),
+                              const SnackBar(
+                                content: Text('Không thể mở liên kết'),
+                              ),
                             );
                           }
                         }
                       },
                     ),
-                    
+
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      child: Divider(color: themeProvider.borderColor, thickness: 1),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Divider(
+                        color: themeProvider.borderColor,
+                        thickness: 1,
+                      ),
                     ),
-                    
+
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       child: Text(
                         'CÀI ĐẶT',
                         style: TextStyle(
-                          color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                          color: themeProvider.foregroundColor.withValues(
+                            alpha: 0.5,
+                          ),
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
                         ),
                       ),
                     ),
-                    
+
                     _buildDrawerItem(
                       context: context,
                       themeProvider: themeProvider,
                       icon: Icons.language_rounded,
                       title: 'Ngôn ngữ',
                       trailing: Text(
-                        'Tiếng Việt', 
-                        style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 13)
+                        'Tiếng Việt',
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor.withValues(
+                            alpha: 0.5,
+                          ),
+                          fontSize: 13,
+                        ),
                       ),
                       onTap: () {},
                     ),
@@ -183,7 +228,9 @@ class MainDrawer extends StatelessWidget {
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const EyeProtectionScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const EyeProtectionScreen(),
+                          ),
                         );
                       },
                     ),
@@ -203,7 +250,24 @@ class MainDrawer extends StatelessWidget {
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const TermsAndPrivacyScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const TermsAndPrivacyScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      themeProvider: themeProvider,
+                      icon: Icons.account_balance_rounded,
+                      title: 'Tài khoản ngân hàng',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BankAccountsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -219,12 +283,18 @@ class MainDrawer extends StatelessWidget {
                         _deleteAllData(context);
                       },
                     ),
-                    
+
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      child: Divider(color: themeProvider.borderColor, thickness: 1),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Divider(
+                        color: themeProvider.borderColor,
+                        thickness: 1,
+                      ),
                     ),
-                    
+
                     _buildDrawerItem(
                       context: context,
                       themeProvider: themeProvider,
@@ -238,22 +308,26 @@ class MainDrawer extends StatelessWidget {
                         final prefs = await SharedPreferences.getInstance();
                         await prefs.remove('is_bypassed_auth');
                         await prefs.remove('bypassed_email');
-                        
+
                         if (context.mounted) {
                           Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                            MaterialPageRoute(
+                              builder: (context) => const AuthWrapper(),
+                            ),
                             (route) => false,
                           );
                         }
                       },
                     ),
-                    
+
                     const SizedBox(height: 30),
-                     Center(
+                    Center(
                       child: Text(
                         'Phiên bản : 2.0.4',
                         style: TextStyle(
-                          color: themeProvider.foregroundColor.withValues(alpha: 0.3),
+                          color: themeProvider.foregroundColor.withValues(
+                            alpha: 0.3,
+                          ),
                           fontSize: 12,
                         ),
                       ),
@@ -286,18 +360,22 @@ class MainDrawer extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              icon, 
-              color: iconColor ?? themeProvider.foregroundColor.withValues(alpha: 0.7), 
-              size: 22
+              icon,
+              color:
+                  iconColor ??
+                  themeProvider.foregroundColor.withValues(alpha: 0.7),
+              size: 22,
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
-                title, 
+                title,
                 style: TextStyle(
-                  color: titleColor ?? themeProvider.foregroundColor.withValues(alpha: 0.9), 
-                  fontSize: 15, 
-                  fontWeight: FontWeight.w500
+                  color:
+                      titleColor ??
+                      themeProvider.foregroundColor.withValues(alpha: 0.9),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -321,18 +399,18 @@ class MainDrawer extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            icon, 
-            color: themeProvider.foregroundColor.withValues(alpha: 0.7), 
-            size: 22
+            icon,
+            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+            size: 22,
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              title, 
+              title,
               style: TextStyle(
-                color: themeProvider.foregroundColor.withValues(alpha: 0.9), 
-                fontSize: 15, 
-                fontWeight: FontWeight.w500
+                color: themeProvider.foregroundColor.withValues(alpha: 0.9),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -341,8 +419,12 @@ class MainDrawer extends StatelessWidget {
             onChanged: onChanged,
             activeThumbColor: const Color(0xFFEC5B13),
             activeTrackColor: const Color(0xFFEC5B13).withValues(alpha: 0.5),
-            inactiveThumbColor: themeProvider.foregroundColor.withValues(alpha: 0.4),
-            inactiveTrackColor: themeProvider.foregroundColor.withValues(alpha: 0.1),
+            inactiveThumbColor: themeProvider.foregroundColor.withValues(
+              alpha: 0.4,
+            ),
+            inactiveTrackColor: themeProvider.foregroundColor.withValues(
+              alpha: 0.1,
+            ),
           ),
         ],
       ),
@@ -362,26 +444,42 @@ class MainDrawer extends StatelessWidget {
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.red),
             const SizedBox(width: 10),
-            Text('Xóa tất cả dữ liệu?', style: TextStyle(color: themeProvider.foregroundColor)),
+            Text(
+              'Xóa tất cả dữ liệu?',
+              style: TextStyle(color: themeProvider.foregroundColor),
+            ),
           ],
         ),
         content: Text(
           'Hành động này sẽ xóa vĩnh viễn toàn bộ giao dịch của bạn trên cả Firestore và Realtime Database. Bạn chắc chắn chứ?',
-          style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7), fontSize: 16),
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+            fontSize: 16,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Hủy', style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7))),
+            child: Text(
+              'Hủy',
+              style: TextStyle(
+                color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('Xóa tất cả', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Xóa tất cả',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -390,7 +488,7 @@ class MainDrawer extends StatelessWidget {
     if (confirm == true && context.mounted) {
       try {
         await provider.deleteAllTransactions();
-        
+
         if (context.mounted) {
           provider.refresh();
           messenger.showSnackBar(

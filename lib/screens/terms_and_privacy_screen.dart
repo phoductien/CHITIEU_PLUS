@@ -51,8 +51,14 @@ class TermsAndPrivacyScreen extends StatelessWidget {
                 unselectedLabelColor: textColor.withValues(alpha: 0.5),
                 indicatorColor: primaryColor,
                 indicatorWeight: 3,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
                 tabs: const [
                   Tab(text: 'Quyền riêng tư'),
                   Tab(text: 'Điều khoản'),
@@ -61,12 +67,7 @@ class TermsAndPrivacyScreen extends StatelessWidget {
             ),
           ),
           bottomOpacity: 1,
-          shape: Border(
-            bottom: BorderSide(
-              color: borderColor,
-              width: 1,
-            ),
-          ),
+          shape: Border(bottom: BorderSide(color: borderColor, width: 1)),
         ),
         body: TabBarView(
           children: [
@@ -78,7 +79,11 @@ class TermsAndPrivacyScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPrivacyTab(Color titleColor, Color bodyColor, Color primaryColor) {
+  Widget _buildPrivacyTab(
+    Color titleColor,
+    Color bodyColor,
+    Color primaryColor,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -86,7 +91,11 @@ class TermsAndPrivacyScreen extends StatelessWidget {
         children: [
           Text(
             'CHÍNH SÁCH QUYỀN RIÊNG TƯ',
-            style: TextStyle(color: titleColor, fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: titleColor,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -95,30 +104,35 @@ class TermsAndPrivacyScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _buildSection(
-              '1. LIÊN HỆ VỚI CHÚNG TÔI',
-              'Nếu bạn có câu hỏi về bảo vệ dữ liệu hoặc yêu cầu giải quyết các vấn đề liên quan đến dữ liệu cá nhân, vui lòng liên hệ:\nTên đơn vị kiểm soát: ChiTieuPlus Team\nEmail: privacy@chitieuplus.com',
-              primaryColor,
-              bodyColor),
+            '1. LIÊN HỆ VỚI CHÚNG TÔI',
+            'Nếu bạn có câu hỏi về bảo vệ dữ liệu hoặc yêu cầu giải quyết các vấn đề liên quan đến dữ liệu cá nhân, vui lòng liên hệ:\nTên đơn vị kiểm soát: ChiTieuPlus Team\nEmail: privacy@chitieuplus.com',
+            primaryColor,
+            bodyColor,
+          ),
           _buildSection(
-              '2. DỮ LIỆU CHÚNG TÔI THU THẬP',
-              '1) Dữ liệu bạn cung cấp cho chúng tôi:\n- Thông tin liên hệ (như tên, email).\n- Thông tin hồ sơ (chẳng hạn như ảnh đại diện).\n- Dữ liệu giao dịch chi tiêu, hạn mức ngân sách và các ghi chú bạn tự nguyện nhập.\n2) Dữ liệu thu thập tự động:\n- Dữ liệu về tài khoản, ID thiết bị, hệ điều hành.\n- Tần suất sử dụng app và cấu trúc menu để tối ưu trải nghiệm.\n3) Dữ liệu từ đối tác:\n- Dữ liệu nhận được khi bạn liên kết với Firebase Auth (Google Sign-In).',
-              primaryColor,
-              bodyColor),
+            '2. DỮ LIỆU CHÚNG TÔI THU THẬP',
+            '1) Dữ liệu bạn cung cấp cho chúng tôi:\n- Thông tin liên hệ (như tên, email).\n- Thông tin hồ sơ (chẳng hạn như ảnh đại diện).\n- Dữ liệu giao dịch chi tiêu, hạn mức ngân sách và các ghi chú bạn tự nguyện nhập.\n2) Dữ liệu thu thập tự động:\n- Dữ liệu về tài khoản, ID thiết bị, hệ điều hành.\n- Tần suất sử dụng app và cấu trúc menu để tối ưu trải nghiệm.\n3) Dữ liệu từ đối tác:\n- Dữ liệu nhận được khi bạn liên kết với Firebase Auth (Google Sign-In).',
+            primaryColor,
+            bodyColor,
+          ),
           _buildSection(
-              '3. TẠI SAO CHÚNG TÔI THU THẬP DỮ LIỆU CỦA BẠN?',
-              '1) Để ứng dụng hoạt động:\n- Khởi tạo tài khoản, đồng bộ ví.\n2) Để cá nhân hóa dịch vụ:\n- Cung cấp tính năng trợ lý ảo (AI) để phân tích chi tiêu cá nhân.\n3) Để phân tích, hiển thị báo cáo:\n- Lập các đồ thị, báo cáo phân bổ và xu hướng.',
-              primaryColor,
-              bodyColor),
+            '3. TẠI SAO CHÚNG TÔI THU THẬP DỮ LIỆU CỦA BẠN?',
+            '1) Để ứng dụng hoạt động:\n- Khởi tạo tài khoản, đồng bộ ví.\n2) Để cá nhân hóa dịch vụ:\n- Cung cấp tính năng trợ lý ảo (AI) để phân tích chi tiêu cá nhân.\n3) Để phân tích, hiển thị báo cáo:\n- Lập các đồ thị, báo cáo phân bổ và xu hướng.',
+            primaryColor,
+            bodyColor,
+          ),
           _buildSection(
-              '4. AI CÓ THỂ XEM DỮ LIỆU?',
-              'Hoạt động phân tích chi tiêu cá nhân dựa trên tài khoản của bạn. Tuy nhiên, toàn bộ dữ liệu giao dịch được chạy độc lập bảo mật và không bị chia sẻ cho bất kì mục đích quảng cáo bên ngoài nào.',
-              primaryColor,
-              bodyColor),
+            '4. AI CÓ THỂ XEM DỮ LIỆU?',
+            'Hoạt động phân tích chi tiêu cá nhân dựa trên tài khoản của bạn. Tuy nhiên, toàn bộ dữ liệu giao dịch được chạy độc lập bảo mật và không bị chia sẻ cho bất kì mục đích quảng cáo bên ngoài nào.',
+            primaryColor,
+            bodyColor,
+          ),
           _buildSection(
-              '5. BẢO VỆ VÀ LƯU GIỮ DỮ LIỆU',
-              'Chúng tôi mã hóa mật khẩu và các thông tin định danh. Mọi gói tin truyền tải lên cơ sở dữ liệu đều tuân thủ các quy tắc bảo mật. Dữ liệu sẽ được lưu giữ miễn là tài khoản ChiTieuPlus của bạn còn hiệu lực.\nBạn có quyền nhấn nút "Xoá toàn bộ dữ liệu" để loại bỏ mọi vết tích trên Cloud.',
-              primaryColor,
-              bodyColor),
+            '5. BẢO VỆ VÀ LƯU GIỮ DỮ LIỆU',
+            'Chúng tôi mã hóa mật khẩu và các thông tin định danh. Mọi gói tin truyền tải lên cơ sở dữ liệu đều tuân thủ các quy tắc bảo mật. Dữ liệu sẽ được lưu giữ miễn là tài khoản ChiTieuPlus của bạn còn hiệu lực.\nBạn có quyền nhấn nút "Xoá toàn bộ dữ liệu" để loại bỏ mọi vết tích trên Cloud.',
+            primaryColor,
+            bodyColor,
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),
@@ -135,7 +149,7 @@ class TermsAndPrivacyScreen extends StatelessWidget {
                 fontStyle: FontStyle.italic,
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -149,7 +163,11 @@ class TermsAndPrivacyScreen extends StatelessWidget {
         children: [
           Text(
             'ĐIỀU KHOẢN SỬ DỤNG GIAO DỊCH',
-            style: TextStyle(color: titleColor, fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: titleColor,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -158,30 +176,35 @@ class TermsAndPrivacyScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _buildSection(
-              '1. TÀI KHOẢN CỦA BẠN',
-              '1) Độ tuổi: Để tạo tài khoản ChiTieuPlus, bạn phải đáp ứng độ tuổi tối thiểu theo quy định. Nếu bạn dưới độ tuổi quy định, phụ huynh hoặc người giám hộ hợp pháp của bạn phải đọc và đồng ý với các Điều Khoản này.\n2) Tạo tài khoản: Bạn có quyền sử dụng email hoặc thông tin bên thứ ba để đăng ký. Bạn chịu trách nhiệm hoàn toàn đối với việc bảo mật thông tin đăng nhập.',
-              primaryColor,
-              bodyColor),
+            '1. TÀI KHOẢN CỦA BẠN',
+            '1) Độ tuổi: Để tạo tài khoản ChiTieuPlus, bạn phải đáp ứng độ tuổi tối thiểu theo quy định. Nếu bạn dưới độ tuổi quy định, phụ huynh hoặc người giám hộ hợp pháp của bạn phải đọc và đồng ý với các Điều Khoản này.\n2) Tạo tài khoản: Bạn có quyền sử dụng email hoặc thông tin bên thứ ba để đăng ký. Bạn chịu trách nhiệm hoàn toàn đối với việc bảo mật thông tin đăng nhập.',
+            primaryColor,
+            bodyColor,
+          ),
           _buildSection(
-              '2. QUYỀN SỞ HỮU TRÍ TUỆ',
-              'Toàn bộ mã nguồn, thiết kế UI/UX, đồ họa và thuật toán AI phân tích chi tiêu đều thuộc bản quyền bảo hộ của hệ thống ChiTieuPlus. Nghiêm cấm mọi hành vi sao chép, làm giả, hoặc phát tán trái phép.',
-              primaryColor,
-              bodyColor),
+            '2. QUYỀN SỞ HỮU TRÍ TUỆ',
+            'Toàn bộ mã nguồn, thiết kế UI/UX, đồ họa và thuật toán AI phân tích chi tiêu đều thuộc bản quyền bảo hộ của hệ thống ChiTieuPlus. Nghiêm cấm mọi hành vi sao chép, làm giả, hoặc phát tán trái phép.',
+            primaryColor,
+            bodyColor,
+          ),
           _buildSection(
-              '3. NGUYÊN TẮC HÀNH VI NGƯỜI DÙNG',
-              'Bạn bị nghiêm cấm tham gia trực tiếp hoặc gián tiếp vào các hoạt động sau:\na) Lưu trữ ghi chú giao dịch mang tính vi phạm pháp luật hoặc bạo lực.\nb) Khai thác lỗi (bugs), lỗ hổng hệ thống để làm sai lệch biểu đồ báo cáo tài chính.\nc) Cố gắng vượt qua, vô hiệu hóa các biện pháp bảo mật trên Database.\nd) Gửi thư rác (spam) gây tắc nghẽn hệ thống phản hồi của chúng tôi.',
-              primaryColor,
-              bodyColor),
+            '3. NGUYÊN TẮC HÀNH VI NGƯỜI DÙNG',
+            'Bạn bị nghiêm cấm tham gia trực tiếp hoặc gián tiếp vào các hoạt động sau:\na) Lưu trữ ghi chú giao dịch mang tính vi phạm pháp luật hoặc bạo lực.\nb) Khai thác lỗi (bugs), lỗ hổng hệ thống để làm sai lệch biểu đồ báo cáo tài chính.\nc) Cố gắng vượt qua, vô hiệu hóa các biện pháp bảo mật trên Database.\nd) Gửi thư rác (spam) gây tắc nghẽn hệ thống phản hồi của chúng tôi.',
+            primaryColor,
+            bodyColor,
+          ),
           _buildSection(
-              '4. GIỚI HẠN VÀ CHẤM DỨT',
-              'Trong trường hợp phát hiện vi phạm Mục 3, chúng tôi có toàn quyền (mà không cần báo trước) để:\n- Sửa đổi hoặc tạm ngưng các dịch vụ (như tính năng AI).\n- Chấm dứt và xóa vĩnh viễn tài khoản ChiTieuPlus của bạn trên hệ thống Cloud.',
-              primaryColor,
-              bodyColor),
+            '4. GIỚI HẠN VÀ CHẤM DỨT',
+            'Trong trường hợp phát hiện vi phạm Mục 3, chúng tôi có toàn quyền (mà không cần báo trước) để:\n- Sửa đổi hoặc tạm ngưng các dịch vụ (như tính năng AI).\n- Chấm dứt và xóa vĩnh viễn tài khoản ChiTieuPlus của bạn trên hệ thống Cloud.',
+            primaryColor,
+            bodyColor,
+          ),
           _buildSection(
-              '5. TỪ CHỐI BẢO ĐẢM',
-              'Ứng dụng được cung cấp "NGUYÊN TRẠNG". Do tính chất của thuật toán, Trợ lý AI và các biểu đồ phân tích ngân sách chỉ mang tính chất dự báo và tham khảo. Chúng tôi không chịu trách nhiệm bồi thường cho các quyết định đầu tư, tài chính sai lầm của bạn.',
-              primaryColor,
-              bodyColor),
+            '5. TỪ CHỐI BẢO ĐẢM',
+            'Ứng dụng được cung cấp "NGUYÊN TRẠNG". Do tính chất của thuật toán, Trợ lý AI và các biểu đồ phân tích ngân sách chỉ mang tính chất dự báo và tham khảo. Chúng tôi không chịu trách nhiệm bồi thường cho các quyết định đầu tư, tài chính sai lầm của bạn.',
+            primaryColor,
+            bodyColor,
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),
@@ -198,13 +221,18 @@ class TermsAndPrivacyScreen extends StatelessWidget {
                 fontStyle: FontStyle.italic,
               ),
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSection(String title, String content, Color primaryColor, Color bodyColor) {
+  Widget _buildSection(
+    String title,
+    String content,
+    Color primaryColor,
+    Color bodyColor,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Column(
@@ -221,11 +249,7 @@ class TermsAndPrivacyScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             content,
-            style: TextStyle(
-              color: bodyColor,
-              fontSize: 14,
-              height: 1.5,
-            ),
+            style: TextStyle(color: bodyColor, fontSize: 14, height: 1.5),
           ),
         ],
       ),

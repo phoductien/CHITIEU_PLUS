@@ -19,7 +19,7 @@ class TransactionService {
 
   Future<void> addTransaction(TransactionModel transaction) async {
     if (_userId == null) return;
-    
+
     // Get a new doc reference to get a generated ID if transaction.id is empty
     DocumentReference docRef;
     if (transaction.id.isEmpty) {
@@ -27,23 +27,23 @@ class TransactionService {
     } else {
       docRef = _transactionsRef.doc(transaction.id);
     }
-    
+
     final finalId = docRef.id;
     final finalTransaction = transaction.copyWith(id: finalId);
 
     // 1. Save to Firestore
     await docRef.set(finalTransaction.toMap());
-    
+
     // 2. Save to Realtime DB
     await _realtime.saveTransaction(finalTransaction);
-    
+
     // 3. SQLite is now only updated during export (on-demand)
     // await _local.insertTransaction(finalTransaction);
   }
 
   Stream<List<TransactionModel>> getTransactions() {
     if (_userId == null) return Stream.value([]);
-    
+
     // UI will listen to Firestore for real-time updates without reload
     return _transactionsRef
         .where('userId', isEqualTo: _userId)
@@ -51,19 +51,24 @@ class TransactionService {
         .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => TransactionModel.fromMap(doc.id, doc.data() as Map<String, dynamic>))
-          .toList();
-    });
+          return snapshot.docs
+              .map(
+                (doc) => TransactionModel.fromMap(
+                  doc.id,
+                  doc.data() as Map<String, dynamic>,
+                ),
+              )
+              .toList();
+        });
   }
 
   Future<void> deleteTransaction(String id) async {
     // 1. Delete from Firestore
     await _transactionsRef.doc(id).delete();
-    
+
     // 2. Delete from Realtime DB
     await _realtime.deleteTransaction(id);
-    
+
     // 3. SQLite is now only updated during export (on-demand)
     // await _local.deleteTransaction(id);
   }
@@ -72,10 +77,10 @@ class TransactionService {
     final batch = _db.batch();
     for (var id in ids) {
       batch.delete(_transactionsRef.doc(id));
-      
+
       // Realtime DB deletion
       await _realtime.deleteTransaction(id);
-      
+
       // SQLite is now only updated during export (on-demand)
       // await _local.deleteTransaction(id);
     }
@@ -84,26 +89,26 @@ class TransactionService {
 
   Future<void> updateTransaction(TransactionModel transaction) async {
     if (_userId == null) return;
-    
+
     // 1. Update Firestore
     await _transactionsRef.doc(transaction.id).update(transaction.toMap());
-    
+
     // 2. Update Realtime DB
     await _realtime.saveTransaction(transaction);
-    
+
     // 3. SQLite is now only updated during export (on-demand)
     // await _local.updateTransaction(transaction);
   }
 
   Future<void> togglePin(String id, bool currentStatus) async {
     final newStatus = !currentStatus;
-    
+
     // 1. Update Firestore
     await _transactionsRef.doc(id).update({'isPinned': newStatus});
-    
+
     // 2. Update Realtime DB
     await _realtime.updateTransactionField(id, {'isPinned': newStatus});
-    
+
     // 3. SQLite is now only updated during export (on-demand)
     // final db = await _local.database;
     // await db.update('transactions', {'isPinned': newStatus ? 1 : 0}, where: 'id = ?', whereArgs: [id]);
@@ -118,9 +123,12 @@ class TransactionService {
     final snapshot = await _transactionsRef
         .where('userId', isEqualTo: _userId)
         .get();
-    
+
     final transactions = snapshot.docs.map((doc) {
-      return TransactionModel.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      return TransactionModel.fromMap(
+        doc.id,
+        doc.data() as Map<String, dynamic>,
+      );
     }).toList();
 
     // 2. Clear local SQLite and rebuild (Desktop/Mobile only)
@@ -128,16 +136,23 @@ class TransactionService {
       if (kIsWeb) {
         if (webFormat == 'csv') {
           final buffer = StringBuffer();
-          buffer.writeln('ID,Tiêu đề,Số tiền,Loại,Danh mục,Ngày giờ,Ví,Ghi chú');
+          buffer.writeln(
+            'ID,Tiêu đề,Số tiền,Loại,Danh mục,Ngày giờ,Ví,Ghi chú',
+          );
           for (var t in transactions) {
             String note = t.note?.replaceAll('"', '""') ?? '';
             String title = t.title.replaceAll('"', '""');
             String category = t.category.replaceAll('"', '""');
             String dateStr = t.date.toIso8601String();
-            String typeStr = t.type == TransactionType.income ? 'Thu thập' : 'Chi tiêu';
-            buffer.writeln('"${t.id}","$title",${t.amount},"$typeStr","$category","$dateStr","${t.wallet}","$note"');
+            String typeStr = t.type == TransactionType.income
+                ? 'Thu thập'
+                : 'Chi tiêu';
+            buffer.writeln(
+              '"${t.id}","$title",${t.amount},"$typeStr","$category","$dateStr","${t.wallet}","$note"',
+            );
           }
-          final String csvString = '\uFEFF${buffer.toString()}'; // Add BOM for Excel UTF-8 display
+          final String csvString =
+              '\uFEFF${buffer.toString()}'; // Add BOM for Excel UTF-8 display
           return Uint8List.fromList(utf8.encode(csvString));
         } else {
           // Fallback for Web: Export as JSON
@@ -146,7 +161,9 @@ class TransactionService {
             map['id'] = t.id; // Include ID in export
             // Convert Timestamp to ISO 8601 string for JSON compatibility
             if (map['date'] is Timestamp) {
-              map['date'] = (map['date'] as Timestamp).toDate().toIso8601String();
+              map['date'] = (map['date'] as Timestamp)
+                  .toDate()
+                  .toIso8601String();
             }
             return map;
           }).toList();
@@ -157,7 +174,7 @@ class TransactionService {
 
       await _local.clearAllData();
       await _local.bulkInsertTransactions(transactions);
-      
+
       final dbPath = await _local.getDatabasePath();
       final dbFile = File(dbPath);
       return await dbFile.readAsBytes();
