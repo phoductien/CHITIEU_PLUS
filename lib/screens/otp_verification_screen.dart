@@ -19,9 +19,12 @@ class OTPVerificationScreen extends StatefulWidget {
 }
 
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
-  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
-  
+
   Timer? _timer;
   int _secondsRemaining = 300; // 5 minutes
   bool _canResend = false;
@@ -75,21 +78,21 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
   Future<void> _resendOTP() async {
     if (!_canResend) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     await OTPService().sendOTP(widget.email);
-    
+
     if (mounted) {
       setState(() {
         _isLoading = false;
         _startTimer();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã gửi lại mã OTP mới')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã gửi lại mã OTP mới')));
     }
   }
 
@@ -98,7 +101,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       _isError = false;
       _errorMessage = '';
     });
-    
+
     if (value.length > 1) {
       // Xử lý paste
       String pastedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
@@ -164,7 +167,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
 
     bool isValid = OTPService().verifyOTP(otp);
-    
+
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -181,7 +184,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => ResetPasswordScreen(email: widget.email, otp: otp),
+            builder: (context) =>
+                ResetPasswordScreen(email: widget.email, otp: otp),
           ),
         );
       } else {
@@ -196,10 +200,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -213,18 +214,17 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF022C4F),
-              Color(0xFF02467D),
-              Color(0xFF0174D7),
-            ],
+            colors: [Color(0xFF022C4F), Color(0xFF02467D), Color(0xFF0174D7)],
             stops: [0.0, 0.4, 1.0],
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
               child: Column(
                 children: [
                   // Back Button
@@ -236,10 +236,10 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   const AppLogo(size: 72),
                   const SizedBox(height: 16),
-                  
+
                   const Text(
                     'ChiTieuPlus',
                     style: TextStyle(
@@ -249,7 +249,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  
+
                   // Verification Shield Icon
                   Container(
                     width: 80,
@@ -258,10 +258,14 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                       color: Colors.white.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.security, color: Color(0xFFF05D15), size: 40),
+                    child: const Icon(
+                      Icons.security,
+                      color: Color(0xFFF05D15),
+                      size: 40,
+                    ),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   const Text(
                     'Xác thực OTP',
                     style: TextStyle(
@@ -280,7 +284,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // OTP Input Boxes
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -298,7 +302,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ],
                   const SizedBox(height: 40),
-                  
+
                   // Timer and Resend
                   Text(
                     'Bạn chưa nhận được mã?',
@@ -313,7 +317,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     child: Text(
                       'Gửi lại mã (${_formatTime(_secondsRemaining)})',
                       style: TextStyle(
-                        color: _canResend ? const Color(0xFFF05D15) : const Color(0xFFF05D15).withValues(alpha: 0.5),
+                        color: _canResend
+                            ? const Color(0xFFF05D15)
+                            : const Color(0xFFF05D15).withValues(alpha: 0.5),
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         decoration: TextDecoration.underline,
@@ -321,13 +327,15 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  
+
                   // Verify Button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _verifyOTP,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF05D15),
-                      disabledBackgroundColor: const Color(0xFFF05D15).withValues(alpha: 0.5),
+                      disabledBackgroundColor: const Color(
+                        0xFFF05D15,
+                      ).withValues(alpha: 0.5),
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -335,7 +343,10 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                       elevation: 8,
                     ),
                     child: _isLoading
-                        ? const AppLoadingIndicator(size: 24, color: Colors.white)
+                        ? const AppLoadingIndicator(
+                            size: 24,
+                            color: Colors.white,
+                          )
                         : const Text(
                             'Xác nhận',
                             style: TextStyle(
@@ -364,9 +375,11 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         color: const Color(0xFF0D3B66).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: _isError 
-              ? Colors.redAccent 
-              : (_focusNodes[index].hasFocus ? const Color(0xFFF05D15) : Colors.white.withValues(alpha: 0.2)),
+          color: _isError
+              ? Colors.redAccent
+              : (_focusNodes[index].hasFocus
+                    ? const Color(0xFFF05D15)
+                    : Colors.white.withValues(alpha: 0.2)),
           width: 2,
         ),
       ),
@@ -379,7 +392,11 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
           FilteringTextInputFormatter.digitsOnly,
           LengthLimitingTextInputFormatter(6),
         ],
-        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
         decoration: const InputDecoration(
           counterText: '',
           border: InputBorder.none,

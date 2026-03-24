@@ -57,13 +57,16 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SafeArea(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 32.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const AppLogo(size: 72),
                       const SizedBox(height: 16),
-                      
+
                       // App Name
                       const Text(
                         'ChiTieuPlus',
@@ -74,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      
+
                       // Subtitle
                       Text(
                         'Quản lý tài chính thông minh',
@@ -84,10 +87,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      
+
                       // Login Form Container
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 32.0,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF06294D), // Dark inner box
                           borderRadius: BorderRadius.circular(24),
@@ -105,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            
+
                             // Email Input
                             _buildInputField(
                               controller: _emailController,
@@ -113,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               icon: Icons.person,
                             ),
                             const SizedBox(height: 24),
-                            
+
                             // Password Label Row
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -130,7 +136,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ForgotPasswordScreen(),
+                                      ),
                                     );
                                   },
                                   child: const Text(
@@ -145,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            
+
                             // Password Input
                             _buildInputField(
                               controller: _passwordController,
@@ -160,13 +169,15 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                             ),
                             const SizedBox(height: 32),
-                            
+
                             // Login Button
                             ElevatedButton(
                               onPressed: _isLoading ? null : _loginUser,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFF05D15),
-                                disabledBackgroundColor: const Color(0xFFF05D15).withValues(alpha: 0.5),
+                                disabledBackgroundColor: const Color(
+                                  0xFFF05D15,
+                                ).withValues(alpha: 0.5),
                                 minimumSize: const Size(double.infinity, 56),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -174,7 +185,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 elevation: 0,
                               ),
                               child: _isLoading
-                                  ? const AppLoadingIndicator(size: 24, color: Colors.white)
+                                  ? const AppLoadingIndicator(
+                                      size: 24,
+                                      color: Colors.white,
+                                    )
                                   : const Text(
                                       'Đăng nhập',
                                       style: TextStyle(
@@ -185,38 +199,53 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                             ),
                             const SizedBox(height: 24),
-                            
+
                             // OR Divider
                             Row(
                               children: [
-                                Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
+                                Expanded(
+                                  child: Divider(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
                                   child: Text(
                                     'HOẶC',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
-                                Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
+                                Expanded(
+                                  child: Divider(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 24),
-                            
+
                             // Google Login Button
                             ElevatedButton(
                               onPressed: _isLoading ? null : _signInWithGoogle,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: Colors.black87,
-                                disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
+                                disabledBackgroundColor: Colors.white
+                                    .withValues(alpha: 0.5),
                                 minimumSize: const Size(double.infinity, 56),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                                  side: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  ),
                                 ),
                                 elevation: 0,
                               ),
@@ -229,7 +258,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     width: 24,
                                     height: 24,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(Icons.account_circle, color: Color(0xFF4285F4), size: 24);
+                                      return const Icon(
+                                        Icons.account_circle,
+                                        color: Color(0xFF4285F4),
+                                        size: 24,
+                                      );
                                     },
                                   ),
                                   const SizedBox(width: 12),
@@ -245,13 +278,15 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Guest Login Button
                             OutlinedButton(
                               onPressed: _isLoading ? null : _loginAsGuest,
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.white,
-                                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                                side: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
                                 minimumSize: const Size(double.infinity, 56),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -266,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            
+
                             // Register Link
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -279,29 +314,32 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 GestureDetector(
-                                   onTap: () {
-                                     Navigator.push(
-                                       context,
-                                       MaterialPageRoute(builder: (context) => const RegistrationScreen()),
-                                     );
-                                   },
-                                   child: const Text(
-                                     'Đăng ký ngay',
-                                     style: TextStyle(
-                                       color: Color(0xFFF05D15),
-                                       fontSize: 13,
-                                       fontWeight: FontWeight.bold,
-                                     ),
-                                   ),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const RegistrationScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    'Đăng ký ngay',
+                                    style: TextStyle(
+                                      color: Color(0xFFF05D15),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Footer Security info
                       const AuthFooterTerms(),
                     ],
@@ -310,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          
+
           // Full screen loading overlay with blur effect
           if (_isLoading)
             Positioned.fill(
@@ -344,9 +382,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF0D3B66),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: controller,
@@ -402,10 +438,12 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       // 2. Fetch and Sync User Data
-      
+
       // We wrap the profile fetching in a timeout/error handler to prevent blocking navigation indefinitely
       try {
-        await userProvider.fetchFromFirebase().timeout(const Duration(seconds: 5));
+        await userProvider.fetchFromFirebase().timeout(
+          const Duration(seconds: 5),
+        );
         await userProvider.syncToFirebase().timeout(const Duration(seconds: 5));
       } catch (e) {
         debugPrint('Post-login background tasks error: $e');
@@ -421,24 +459,34 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       // 3. Navigation and Success notification are now handled GLOBALLY in main.dart
-      debugPrint('[DEBUG] Email Login: Success. Global listener will handle redirect.');
+      debugPrint(
+        '[DEBUG] Email Login: Success. Global listener will handle redirect.',
+      );
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'wrong-password' || e.code == 'invalid-credential' || e.code == 'user-not-found') {
-       
+      if (e.code == 'wrong-password' ||
+          e.code == 'invalid-credential' ||
+          e.code == 'user-not-found') {
         try {
-          final doc = await FirebaseFirestore.instance.collection('users_passwords').doc(email).get();
+          final doc = await FirebaseFirestore.instance
+              .collection('users_passwords')
+              .doc(email)
+              .get();
           if (doc.exists && doc.data()?['password'] == password) {
-            debugPrint('[DEBUG] Email Login: BYPASSED with Firestore override.');
+            debugPrint(
+              '[DEBUG] Email Login: BYPASSED with Firestore override.',
+            );
             final prefs = await SharedPreferences.getInstance();
             await prefs.setBool('is_bypassed_auth', true);
             await prefs.setString('bypassed_email', email);
-            
+
             if (mounted) {
               final userProvider = context.read<UserProvider>();
-              await userProvider.fetchFromFirebase().timeout(const Duration(seconds: 5));
-              
+              await userProvider.fetchFromFirebase().timeout(
+                const Duration(seconds: 5),
+              );
+
               if (!mounted) return;
-              
+
               // Global auth listener won't fire for bypassed users, so we navigate manually
               Navigator.pushReplacement(
                 context,
@@ -474,7 +522,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       _showErrorSnackBar('Lỗi không xác định: $e');
     }
-    // We REMOVED the finally block here because we want _isLoading to persist 
+    // We REMOVED the finally block here because we want _isLoading to persist
     // during the global redirect logic in success cases.
   }
 
@@ -489,7 +537,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleGoogleSignInResult(GoogleSignInResult? result) async {
-    debugPrint('Google Sign-In result received: ${result?.credential != null ? "Success" : "Cancelled"}');
+    debugPrint(
+      'Google Sign-In result received: ${result?.credential != null ? "Success" : "Cancelled"}',
+    );
     if (result == null || result.credential == null) {
       if (mounted) {
         setState(() {
@@ -515,59 +565,76 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('[DEBUG] Google Login: Authenticating with Firebase...');
       final UserCredential userCredential = await FirebaseAuth.instance
           .signInWithCredential(credential)
-          .timeout(const Duration(seconds: 15), onTimeout: () {
-            debugPrint('[DEBUG] Google Login: Auth TIMEOUT');
-            throw 'Hết thời gian xác thực tài khoản Google. Vui lòng thử lại.';
-          });
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              debugPrint('[DEBUG] Google Login: Auth TIMEOUT');
+              throw 'Hết thời gian xác thực tài khoản Google. Vui lòng thử lại.';
+            },
+          );
 
       if (userCredential.user != null) {
-        debugPrint('[DEBUG] Google Login: Auth Success for ${userCredential.user?.email}');
-        
-        // 2. Schedule Background Sync (Non-blocking)
-        unawaited(Future(() async {
-          try {
-            // Capture and store Google Tokens for future API calls
-            if (result.accessToken != null) {
-              await userProvider.setGoogleTokens(
-                accessToken: result.accessToken!,
-                serverAuthCode: result.serverAuthCode,
-              );
-            }
+        debugPrint(
+          '[DEBUG] Google Login: Auth Success for ${userCredential.user?.email}',
+        );
 
-            // Update local provider state immediately if possible
-            if (userCredential.user?.displayName != null) {
-              await userProvider.setName(userCredential.user!.displayName!);
-            }
-            if (userCredential.user?.email != null) {
-              await userProvider.setEmail(userCredential.user!.email!);
-            }
-            if (userCredential.user?.photoURL != null) {
-              await userProvider.setPhotoUrl(userCredential.user!.photoURL!);
-            }
-            
-            // Background Firestore tasks
-            await userProvider.fetchFromFirebase().timeout(const Duration(seconds: 15));
-            await userProvider.syncToFirebase().timeout(const Duration(seconds: 15));
-            debugPrint('[DEBUG] Google Login: Background sync finished.');
-            
-            // Add Notification (Google)
-            if (mounted) {
-              context.read<NotificationProvider>().addNotification(
-                title: 'Đăng nhập Google',
-                body: 'Tài khoản Google của bạn đã được liên kết thành công.',
-                type: NotificationType.security,
+        // 2. Schedule Background Sync (Non-blocking)
+        unawaited(
+          Future(() async {
+            try {
+              // Capture and store Google Tokens for future API calls
+              if (result.accessToken != null) {
+                await userProvider.setGoogleTokens(
+                  accessToken: result.accessToken!,
+                  serverAuthCode: result.serverAuthCode,
+                );
+              }
+
+              // Update local provider state immediately if possible
+              if (userCredential.user?.displayName != null) {
+                await userProvider.setName(userCredential.user!.displayName!);
+              }
+              if (userCredential.user?.email != null) {
+                await userProvider.setEmail(userCredential.user!.email!);
+              }
+              if (userCredential.user?.photoURL != null) {
+                await userProvider.setPhotoUrl(userCredential.user!.photoURL!);
+              }
+
+              // Background Firestore tasks
+              await userProvider.fetchFromFirebase().timeout(
+                const Duration(seconds: 15),
+              );
+              await userProvider.syncToFirebase().timeout(
+                const Duration(seconds: 15),
+              );
+              debugPrint('[DEBUG] Google Login: Background sync finished.');
+
+              // Add Notification (Google)
+              if (mounted) {
+                context.read<NotificationProvider>().addNotification(
+                  title: 'Đăng nhập Google',
+                  body: 'Tài khoản Google của bạn đã được liên kết thành công.',
+                  type: NotificationType.security,
+                );
+              }
+            } catch (e) {
+              debugPrint(
+                '[DEBUG] Google Login: Background sync error (recovered): $e',
               );
             }
-          } catch (e) {
-            debugPrint('[DEBUG] Google Login: Background sync error (recovered): $e');
-          }
-        }));
+          }),
+        );
 
         // 3. Navigation is now handled GLOBALLY in main.dart by the authStateChanges listener.
         // This ensures the transition happens reliably as soon as Firebase confirms the user.
-        debugPrint('[DEBUG] Google Login: Waiting for global listener to handle navigation...');
+        debugPrint(
+          '[DEBUG] Google Login: Waiting for global listener to handle navigation...',
+        );
       } else {
-        debugPrint('[DEBUG] Google Login: Received null user from UserCredential.');
+        debugPrint(
+          '[DEBUG] Google Login: Received null user from UserCredential.',
+        );
       }
     } catch (e) {
       debugPrint('[DEBUG] Google Login: CRITICAL ERROR: $e');
@@ -610,31 +677,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final userProvider = context.read<UserProvider>();
-      
+
       // 1. Firebase Anonymous Sign In
       final userCredential = await FirebaseAuth.instance.signInAnonymously();
-      
+
       if (userCredential.user != null) {
         // 2. Set Guest Status in Provider (Syncs with SharedPreferences)
         await userProvider.setGuestStatus(true);
-        
+
         // 3. Explicitly Sync Initial Guest Profile to Firebase
         try {
-          await userProvider.syncToFirebase().timeout(const Duration(seconds: 5));
+          await userProvider.syncToFirebase().timeout(
+            const Duration(seconds: 5),
+          );
         } catch (e) {
-          debugPrint('[DEBUG] Guest Login: Error syncing initial profile to Firebase: $e');
+          debugPrint(
+            '[DEBUG] Guest Login: Error syncing initial profile to Firebase: $e',
+          );
         }
-        
+
         // Add Notification
         if (mounted) {
           context.read<NotificationProvider>().addNotification(
             title: 'Chế độ Khách',
-            body: 'Bạn đang sử dụng ứng dụng với tư cách Khách. Một số tính năng sẽ bị hạn chế.',
+            body:
+                'Bạn đang sử dụng ứng dụng với tư cách Khách. Một số tính năng sẽ bị hạn chế.',
             type: NotificationType.system,
           );
         }
-        
-        debugPrint('[DEBUG] Guest Login: Success. Global listener will handle redirect.');
+
+        debugPrint(
+          '[DEBUG] Guest Login: Success. Global listener will handle redirect.',
+        );
       }
     } catch (e) {
       debugPrint('[DEBUG] Guest Login: Error: $e');

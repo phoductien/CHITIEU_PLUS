@@ -10,7 +10,11 @@ import 'package:chitieu_plus/widgets/auth_footer_terms.dart';
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
   final String otp;
-  const ResetPasswordScreen({super.key, required this.email, required this.otp});
+  const ResetPasswordScreen({
+    super.key,
+    required this.email,
+    required this.otp,
+  });
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -18,8 +22,9 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -46,7 +51,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final password = _passwordController.text;
     setState(() {
       _hasMinLength = password.length >= 8;
-      _hasLetterAndNumber = RegExp(r'[a-zA-Z]').hasMatch(password) && RegExp(r'[0-9]').hasMatch(password);
+      _hasLetterAndNumber =
+          RegExp(r'[a-zA-Z]').hasMatch(password) &&
+          RegExp(r'[0-9]').hasMatch(password);
     });
   }
 
@@ -70,13 +77,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     try {
       // Logic for password reset:
-      // Note: In a production environment with Firebase Auth, you would typically use 
-      // a backend function to update the password since common users cannot 
+      // Note: In a production environment with Firebase Auth, you would typically use
+      // a backend function to update the password since common users cannot
       // update passwords without re-authenticating.
-      
-      // For this implementation, we simulate the database update and provide a 
+
+      // For this implementation, we simulate the database update and provide a
       // success resulting screen as requested.
-      
+
       // 1. We update a custom "users_passwords" document in Firestore
       // This allows us to bypass Firebase Auth's restriction on client-side password updates
       await FirebaseFirestore.instance
@@ -86,7 +93,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             'password': password,
             'lastPasswordReset': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true))
-          .catchError((e) => debugPrint('Non-critical Firestore update error: $e'));
+          .catchError(
+            (e) => debugPrint('Non-critical Firestore update error: $e'),
+          );
 
       // 2. Simulate delay
       await Future.delayed(const Duration(seconds: 2));
@@ -115,10 +124,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -132,18 +138,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF022C4F),
-              Color(0xFF02467D),
-              Color(0xFF0174D7),
-            ],
+            colors: [Color(0xFF022C4F), Color(0xFF02467D), Color(0xFF0174D7)],
             stops: [0.0, 0.4, 1.0],
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
               child: Column(
                 children: [
                   // Back Button
@@ -155,7 +160,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Reset Icon
                   Container(
                     width: 80,
@@ -164,10 +169,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       color: const Color(0xFFF05D15).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: const Icon(Icons.restore, color: Color(0xFFF05D15), size: 44),
+                    child: const Icon(
+                      Icons.restore,
+                      color: Color(0xFFF05D15),
+                      size: 44,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   const Text(
                     'Mật khẩu mới',
                     style: TextStyle(
@@ -186,14 +195,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  
+
                   // Password Fields Container
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 32,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF031A33).withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,38 +218,52 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           controller: _passwordController,
                           hintText: '••••••••',
                           obscureText: _obscurePassword,
-                          toggleIcon: _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                          onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+                          toggleIcon: _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          onToggle: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         _buildLabel('Xác nhận mật khẩu'),
                         const SizedBox(height: 12),
                         _buildPasswordField(
                           controller: _confirmPasswordController,
                           hintText: '••••••••',
                           obscureText: _obscureConfirmPassword,
-                          toggleIcon: _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
-                          onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                          toggleIcon: _obscureConfirmPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          onToggle: () => setState(
+                            () => _obscureConfirmPassword =
+                                !_obscureConfirmPassword,
+                          ),
                           icon: Icons.check_circle_outline,
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Validation Indicators
                         _buildValidationItem('Ít nhất 8 ký tự', _hasMinLength),
                         const SizedBox(height: 12),
-                        _buildValidationItem('Bao gồm chữ cái và số', _hasLetterAndNumber),
+                        _buildValidationItem(
+                          'Bao gồm chữ cái và số',
+                          _hasLetterAndNumber,
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // Submit Button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _resetPassword,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF05D15),
-                      disabledBackgroundColor: const Color(0xFFF05D15).withValues(alpha: 0.5),
+                      disabledBackgroundColor: const Color(
+                        0xFFF05D15,
+                      ).withValues(alpha: 0.5),
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -243,7 +271,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       elevation: 8,
                     ),
                     child: _isLoading
-                        ? const AppLoadingIndicator(size: 24, color: Colors.white)
+                        ? const AppLoadingIndicator(
+                            size: 24,
+                            color: Colors.white,
+                          )
                         : const Text(
                             'Đổi mật khẩu',
                             style: TextStyle(
@@ -254,7 +285,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Cancel
                   TextButton(
                     onPressed: () {
@@ -311,9 +342,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2)),
-          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.4), size: 18),
+          prefixIcon: Icon(
+            icon,
+            color: Colors.white.withValues(alpha: 0.4),
+            size: 18,
+          ),
           suffixIcon: IconButton(
-            icon: Icon(toggleIcon, color: Colors.white.withValues(alpha: 0.4), size: 18),
+            icon: Icon(
+              toggleIcon,
+              color: Colors.white.withValues(alpha: 0.4),
+              size: 18,
+            ),
             onPressed: onToggle,
           ),
           border: InputBorder.none,

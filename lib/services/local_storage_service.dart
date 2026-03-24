@@ -24,14 +24,12 @@ class LocalStorageService {
       // Return a dummy database or throw a descriptive error
       // Since the user is testing on Web but wants SQLite, we should ideally use sqflite_common_ffi_web
       // but for now let's just avoid the crash if they are just "trying it out"
-      throw Exception('SQLite (sqflite) không hỗ trợ trên trình duyệt Web. Vui lòng chạy trên Android, iOS hoặc Windows.');
+      throw Exception(
+        'SQLite (sqflite) không hỗ trợ trên trình duyệt Web. Vui lòng chạy trên Android, iOS hoặc Windows.',
+      );
     }
     String path = join(await getDatabasesPath(), 'chitieu_plus.db');
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
+    return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -59,7 +57,7 @@ class LocalStorageService {
     // Convert DateTime/Timestamp for SQLite compatibility
     data['date'] = transaction.date.toIso8601String();
     data['isPinned'] = transaction.isPinned ? 1 : 0;
-    
+
     return await db.insert(
       'transactions',
       data,
@@ -84,7 +82,9 @@ class LocalStorageService {
         amount: maps[i]['amount'],
         category: maps[i]['category'],
         date: DateTime.parse(maps[i]['date']),
-        type: maps[i]['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+        type: maps[i]['type'] == 'income'
+            ? TransactionType.income
+            : TransactionType.expense,
         note: maps[i]['note'],
         wallet: maps[i]['wallet'] ?? 'main',
         isPinned: maps[i]['isPinned'] == 1,
@@ -108,11 +108,7 @@ class LocalStorageService {
 
   Future<int> deleteTransaction(String id) async {
     final db = await database;
-    return await db.delete(
-      'transactions',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> clearAllData() async {
@@ -120,10 +116,12 @@ class LocalStorageService {
     await db.delete('transactions');
   }
 
-  Future<void> bulkInsertTransactions(List<TransactionModel> transactions) async {
+  Future<void> bulkInsertTransactions(
+    List<TransactionModel> transactions,
+  ) async {
     final db = await database;
     final batch = db.batch();
-    
+
     for (var transaction in transactions) {
       Map<String, dynamic> data = transaction.toMap();
       data['date'] = transaction.date.toIso8601String();
@@ -135,7 +133,7 @@ class LocalStorageService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
-    
+
     await batch.commit(noResult: true);
   }
 

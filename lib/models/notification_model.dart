@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum NotificationType {
-  transaction,
-  aiReminder,
-  system,
-  security,
-}
+enum NotificationType { transaction, aiReminder, system, security }
 
 class NotificationModel {
   final int id;
@@ -67,7 +62,11 @@ class NotificationModel {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final notificationDate = DateTime(timestamp.year, timestamp.month, timestamp.day);
+    final notificationDate = DateTime(
+      timestamp.year,
+      timestamp.month,
+      timestamp.day,
+    );
 
     if (notificationDate == today) {
       return 'HÔM NAY';

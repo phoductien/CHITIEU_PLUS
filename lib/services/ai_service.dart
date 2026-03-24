@@ -36,7 +36,7 @@ class AiService {
       'Nhanh': 'gemini-3.1-flash-lite-preview',
       'Tư duy': 'gemini-3-flash-preview',
       'Pro': 'gemini-3.1-pro-preview',
-    }
+    },
   };
 
   String get currentVersion => _currentVersion;
@@ -52,7 +52,8 @@ class AiService {
     final prefs = await SharedPreferences.getInstance();
     _currentVersion = prefs.getString(_versionPrefsKey) ?? '3.0';
     _currentTier = prefs.getString(_tierPrefsKey) ?? 'Tư duy';
-    _currentModelName = _modelMap[_currentVersion]?[_currentTier] ?? 'gemini-3-flash';
+    _currentModelName =
+        _modelMap[_currentVersion]?[_currentTier] ?? 'gemini-3-flash';
 
     _initialized = true;
   }
@@ -61,7 +62,7 @@ class AiService {
     final prefs = await SharedPreferences.getInstance();
     final lockoutStr = prefs.getString('lockout_$_currentModelName');
     if (lockoutStr == null) return null;
-    
+
     final lockoutTime = DateTime.parse(lockoutStr);
     if (DateTime.now().isAfter(lockoutTime)) {
       await prefs.remove('lockout_$_currentModelName');
@@ -73,7 +74,10 @@ class AiService {
   Future<void> _setLockout() async {
     final lockoutTime = DateTime.now().add(const Duration(hours: 24));
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('lockout_$_currentModelName', lockoutTime.toIso8601String());
+    await prefs.setString(
+      'lockout_$_currentModelName',
+      lockoutTime.toIso8601String(),
+    );
   }
 
   Future<void> updateModel(String modelName) async {
@@ -103,7 +107,11 @@ class AiService {
     await init();
   }
 
-  Future<String> sendMessage(String text, {List<Map<String, dynamic>>? attachments, List<String>? contextStrings}) async {
+  Future<String> sendMessage(
+    String text, {
+    List<Map<String, dynamic>>? attachments,
+    List<String>? contextStrings,
+  }) async {
     await _ensureInitialized();
 
     final lockoutTime = await getLockoutTime();
@@ -112,7 +120,7 @@ class AiService {
     }
 
     if (_vercelProxyUrl.contains('YOUR_VERCEL_DOMAIN_HERE')) {
-         return "LỖI: Chưa cấu hình Vercel Proxy URL. Vui lòng mở `ai_service.dart` và cập nhật biến `_vercelProxyUrl`.";
+      return "LỖI: Chưa cấu hình Vercel Proxy URL. Vui lòng mở `ai_service.dart` và cập nhật biến `_vercelProxyUrl`.";
     }
     try {
       final payload = {
@@ -122,10 +130,17 @@ class AiService {
         'version': _currentVersion,
         'tier': _currentTier,
         'contextStrings': contextStrings ?? [],
-        'attachments': (attachments ?? []).map((att) => {
-           'base64': att['bytes'] != null ? base64Encode(att['bytes'] as Uint8List) : null,
-           'mimeType': att['mimeType'],
-        }).where((a) => a['base64'] != null).toList(),
+        'attachments': (attachments ?? [])
+            .map(
+              (att) => {
+                'base64': att['bytes'] != null
+                    ? base64Encode(att['bytes'] as Uint8List)
+                    : null,
+                'mimeType': att['mimeType'],
+              },
+            )
+            .where((a) => a['base64'] != null)
+            .toList(),
       };
 
       // Gửi yêu cầu qua thẻ POST
@@ -136,18 +151,18 @@ class AiService {
       );
 
       if (response.statusCode == 200) {
-         final data = jsonDecode(utf8.decode(response.bodyBytes));
-         
-         // Update client history
-         _clientHistory.add({'role': 'user', 'text': text});
-         _clientHistory.add({'role': 'ai', 'text': data['response']});
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
 
-         return data['response'] ?? "Không có phản hồi từ AI.";
+        // Update client history
+        _clientHistory.add({'role': 'user', 'text': text});
+        _clientHistory.add({'role': 'ai', 'text': data['response']});
+
+        return data['response'] ?? "Không có phản hồi từ AI.";
       } else if (response.statusCode == 429) {
-         await _setLockout();
-         return "LIMIT_EXCEEDED";
+        await _setLockout();
+        return "LIMIT_EXCEEDED";
       } else {
-         return "Lỗi từ Server (${response.statusCode}): ${response.body}";
+        return "Lỗi từ Server (${response.statusCode}): ${response.body}";
       }
     } catch (e) {
       debugPrint('[AiService] Error HTTP: $e');
@@ -165,20 +180,44 @@ class AiService {
 
     await _ensureInitialized();
     try {
+      final payload = {
+        'type': 'chat',
+        'message':
+            'Dựa vào tin nhắn sau, hãy tạo một tiêu đề siêu ngắn (tối đa 4 từ) cho cuộc hội thoại này. TRẢ VỀ DUY NHẤT TIÊU ĐỀ TRONG PHẦN MESSAGE CHO PHÉP, KHÔNG có dấu ngoặc kép hay giải thích.\n\n"$firstMessage"',
+        'history': [],
+        'version': _currentVersion,
+        'tier': 'Nhanh',
+      };
+
       final response = await http.post(
         Uri.parse(_vercelProxyUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'type': 'title', 'message': firstMessage}),
+        body: jsonEncode(payload),
       );
-      
+
       if (response.statusCode == 200) {
-         final data = jsonDecode(utf8.decode(response.bodyBytes));
-         final title = data['result'] ?? "Cuộc trò chuyện mới";
-         _titleCache[cacheKey] = title;
-         return title;
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        String rawText = data['response'] ?? "Cuộc trò chuyện mới";
+
+        // Vercel proxy always returns nested JSON for Gemini responses under 'message'
+        try {
+          final innerData = jsonDecode(rawText);
+          if (innerData != null && innerData['message'] != null) {
+            rawText = innerData['message'];
+          }
+        } catch (e) {
+          // Ignored if not JSON
+        }
+
+        String title = rawText.replaceAll('"', '').replaceAll('*', '').trim();
+        if (title.isEmpty) title = "Cuộc trò chuyện mới";
+
+        _titleCache[cacheKey] = title;
+        return title;
       }
       return "Cuộc trò chuyện mới";
     } catch (e) {
+      debugPrint("Title generation error: $e");
       return "Cuộc trò chuyện mới";
     }
   }
@@ -189,20 +228,46 @@ class AiService {
 
     await _ensureInitialized();
     try {
+      final payload = {
+        'type': 'chat',
+        'message':
+            'Dựa vào tin nhắn sau, hãy phân loại nội dung vào MỘT trong các từ khóa: "Thu", "Chi", "Phân tích", "Chính sách", hoặc "Khác". CHỈ TRẢ VỀ DUY NHẤT TỪ KHÓA TRONG PHẦN MESSAGE, KHÔNG có ngoặc kép.\n\n"$firstMessage"',
+        'history': [],
+        'version': _currentVersion,
+        'tier': 'Nhanh',
+      };
+
       final response = await http.post(
         Uri.parse(_vercelProxyUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'type': 'category', 'message': firstMessage}),
+        body: jsonEncode(payload),
       );
-      
+
       if (response.statusCode == 200) {
-         final data = jsonDecode(utf8.decode(response.bodyBytes));
-         final category = data['result'] ?? "Khác";
-         _categoryCache[cacheKey] = category;
-         return category;
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        String rawText = data['response'] ?? "Khác";
+
+        try {
+          final innerData = jsonDecode(rawText);
+          if (innerData != null && innerData['message'] != null) {
+            rawText = innerData['message'];
+          }
+        } catch (e) {
+          // Ignored if not JSON
+        }
+
+        String category = rawText
+            .replaceAll('"', '')
+            .replaceAll('*', '')
+            .trim();
+        if (category.isEmpty) category = "Khác";
+
+        _categoryCache[cacheKey] = category;
+        return category;
       }
       return "Khác";
     } catch (e) {
+      debugPrint("Category generation error: $e");
       return "Khác";
     }
   }

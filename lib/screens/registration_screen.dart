@@ -23,8 +23,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -60,13 +61,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             child: SafeArea(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 32.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const AppLogo(size: 72),
                       const SizedBox(height: 16),
-                      
+
                       // App Name
                       const Text(
                         'ChiTieuPlus',
@@ -77,7 +81,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      
+
                       // Subtitle
                       Text(
                         'Quản lý tài chính thông minh',
@@ -87,10 +91,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      
+
                       // Register Form Container
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 32.0,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF06294D), // Dark inner box
                           borderRadius: BorderRadius.circular(24),
@@ -108,7 +115,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            
+
                             // Name Input
                             _buildInputField(
                               controller: _nameController,
@@ -116,7 +123,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               icon: Icons.person,
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Email Label
                             const Text(
                               'Email',
@@ -127,7 +134,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            
+
                             // Email Input
                             _buildInputField(
                               controller: _emailController,
@@ -135,7 +142,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               icon: Icons.email,
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Password Label
                             const Text(
                               'Mật khẩu',
@@ -146,7 +153,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            
+
                             // Password Input
                             _buildInputField(
                               controller: _passwordController,
@@ -161,7 +168,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               },
                             ),
                             const SizedBox(height: 16),
-    
+
                             // Confirm Password Label
                             const Text(
                               'Xác nhận mật khẩu',
@@ -172,7 +179,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            
+
                             // Confirm Password Input
                             _buildInputField(
                               controller: _confirmPasswordController,
@@ -182,67 +189,89 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               obscureText: _obscureConfirmPassword,
                               onToggleVisibility: () {
                                 setState(() {
-                                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
                                 });
                               },
                             ),
                             const SizedBox(height: 32),
-                            
+
                             // Register Button
                             ElevatedButton(
                               onPressed: _isLoading ? null : _registerUser,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFF05D15),
-                                disabledBackgroundColor: const Color(0xFFF05D15).withValues(alpha: 0.5),
+                                disabledBackgroundColor: const Color(
+                                  0xFFF05D15,
+                                ).withValues(alpha: 0.5),
                                 minimumSize: const Size(double.infinity, 56),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 elevation: 0,
                               ),
-                              child: _isLoading 
-                                ? const AppLoadingIndicator(size: 24, color: Colors.white)
-                                : const Text(
-                                'ĐĂNG KÝ NGAY',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              child: _isLoading
+                                  ? const AppLoadingIndicator(
+                                      size: 24,
+                                      color: Colors.white,
+                                    )
+                                  : const Text(
+                                      'ĐĂNG KÝ NGAY',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                             ),
                             const SizedBox(height: 24),
-                            
+
                             // OR Divider
                             Row(
                               children: [
-                                Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
+                                Expanded(
+                                  child: Divider(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
                                   child: Text(
                                     'HOẶC',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
-                                Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
+                                Expanded(
+                                  child: Divider(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 24),
-                            
+
                             // Google Register Button
                             ElevatedButton(
                               onPressed: _isLoading ? null : _signInWithGoogle,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF031A33),
-                                disabledBackgroundColor: const Color(0xFF031A33).withValues(alpha: 0.5),
+                                disabledBackgroundColor: const Color(
+                                  0xFF031A33,
+                                ).withValues(alpha: 0.5),
                                 minimumSize: const Size(double.infinity, 56),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                                  side: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  ),
                                 ),
                                 elevation: 0,
                               ),
@@ -254,7 +283,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     width: 20,
                                     height: 20,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(Icons.g_mobiledata, color: Colors.white, size: 30);
+                                      return const Icon(
+                                        Icons.g_mobiledata,
+                                        color: Colors.white,
+                                        size: 30,
+                                      );
                                     },
                                   ),
                                   const SizedBox(width: 12),
@@ -270,7 +303,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            
+
                             // Register Link
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -283,26 +316,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   ),
                                 ),
                                 GestureDetector(
-                                   onTap: () {
-                                     Navigator.pop(context); // Trở về Login
-                                   },
-                                   child: const Text(
-                                     'Đăng nhập ngay',
-                                     style: TextStyle(
-                                       color: Color(0xFFF05D15),
-                                       fontSize: 13,
-                                       fontWeight: FontWeight.bold,
-                                     ),
-                                   ),
+                                  onTap: () {
+                                    Navigator.pop(context); // Trở về Login
+                                  },
+                                  child: const Text(
+                                    'Đăng nhập ngay',
+                                    style: TextStyle(
+                                      color: Color(0xFFF05D15),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Footer Security info
                       const AuthFooterTerms(),
                     ],
@@ -311,7 +344,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
             ),
           ),
-          
+
           // Full screen loading overlay with blur effect
           if (_isLoading)
             Positioned.fill(
@@ -345,9 +378,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF0D3B66),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: controller,
@@ -471,7 +502,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       }
       _showErrorSnackBar('Lỗi không xác định: $e');
     }
-    // We REMOVED the finally block here because we want _isLoading to persist 
+    // We REMOVED the finally block here because we want _isLoading to persist
     // during the navigation/redirect logic in success cases.
   }
 
@@ -486,7 +517,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Future<void> _handleGoogleSignInResult(GoogleSignInResult? result) async {
-    debugPrint('Registration Google Sign-In result: ${result?.credential != null ? "Success" : "Cancelled"}');
+    debugPrint(
+      'Registration Google Sign-In result: ${result?.credential != null ? "Success" : "Cancelled"}',
+    );
     if (result == null || result.credential == null) {
       if (mounted) {
         setState(() {
@@ -512,42 +545,60 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       debugPrint('[DEBUG] Google Register: Authenticating with Firebase...');
       final UserCredential userCredential = await FirebaseAuth.instance
           .signInWithCredential(credential)
-          .timeout(const Duration(seconds: 15), onTimeout: () {
-            debugPrint('[DEBUG] Google Register: Auth TIMEOUT');
-            throw 'Hết thời gian xác thực Google. Vui lòng thử lại.';
-          });
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              debugPrint('[DEBUG] Google Register: Auth TIMEOUT');
+              throw 'Hết thời gian xác thực Google. Vui lòng thử lại.';
+            },
+          );
 
       if (userCredential.user != null) {
-        debugPrint('[DEBUG] Google Register: Auth Success for ${userCredential.user?.email}');
-        
+        debugPrint(
+          '[DEBUG] Google Register: Auth Success for ${userCredential.user?.email}',
+        );
+
         // 2. Schedule Background Sync (Non-blocking)
-        unawaited(Future(() async {
-          try {
-            // Capture and store Google Tokens for future API calls
-            if (result.accessToken != null) {
-              await userProvider.setGoogleTokens(
-                accessToken: result.accessToken!,
-                serverAuthCode: result.serverAuthCode,
+        unawaited(
+          Future(() async {
+            try {
+              // Capture and store Google Tokens for future API calls
+              if (result.accessToken != null) {
+                await userProvider.setGoogleTokens(
+                  accessToken: result.accessToken!,
+                  serverAuthCode: result.serverAuthCode,
+                );
+              }
+
+              await userProvider.fetchFromFirebase().timeout(
+                const Duration(seconds: 15),
+              );
+              String displayName =
+                  userCredential.user?.displayName ?? 'Người dùng Google';
+              await userProvider.setName(displayName);
+              if (userCredential.user?.email != null) {
+                await userProvider.setEmail(userCredential.user!.email!);
+              }
+              await userProvider.syncToFirebase().timeout(
+                const Duration(seconds: 15),
+              );
+              debugPrint('[DEBUG] Google Register: Background sync finished.');
+            } catch (e) {
+              debugPrint(
+                '[DEBUG] Google Register: Background sync error (recovered): $e',
               );
             }
-
-            await userProvider.fetchFromFirebase().timeout(const Duration(seconds: 15));
-            String displayName = userCredential.user?.displayName ?? 'Người dùng Google';
-            await userProvider.setName(displayName);
-            if (userCredential.user?.email != null) {
-              await userProvider.setEmail(userCredential.user!.email!);
-            }
-            await userProvider.syncToFirebase().timeout(const Duration(seconds: 15));
-            debugPrint('[DEBUG] Google Register: Background sync finished.');
-          } catch (e) {
-            debugPrint('[DEBUG] Google Register: Background sync error (recovered): $e');
-          }
-        }));
+          }),
+        );
 
         // 3. Navigation is now handled GLOBALLY in main.dart by the authStateChanges listener.
-        debugPrint('[DEBUG] Google Register: Waiting for global listener to handle navigation...');
+        debugPrint(
+          '[DEBUG] Google Register: Waiting for global listener to handle navigation...',
+        );
       } else {
-        debugPrint('[DEBUG] Google Register: Received null user from UserCredential.');
+        debugPrint(
+          '[DEBUG] Google Register: Received null user from UserCredential.',
+        );
       }
     } catch (e) {
       debugPrint('[DEBUG] Google Register: CRITICAL ERROR: $e');

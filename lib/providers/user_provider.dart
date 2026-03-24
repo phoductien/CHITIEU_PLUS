@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart'; // Added for Firebase.app()
-import 'package:chitieu_plus/services/realtime_db_service.dart';
 
 class UserProvider with ChangeNotifier {
   String _name = '';
@@ -19,6 +19,10 @@ class UserProvider with ChangeNotifier {
   String _googleServerAuthCode = '';
   bool _isGuest = false;
 
+  double _totalBudget = 5000000;
+  Map<String, double> _categoryBudgets = {};
+  List<String> _bankAccounts = [];
+
   String get name => _name;
   String get email => _email;
   String get photoUrl => _photoUrl;
@@ -29,6 +33,10 @@ class UserProvider with ChangeNotifier {
   String get googleAccessToken => _googleAccessToken;
   String get googleServerAuthCode => _googleServerAuthCode;
   bool get isGuest => _isGuest;
+
+  double get totalBudget => _totalBudget;
+  Map<String, double> get categoryBudgets => _categoryBudgets;
+  List<String> get bankAccounts => _bankAccounts;
 
   /// 1. Tải dữ liệu từ Local Storage (SharedPreferences) lúc khởi động App
   Future<void> loadUserData() async {
@@ -43,6 +51,20 @@ class UserProvider with ChangeNotifier {
     _googleAccessToken = prefs.getString('google_access_token') ?? '';
     _googleServerAuthCode = prefs.getString('google_server_auth_code') ?? '';
     _isGuest = prefs.getBool('is_guest') ?? false;
+
+    _totalBudget = prefs.getDouble('user_total_budget') ?? 5000000;
+    _bankAccounts = prefs.getStringList('user_bank_accounts') ?? [];
+    final catBudgetsJson = prefs.getString('user_category_budgets');
+    if (catBudgetsJson != null) {
+      try {
+        final Map<String, dynamic> decoded = jsonDecode(catBudgetsJson);
+        _categoryBudgets = decoded.map(
+          (k, v) => MapEntry(k, (v as num).toDouble()),
+        );
+      } catch (e) {
+        debugPrint('[UserProvider] Error decoding category budgets: $e');
+      }
+    }
     notifyListeners();
   }
 
@@ -183,6 +205,12 @@ class UserProvider with ChangeNotifier {
         _dob = data['dob'] ?? _dob;
         _gender = data['gender'] ?? _gender;
 
+        _totalBudget =
+            (data['totalBudget'] as num?)?.toDouble() ?? _totalBudget;
+        _bankAccounts = List<String>.from(
+          data['bankAccounts'] ?? _bankAccounts,
+        );
+
         // Cập nhật SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_name', _name);
@@ -193,6 +221,8 @@ class UserProvider with ChangeNotifier {
         await prefs.setString('user_dob', _dob);
         await prefs.setString('user_gender', _gender);
         await prefs.setBool('is_guest', _isGuest);
+        await prefs.setDouble('user_total_budget', _totalBudget);
+        await prefs.setStringList('user_bank_accounts', _bankAccounts);
 
         notifyListeners();
       }
@@ -255,6 +285,8 @@ class UserProvider with ChangeNotifier {
         'dob': _dob,
         'gender': _gender,
         'isGuest': _isGuest,
+        'totalBudget': _totalBudget,
+        'bankAccounts': _bankAccounts,
       };
 
       // 1. Đẩy thông tin của người dùng này lên Firestore
@@ -295,39 +327,95 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<void> setTotalBudget(double value) async {
+    _totalBudget = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('user_total_budget', value);
+    await syncToFirebase();
+  }
+
+  Future<void> setCategoryBudgets(Map<String, double> values) async {
+    _categoryBudgets = values;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_category_budgets', jsonEncode(values));
+    await syncToFirebase();
+  }
+
+  Future<void> addBankAccount(String name) async {
+    if (!_bankAccounts.contains(name)) {
+      _bankAccounts.add(name);
+      notifyListeners();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('user_bank_accounts', _bankAccounts);
+      await syncToFirebase();
+    }
+  }
+
+  Future<void> removeBankAccount(String name) async {
+    if (_bankAccounts.contains(name)) {
+      _bankAccounts.remove(name);
+      notifyListeners();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('user_bank_accounts', _bankAccounts);
+      await syncToFirebase();
+    }
+  }
+
+  static bool isCleaningUpGuest = false;
+
   /// 7. Gọi hàm này khi khởi động app hoặc khi đăng xuất để xóa sạch dữ liệu Khách (xóa User Auth + Data Firebase)
-  static Future<void> cleanupGuestIfAny() async {
+  static Future<void> cleanupGuestIfAny([User? currentUser]) async {
+    isCleaningUpGuest = true;
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = currentUser ?? FirebaseAuth.instance.currentUser;
       if (user != null && user.isAnonymous) {
         final uid = user.uid;
 
         // 1. Xóa trên Firestore
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .delete()
-            .timeout(const Duration(seconds: 5));
+        try {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .delete()
+              .timeout(const Duration(seconds: 5));
+        } catch (e) {
+          debugPrint('[UserProvider] Không thể xóa Firestore Khách: $e');
+        }
 
         // 2. Xóa trên Realtime Database (gồm cả profile và transactions)
-        await FirebaseDatabase.instanceFor(
-              app: Firebase.app(),
-              databaseURL:
-                  'https://chitieuplus-app-default-rtdb.firebaseio.com',
-            )
-            .ref()
-            .child('users/$uid')
-            .remove()
-            .timeout(const Duration(seconds: 5));
+        try {
+          await FirebaseDatabase.instanceFor(
+                app: Firebase.app(),
+                databaseURL:
+                    'https://chitieuplus-app-default-rtdb.firebaseio.com',
+              )
+              .ref()
+              .child('users/$uid')
+              .remove()
+              .timeout(const Duration(seconds: 5));
+        } catch (e) {
+          debugPrint('[UserProvider] Không thể xóa RTDB Khách: $e');
+        }
 
         // 3. Xóa Authenticated User
-        await user.delete().timeout(const Duration(seconds: 5));
+        try {
+          await user.delete().timeout(const Duration(seconds: 5));
+        } catch (e) {
+          debugPrint(
+            '[UserProvider] Error deleting guest user (token may have expired): $e',
+          );
+          await FirebaseAuth.instance.signOut();
+        }
       }
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('is_guest', false);
     } catch (e) {
-      debugPrint('[UserProvider] Lỗi khi dọn dẹp tài khoản Khách: $e');
+      debugPrint('[UserProvider] Lỗi chung khi dọn dẹp tài khoản Khách: $e');
+    } finally {
+      isCleaningUpGuest = false;
     }
   }
 }

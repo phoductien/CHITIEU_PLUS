@@ -13,7 +13,8 @@ class OcrScanScreen extends StatefulWidget {
   State<OcrScanScreen> createState() => _OcrScanScreenState();
 }
 
-class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProviderStateMixin {
+class _OcrScanScreenState extends State<OcrScanScreen>
+    with SingleTickerProviderStateMixin {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
@@ -36,10 +37,9 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _scanAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeInOut,
-    ));
+    _scanAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+    );
   }
 
   Future<void> _initCamera() async {
@@ -48,16 +48,16 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
       _cameraError = null;
       _isCameraInitialized = false;
     });
-    
+
     try {
       _cameras = await availableCameras();
       if (_cameras != null && _cameras!.isNotEmpty) {
         _cameraController = CameraController(
-          _cameras![0],
+          _cameras![1],
           ResolutionPreset.high,
           enableAudio: false,
         );
-        
+
         await _cameraController!.initialize();
         if (mounted) {
           setState(() {
@@ -65,7 +65,10 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
           });
         }
       } else {
-        if (mounted) setState(() => _cameraError = 'Không tìm thấy camera nào trên thiết bị.');
+        if (mounted)
+          setState(
+            () => _cameraError = 'Không tìm thấy camera nào trên thiết bị.',
+          );
       }
     } catch (e) {
       if (mounted) setState(() => _cameraError = 'Lỗi khởi tạo camera: $e');
@@ -82,11 +85,11 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
   Future<void> _processImage(XFile image) async {
     if (!mounted) return;
     setState(() => _isProcessing = true);
-    
+
     try {
       final bytes = await image.readAsBytes();
       final aiService = AiService();
-      
+
       final prompt = '''
       Hãy đóng vai một chuyên gia kế toán. Tôi sẽ gửi cho bạn một ảnh hóa đơn. 
       Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
@@ -102,7 +105,7 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
       final responseText = await aiService.sendMessage(
         prompt,
         attachments: [
-          {'bytes': bytes, 'mimeType': 'image/jpeg'}
+          {'bytes': bytes, 'mimeType': 'image/jpeg'},
         ],
       );
 
@@ -123,9 +126,9 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
           body: e.toString(),
           type: NotificationType.system,
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     } finally {
       if (mounted) {
@@ -142,13 +145,18 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
   }
 
   Future<void> _captureImage() async {
-    if (_cameraController == null || !_isCameraInitialized || _cameraError != null) return;
+    if (_cameraController == null ||
+        !_isCameraInitialized ||
+        _cameraError != null)
+      return;
     try {
       final XFile image = await _cameraController!.takePicture();
       await _processImage(image);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi chụp ảnh: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi chụp ảnh: $e')));
       }
     }
   }
@@ -167,24 +175,38 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.redAccent, width: 2),
                 ),
-                child: const Icon(Icons.priority_high_rounded, color: Colors.redAccent, size: 32),
+                child: const Icon(
+                  Icons.priority_high_rounded,
+                  color: Colors.redAccent,
+                  size: 32,
+                ),
               ),
               const SizedBox(height: 24),
               Text(
                 _cameraError!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13, height: 1.5),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 13,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 30),
               GestureDetector(
                 onTap: _initCamera,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFb54d19), 
+                    color: const Color(0xFFb54d19),
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  child: const Text('Thử lại', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  child: const Text(
+                    'Thử lại',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
                 ),
               ),
             ],
@@ -192,15 +214,17 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
         ),
       );
     }
-    
+
     if (!_isCameraInitialized) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFEC5B13)));
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFEC5B13)),
+      );
     }
-    
+
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: AspectRatio(
-        aspectRatio: _cameraController!.value.aspectRatio,
+      borderRadius: BorderRadius.circular(0),
+      child: FittedBox(
+        fit: BoxFit.cover,
         child: CameraPreview(_cameraController!),
       ),
     );
@@ -213,7 +237,9 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
           animation: _scanAnimation,
           builder: (context, child) {
             final scanHeight = 80.0;
-            final topPos = _scanAnimation.value * (constraints.maxHeight + scanHeight) - scanHeight;
+            final topPos =
+                _scanAnimation.value * (constraints.maxHeight + scanHeight) -
+                scanHeight;
             return Stack(
               children: [
                 Positioned(
@@ -245,11 +271,15 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
             );
           },
         );
-      }
+      },
     );
   }
 
-  Widget _buildBottomButton({required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _buildBottomButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     // Keeps Gallery and Guide at their original positions
     return GestureDetector(
       onTap: onTap,
@@ -265,7 +295,13 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
             child: Icon(icon, color: Colors.white, size: 28),
           ),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
@@ -277,11 +313,22 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Scan', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+          const Text(
+            'Scan',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 6),
           Container(
-            width: 4, height: 4,
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF00D1FF)),
+            width: 4,
+            height: 4,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFF00D1FF),
+            ),
           ),
           const SizedBox(height: 12),
           Container(
@@ -289,7 +336,9 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
             height: 72,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFF4A4A4A), // Solid grey exactly like the screenshot
+              color: Color(
+                0xFF4A4A4A,
+              ), // Solid grey exactly like the screenshot
             ),
           ),
           const SizedBox(height: 20), // Compensate label height of side buttons
@@ -307,7 +356,11 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
         elevation: 0,
         titleSpacing: 10,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 24),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 24,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
@@ -318,10 +371,21 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
                 color: const Color(0xFF1E2838),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.document_scanner_rounded, color: Color(0xFF6B8AFF), size: 20),
+              child: const Icon(
+                Icons.document_scanner_rounded,
+                color: Color(0xFF6B8AFF),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 10),
-            const Text('AI Scanner', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text(
+              'AI Scanner',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -341,7 +405,11 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
             },
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 22),
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: Colors.white,
+              size: 22,
+            ),
             onPressed: () {},
           ),
           const SizedBox(width: 10),
@@ -351,100 +419,130 @@ class _OcrScanScreenState extends State<OcrScanScreen> with SingleTickerProvider
         children: [
           // 1. Camera Preview Box
           Positioned(
-             top: 0,
-             left: 0,
-             right: 0,
-             bottom: 180,
-             child: Container(
-               color: const Color(0xFF111111),
-               child: Center(
-                 child: _buildCameraPreview(),
-               ),
-             ),
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 180,
+            child: Container(
+              color: const Color(0xFF111111),
+              child: Center(child: _buildCameraPreview()),
+            ),
           ),
-          
+
           // 2. White Corners Overlay
           Positioned(
-             top: 0, left: 0, right: 0, bottom: 180,
-             child: IgnorePointer(
-               child: CustomPaint(
-                 painter: ScannerOverlayPainter(),
-               ),
-             ),
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 180,
+            child: IgnorePointer(
+              child: CustomPaint(painter: ScannerOverlayPainter()),
+            ),
           ),
 
           // 3. Scanning Line Animation
           if (_isCameraInitialized && _cameraError == null && !_isProcessing)
             Positioned(
-               top: 0, left: 0, right: 0, bottom: 180,
-               child: IgnorePointer(
-                 child: _buildScannerAnimation(),
-               ),
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 180,
+              child: IgnorePointer(child: _buildScannerAnimation()),
             ),
 
           // 4. Instructions Text (kept as a design choice, but hidden or styled appropriately)
           Positioned(
-            left: 0, right: 0, bottom: 150,
+            left: 0,
+            right: 0,
+            bottom: 150,
             child: Text(
               'Căn chỉnh hóa đơn vào giữa khung hình',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.0), fontSize: 14), // Hidden according to screenshot, but code physically kept
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.0),
+                fontSize: 14,
+              ), // Hidden according to screenshot, but code physically kept
             ),
           ),
 
           // 5. Bottom Controls (Gallery, Capture, Help)
           Positioned(
-            left: 0, right: 0, bottom: 30,
+            left: 0,
+            right: 0,
+            bottom: 30,
             child: Row(
-               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-               crossAxisAlignment: CrossAxisAlignment.end,
-               children: [
-                 _buildBottomButton(icon: Icons.image_outlined, label: 'Thư viện', onTap: () => _pickImage(ImageSource.gallery)),
-                 _buildCaptureButton(),
-                 _buildBottomButton(
-                   icon: Icons.help_outline_rounded, 
-                   label: 'Hướng dẫn', 
-                   onTap: () {
-                     showDialog(
-                       context: context,
-                       builder: (context) => AlertDialog(
-                         backgroundColor: const Color(0xFF1E1E1E),
-                         title: const Text('Hướng dẫn quét', style: TextStyle(color: Colors.white)),
-                         content: const Text(
-                           '1. Đặt hóa đơn trên mặt phẳng đủ sáng.\n2. Căn chỉnh hóa đơn vừa vặn trong khung hình.\n3. Nhấn nút chụp hoặc chọn ảnh từ thư viện.',
-                           style: TextStyle(color: Colors.white70),
-                         ),
-                         actions: [
-                           TextButton(
-                             onPressed: () => Navigator.pop(context), 
-                             child: const Text('Đóng', style: TextStyle(color: Color(0xFFEC5B13)))
-                           )
-                         ],
-                       )
-                     );
-                   }
-                 ),
-               ],
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildBottomButton(
+                  icon: Icons.image_outlined,
+                  label: 'Thư viện',
+                  onTap: () => _pickImage(ImageSource.gallery),
+                ),
+                _buildCaptureButton(),
+                _buildBottomButton(
+                  icon: Icons.help_outline_rounded,
+                  label: 'Hướng dẫn',
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: const Color(0xFF1E1E1E),
+                        title: const Text(
+                          'Hướng dẫn quét',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        content: const Text(
+                          '1. Đặt hóa đơn trên mặt phẳng đủ sáng.\n2. Căn chỉnh hóa đơn vừa vặn trong khung hình.\n3. Nhấn nút chụp hoặc chọn ảnh từ thư viện.',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              'Đóng',
+                              style: TextStyle(color: Color(0xFFEC5B13)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
 
           // 6. Processing Indicator Loader
           if (_isProcessing)
-             Container(
-               color: Colors.black.withValues(alpha: 0.7),
-               child: Center(
-                 child: Column(
-                   mainAxisSize: MainAxisSize.min,
-                   children: [
-                     const CircularProgressIndicator(color: Color(0xFF00D1FF)),
-                     const SizedBox(height: 20),
-                     const Text('Đang phân tích...', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                     const SizedBox(height: 8),
-                     Text('Trí tuệ nhân tạo đang xử lý...', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
-                   ],
-                 ),
-               ),
-             ),
+            Container(
+              color: Colors.black.withValues(alpha: 0.7),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(color: Color(0xFF00D1FF)),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Đang phân tích...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Trí tuệ nhân tạo đang xử lý...',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -458,24 +556,32 @@ class ScannerOverlayPainter extends CustomPainter {
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
-    
+
     final double l = 20.0; // corner length (thin lines)
-    
+
     // Top Left
     canvas.drawLine(const Offset(0, 0), Offset(l, 0), paint);
     canvas.drawLine(const Offset(0, 0), Offset(0, l), paint);
-    
+
     // Top Right
     canvas.drawLine(Offset(size.width, 0), Offset(size.width - l, 0), paint);
     canvas.drawLine(Offset(size.width, 0), Offset(size.width, l), paint);
-    
+
     // Bottom Left
     canvas.drawLine(Offset(0, size.height), Offset(l, size.height), paint);
     canvas.drawLine(Offset(0, size.height), Offset(0, size.height - l), paint);
-    
+
     // Bottom Right
-    canvas.drawLine(Offset(size.width, size.height), Offset(size.width - l, size.height), paint);
-    canvas.drawLine(Offset(size.width, size.height), Offset(size.width, size.height - l), paint);
+    canvas.drawLine(
+      Offset(size.width, size.height),
+      Offset(size.width - l, size.height),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(size.width, size.height),
+      Offset(size.width, size.height - l),
+      paint,
+    );
   }
 
   @override

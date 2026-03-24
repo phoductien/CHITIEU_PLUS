@@ -41,10 +41,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      // In a real production app, we would verify account existence via a cloud function 
+      // In a real production app, we would verify account existence via a cloud function
       // or similar to avoid enumeration, but here we proceed to send OTP.
       await OTPService().sendOTP(email);
-      
+
       if (mounted) {
         context.read<NotificationProvider>().addNotification(
           title: 'Yêu cầu OTP',
@@ -52,7 +52,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           type: NotificationType.security,
         );
       }
-      
+
       if (mounted) {
         Navigator.push(
           context,
@@ -74,10 +74,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -91,18 +88,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF022C4F),
-              Color(0xFF02467D),
-              Color(0xFF0174D7),
-            ],
+            colors: [Color(0xFF022C4F), Color(0xFF02467D), Color(0xFF0174D7)],
             stops: [0.0, 0.4, 1.0],
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
               child: Column(
                 children: [
                   // Back Button
@@ -114,10 +110,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   const AppLogo(size: 72),
                   const SizedBox(height: 16),
-                  
+
                   const Text(
                     'CHITIEUPLUS',
                     style: TextStyle(
@@ -128,10 +124,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  
+
                   // Form Container
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 40.0,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF06294D).withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(32),
@@ -163,7 +162,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                         ),
                         const SizedBox(height: 40),
-                        
+
                         // Email Field
                         _buildLabel('Email'),
                         const SizedBox(height: 12),
@@ -173,22 +172,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           icon: Icons.email_outlined,
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Submit Button
                         ElevatedButton(
                           onPressed: _isLoading ? null : _sendOTP,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFF05D15),
-                            disabledBackgroundColor: const Color(0xFFF05D15).withValues(alpha: 0.5),
+                            disabledBackgroundColor: const Color(
+                              0xFFF05D15,
+                            ).withValues(alpha: 0.5),
                             minimumSize: const Size(double.infinity, 56),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                             elevation: 8,
-                            shadowColor: const Color(0xFFF05D15).withValues(alpha: 0.4),
+                            shadowColor: const Color(
+                              0xFFF05D15,
+                            ).withValues(alpha: 0.4),
                           ),
                           child: _isLoading
-                              ? const AppLoadingIndicator(size: 24, color: Colors.white)
+                              ? const AppLoadingIndicator(
+                                  size: 24,
+                                  color: Colors.white,
+                                )
                               : const Text(
                                   'Gửi mã xác thực',
                                   style: TextStyle(
@@ -199,14 +205,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 ),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Back to Login Link
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.login, color: Colors.white.withValues(alpha: 0.7), size: 16),
+                              Icon(
+                                Icons.login,
+                                color: Colors.white.withValues(alpha: 0.7),
+                                size: 16,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'Quay lại đăng nhập',
@@ -222,7 +232,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 64),
                   Text(
                     '© 2024 ChiTieuPlus. All rights reserved.',
@@ -263,9 +273,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF0D3B66).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: TextField(
         controller: controller,

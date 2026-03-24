@@ -4,16 +4,12 @@ class AppLogo extends StatelessWidget {
   final double size;
   final bool showShadow;
 
-  const AppLogo({
-    super.key,
-    this.size = 100,
-    this.showShadow = true,
-  });
+  const AppLogo({super.key, this.size = 100, this.showShadow = true});
 
   @override
   Widget build(BuildContext context) {
     final double s = size / 90.0;
-    
+
     return Container(
       width: size,
       height: size,
@@ -67,14 +63,20 @@ class AppLogo extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: ((36 * s) / 2) - (20 * s / 2) - 6 * s + (36 * s / 2), // Adjust relative positioning scaling logic securely
+              top:
+                  ((36 * s) / 2) -
+                  (20 * s / 2) -
+                  6 * s +
+                  (36 *
+                      s /
+                      2), // Adjust relative positioning scaling logic securely
               child: const SizedBox.shrink(),
             ),
             // The position of the notch line inside the wallet
             Positioned(
-              top: (size - 36*s)/2 + 6*s,
-              left: (size - 48*s)/2 + 6*s,
-              right: (size - 48*s)/2 + 14*s,
+              top: (size - 36 * s) / 2 + 6 * s,
+              left: (size - 48 * s) / 2 + 6 * s,
+              right: (size - 48 * s) / 2 + 14 * s,
               child: Container(
                 height: 3 * s,
                 decoration: BoxDecoration(

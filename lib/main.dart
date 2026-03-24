@@ -15,13 +15,16 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:chitieu_plus/providers/language_provider.dart';
+import 'package:chitieu_plus/utils/session_helper.dart'
+    if (dart.library.html) 'package:chitieu_plus/utils/session_helper_web.dart'
+    as session_helper;
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class AppRestart extends StatefulWidget {
   final Widget child;
   const AppRestart({super.key, required this.child});
-  
+
   static void restart(BuildContext context) {
     context.findAncestorStateOfType<_AppRestartState>()?.restartApp();
   }
@@ -32,7 +35,7 @@ class AppRestart extends StatefulWidget {
 
 class _AppRestartState extends State<AppRestart> {
   Key key = UniqueKey();
-  
+
   void restartApp() {
     setState(() {
       key = UniqueKey();
@@ -47,17 +50,15 @@ class _AppRestartState extends State<AppRestart> {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize SQLite for Desktop
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Initialize Google Auth Service early
   await GoogleAuthService().init();
 
@@ -66,7 +67,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()..loadUserData()),
-        ChangeNotifierProvider(create: (_) => NotificationProvider()..loadInitialNotifications()),
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider()..loadInitialNotifications(),
+        ),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
@@ -90,29 +93,44 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _authStream = FirebaseAuth.instance.authStateChanges();
-    
+
     // Listen to auth state changes to perform global redirects
     _authStream.listen((User? user) {
       if (user != null) {
         if (_isInitialCheck && user.isAnonymous) {
-          debugPrint('[DEBUG] main.dart: Ký tự khách cũ còn sót lại từ phiên trước. Tiến hành xóa...');
-          UserProvider.cleanupGuestIfAny();
-          // cleanupGuestIfAny sẽ gọi account.delete() hoặc signOut(),
-          // từ đó kích hoạt một sự kiện authStateChanges(null) mới.
-          // Ta không điều hướng vòng HomeScreen cho khách ma này.
-          _isInitialCheck = false;
-          return;
+          if (kIsWeb && session_helper.checkIsReload()) {
+            debugPrint(
+              '[DEBUG] main.dart: Web reload detected. Giữ lại tài khoản Khách.',
+            );
+            // Skip deletion, let the user continue to HomeScreen.
+          } else {
+            debugPrint(
+              '[DEBUG] main.dart: Ký tự khách cũ còn sót lại từ phiên trước. Tiến hành xóa...',
+            );
+            UserProvider.cleanupGuestIfAny();
+            // cleanupGuestIfAny sẽ gọi account.delete() hoặc signOut(),
+            // từ đó kích hoạt một sự kiện authStateChanges(null) mới.
+            // Ta không điều hướng vòng HomeScreen cho khách ma này.
+            _isInitialCheck = false;
+            return;
+          }
         }
 
-        debugPrint('[DEBUG] main.dart: Auth state changed to LOGGED IN. Checking navigation...');
-        
+        debugPrint(
+          '[DEBUG] main.dart: Auth state changed to LOGGED IN. Checking navigation...',
+        );
+
         final navState = navigatorKey.currentState;
         if (navState != null) {
-          debugPrint('[DEBUG] main.dart: Redirecting to HomeScreen via global listener...');
-          
+          debugPrint(
+            '[DEBUG] main.dart: Redirecting to HomeScreen via global listener...',
+          );
+
           // Only show "Đăng nhập thành công" if this is NOT the initial app launch check
-          final String? welcomeMsg = _isInitialCheck ? null : 'Đăng nhập thành công!';
-          
+          final String? welcomeMsg = _isInitialCheck
+              ? null
+              : 'Đăng nhập thành công!';
+
           navState.pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => HomeScreen(welcomeMessage: welcomeMsg),
@@ -123,7 +141,7 @@ class _MyAppState extends State<MyApp> {
       } else {
         debugPrint('[DEBUG] main.dart: Auth state changed to LOGGED OUT.');
       }
-      
+
       // After the first event (authenticated or not), it's no longer the initial check
       _isInitialCheck = false;
     });
@@ -133,7 +151,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final languageProvider = Provider.of<LanguageProvider>(context);
-    
+
     return AppRestart(
       child: MaterialApp(
         navigatorKey: navigatorKey,
@@ -145,10 +163,7 @@ class _MyAppState extends State<MyApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [
-          Locale('vi'),
-          Locale('en'),
-        ],
+        supportedLocales: const [Locale('vi'), Locale('en')],
         themeMode: themeProvider.themeMode,
         theme: ThemeData(
           fontFamily: 'Arial',

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageProvider with ChangeNotifier {
   Locale _locale = const Locale('vi');
-  
+
   LanguageProvider() {
     _loadFromPrefs();
   }
@@ -21,6 +21,8 @@ class LanguageProvider with ChangeNotifier {
       'hello': 'Xin chào',
       'total_balance': 'Tổng số dư',
       'wallet': 'Ví của bạn',
+      'wallet_demo': 'Ví của bạn (Demo)',
+      'deposit_to_demo': 'Nạp vào Ví của bạn (Demo)',
       'ai_scan': 'AI QUÉT HÓA ĐƠN',
       'recent_transactions': 'Giao dịch gần đây',
       'view_all': 'Xem tất cả',
@@ -100,7 +102,8 @@ class LanguageProvider with ChangeNotifier {
       'reset_password_validation_length': 'Ít nhất 8 ký tự',
       'reset_password_validation_mix': 'Bao gồm chữ cái và số',
       'reset_success_title': 'Thành công!',
-      'reset_success_body': 'Mật khẩu của bạn đã được thay đổi thành công. Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.',
+      'reset_success_body':
+          'Mật khẩu của bạn đã được thay đổi thành công. Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.',
       'reset_success_button': 'Đăng nhập ngay',
       'add_transaction_title': 'Thêm giao dịch',
       'add_transaction_tab_manual': 'Thủ công',
@@ -138,11 +141,13 @@ class LanguageProvider with ChangeNotifier {
       'onboarding_start': 'Bắt đầu ngay',
       'onboarding_skip': 'BỎ QUA',
       'onboarding_p2_title': 'Bạn tên là gì?',
-      'onboarding_p2_subtitle': 'Chào mừng đến với ChiTieuPlus. Hãy cho chúng tôi biết tên của bạn để bắt đầu hành trình quản lý tài chính.',
+      'onboarding_p2_subtitle':
+          'Chào mừng đến với ChiTieuPlus. Hãy cho chúng tôi biết tên của bạn để bắt đầu hành trình quản lý tài chính.',
       'onboarding_p2_label': 'Họ và tên của bạn',
       'onboarding_p2_hint': 'Nhập tên đầy đủ...',
       'onboarding_p3_title': 'Chọn loại tiền tệ',
-      'onboarding_p3_subtitle': 'Chọn tiền tệ chính để theo dõi các khoản chi tiêu của bạn',
+      'onboarding_p3_subtitle':
+          'Chọn tiền tệ chính để theo dõi các khoản chi tiêu của bạn',
       'onboarding_terms_1': 'Bằng việc tiếp tục, bạn chấp thuận với ',
       'onboarding_terms_2': 'chính sách điều khoản',
       'onboarding_terms_3': ' và ',
@@ -159,7 +164,8 @@ class LanguageProvider with ChangeNotifier {
       'ocr_scan_processing': 'Đang phân tích hóa đơn...',
       'ocr_scan_ai_processing': 'Trí tuệ nhân tạo đang xử lý...',
       'ocr_scan_error_title': 'Lỗi AI Scan',
-      'ocr_scan_error_not_recognized': 'Không thể nhận diện được hóa đơn. Vui lòng thử lại.',
+      'ocr_scan_error_not_recognized':
+          'Không thể nhận diện được hóa đơn. Vui lòng thử lại.',
       'ocr_scan_prompt': '''
       Hãy đóng vai một chuyên gia kế toán. Tôi sẽ gửi cho bạn một ảnh hóa đơn. 
       Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
@@ -173,12 +179,14 @@ class LanguageProvider with ChangeNotifier {
       ''',
       'ai_chat_title': 'Trợ lý AI',
       'ai_chat_new_chat': 'Cuộc trò chuyện mới',
-      'ai_chat_greeting': 'Chào bạn, tôi là trợ lý ảo ChiTieuPlus. Tôi có thể giúp gì cho bạn hôm nay?',
+      'ai_chat_greeting':
+          'Chào bạn, tôi là trợ lý ảo ChiTieuPlus. Tôi có thể giúp gì cho bạn hôm nay?',
       'ai_chat_hint_input': 'Hỏi tôi bất cứ điều gì...',
       'ai_chat_hint_offline': 'Vui lòng kiểm tra kết nối...',
       'ai_chat_hint_limit': 'AI đang bị giới hạn...',
       'ai_chat_hint_listening': 'Đang nghe...',
-      'ai_chat_limit_reached': 'Giới hạn API đã đạt cho Model này. Vui lòng chờ hoặc đổi sang Model khác.',
+      'ai_chat_limit_reached':
+          'Giới hạn API đã đạt cho Model này. Vui lòng chờ hoặc đổi sang Model khác.',
       'ai_chat_limit_timer_prefix': 'Giới hạn model đã đạt. Vui lòng chờ:',
       'ai_chat_switch_model': 'Đổi Model khác',
       'ai_chat_offline_msg': 'Đã mất kết nối mạng. AI đang ngoại tuyến.',
@@ -192,7 +200,8 @@ class LanguageProvider with ChangeNotifier {
       'ai_chat_rename_cancel': 'Hủy',
       'ai_chat_delete_session': 'Xóa hội thoại này',
       'ai_chat_delete_all_title': 'Xóa tất cả?',
-      'ai_chat_delete_all_msg': 'Hành động này sẽ xóa vĩnh viễn toàn bộ lịch sử trò chuyện.',
+      'ai_chat_delete_all_msg':
+          'Hành động này sẽ xóa vĩnh viễn toàn bộ lịch sử trò chuyện.',
       'ai_chat_delete_all_btn': 'Xóa hết',
       'ai_chat_pin': 'Ghim cuộc trò chuyện',
       'ai_chat_unpin': 'Bỏ ghim',
@@ -205,18 +214,23 @@ class LanguageProvider with ChangeNotifier {
       'ai_chat_model_close': 'Đóng',
       'ai_chat_model_switched_msg': 'Đã chuyển sang phiên bản {version}',
       'ai_chat_url_dialog_title': 'URL trang web và YouTube',
-      'ai_chat_url_dialog_subtitle': 'Dán URL trang web và YouTube vào bên dưới để tải lên dưới dạng một nguồn.',
+      'ai_chat_url_dialog_subtitle':
+          'Dán URL trang web và YouTube vào bên dưới để tải lên dưới dạng một nguồn.',
       'ai_chat_url_dialog_hint': 'Dán liên kết bất kỳ',
       'ai_chat_url_insert': 'Chèn',
-      'ai_chat_url_note_1': 'Để thêm nhiều URL, hãy phân tách bằng dấu cách hoặc dòng mới.',
-      'ai_chat_url_note_2': 'Hiện chỉ nhập được văn bản hiển thị trên trang web.',
+      'ai_chat_url_note_1':
+          'Để thêm nhiều URL, hãy phân tách bằng dấu cách hoặc dòng mới.',
+      'ai_chat_url_note_2':
+          'Hiện chỉ nhập được văn bản hiển thị trên trang web.',
       'ai_chat_url_note_3': 'Không hỗ trợ bài viết có tính phí.',
-      'ai_chat_url_note_4': 'Hiện chỉ nhập được bản chép lời của video trên YouTube.',
+      'ai_chat_url_note_4':
+          'Hiện chỉ nhập được bản chép lời của video trên YouTube.',
       'ai_chat_url_note_5': 'Chỉ hỗ trợ video công khai trên YouTube.',
       'ai_chat_mic_error': 'Không thể truy cập Micro. Vui lòng cấp quyền.',
       'ai_chat_website_btn': 'Trang web',
       'ai_chat_history_header': 'Lịch sử trò chuyện',
-      'ai_chat_empty_header': 'Hôm nay tôi có thể giúp gì cho tình hình tài chính của bạn?',
+      'ai_chat_empty_header':
+          'Hôm nay tôi có thể giúp gì cho tình hình tài chính của bạn?',
       'ai_chat_continue_header': 'Tiếp tục cuộc trò chuyện về ',
       'ai_chat_transaction_save_btn': 'Lưu giao dịch',
       'ai_chat_transaction_saved_badge': 'Đã lưu giao dịch',
@@ -227,16 +241,20 @@ class LanguageProvider with ChangeNotifier {
       'ai_chat_transaction_category_label': 'Hạng mục:',
       'ai_chat_transaction_save_success': 'Giao dịch đã được lưu!',
       'ai_chat_transaction_save_error': 'Lỗi khi lưu: ',
-      'ai_chat_transaction_login_required': 'Vui lòng đăng nhập để lưu giao dịch.',
+      'ai_chat_transaction_login_required':
+          'Vui lòng đăng nhập để lưu giao dịch.',
       'ai_chat_transaction_notif_success_title': 'Giao dịch thành công',
-      'ai_chat_transaction_notif_success_body': 'Đã lưu "{title}" với số tiền {amount}đ',
+      'ai_chat_transaction_notif_success_body':
+          'Đã lưu "{title}" với số tiền {amount}đ',
       'ai_chat_transaction_notif_error_title': 'Giao dịch thất bại',
-      'ai_chat_transaction_notif_error_body': 'Không thể lưu giao dịch: {title}. Lỗi: {error}',
+      'ai_chat_transaction_notif_error_body':
+          'Không thể lưu giao dịch: {title}. Lỗi: {error}',
       'ai_chat_analyze_request': 'Hãy phân tích những nội dung này giúp tôi.',
       'ai_chat_analyze_content_placeholder': 'Phân tích nội dung',
       'ai_chat_time_now': 'Bây giờ',
       'details': 'Chi tiết',
-      'ai_bubble_greeting': 'Chào bạn! Tôi có thể giúp gì cho\nngân sách của bạn hôm nay?',
+      'ai_bubble_greeting':
+          'Chào bạn! Tôi có thể giúp gì cho\nngân sách của bạn hôm nay?',
       'greeting_morning': 'Chào buổi sáng',
       'greeting_afternoon': 'Chào buổi trưa',
       'greeting_evening': 'Chào buổi chiều',
@@ -249,7 +267,8 @@ class LanguageProvider with ChangeNotifier {
       'export_downloading': 'Đang bắt đầu tải xuống: {file}',
       'export_error': 'Lỗi khi xuất database: {error}',
       'selected_count': 'Đã chọn {count}',
-      'confirm_delete_msg_multiple': 'Bạn có chắc chắn muốn xóa {count} giao dịch đã chọn?',
+      'confirm_delete_msg_multiple':
+          'Bạn có chắc chắn muốn xóa {count} giao dịch đã chọn?',
       'confirm_delete_msg_single': 'Giao dịch này sẽ bị xóa vĩnh viễn.',
       'delete_success_count': 'Đã xóa {count} giao dịch',
       'today': 'Hôm nay',
@@ -283,6 +302,8 @@ class LanguageProvider with ChangeNotifier {
       'hello': 'Hello',
       'total_balance': 'Total Balance',
       'wallet': 'Your Wallet',
+      'wallet_demo': 'Your Wallet (Demo)',
+      'deposit_to_demo': 'Deposit to Your Wallet (Demo)',
       'ai_scan': 'AI BILL SCAN',
       'recent_transactions': 'Recent Transactions',
       'view_all': 'View All',
@@ -343,7 +364,8 @@ class LanguageProvider with ChangeNotifier {
       'register_error_empty_fullname': 'Full name cannot be empty',
       'register_error_password_mismatch': 'Passwords do not match',
       'forgot_password_title': 'Forgot Password',
-      'forgot_password_subtitle': 'Enter your email to receive verification code',
+      'forgot_password_subtitle':
+          'Enter your email to receive verification code',
       'forgot_password_button_send': 'Send Verification Code',
       'forgot_password_footer_link': 'Back to Login',
       'forgot_password_error_email_sent': 'Verification code sent',
@@ -362,7 +384,8 @@ class LanguageProvider with ChangeNotifier {
       'reset_password_validation_length': 'At least 8 characters',
       'reset_password_validation_mix': 'Include letters and numbers',
       'reset_success_title': 'Success!',
-      'reset_success_body': 'Your password has been changed successfully. You can now login with your new password.',
+      'reset_success_body':
+          'Your password has been changed successfully. You can now login with your new password.',
       'reset_success_button': 'Login Now',
       'add_transaction_title': 'Add Transaction',
       'add_transaction_tab_manual': 'Manual',
@@ -400,7 +423,8 @@ class LanguageProvider with ChangeNotifier {
       'onboarding_start': 'Get Started',
       'onboarding_skip': 'SKIP',
       'onboarding_p2_title': 'What is your name?',
-      'onboarding_p2_subtitle': 'Welcome to ChiTieuPlus. Let us know your name to start your financial journey.',
+      'onboarding_p2_subtitle':
+          'Welcome to ChiTieuPlus. Let us know your name to start your financial journey.',
       'onboarding_p2_label': 'Your Full Name',
       'onboarding_p2_hint': 'Enter full name...',
       'onboarding_p3_title': 'Choose Currency',
@@ -421,7 +445,8 @@ class LanguageProvider with ChangeNotifier {
       'ocr_scan_processing': 'Analyzing receipt...',
       'ocr_scan_ai_processing': 'AI is processing...',
       'ocr_scan_error_title': 'AI Scan Error',
-      'ocr_scan_error_not_recognized': 'Could not recognize the receipt. Please try again.',
+      'ocr_scan_error_not_recognized':
+          'Could not recognize the receipt. Please try again.',
       'ocr_scan_prompt': '''
       Act as an accounting expert. I will send you an image of a receipt.
       Your task is to extract the following information in JSON format:
@@ -435,12 +460,14 @@ class LanguageProvider with ChangeNotifier {
       ''',
       'ai_chat_title': 'AI Assistant',
       'ai_chat_new_chat': 'New Conversation',
-      'ai_chat_greeting': 'Hello, I am ChiTieuPlus virtual assistant. How can I help you today?',
+      'ai_chat_greeting':
+          'Hello, I am ChiTieuPlus virtual assistant. How can I help you today?',
       'ai_chat_hint_input': 'Ask me anything...',
       'ai_chat_hint_offline': 'Please check your connection...',
       'ai_chat_hint_limit': 'AI is being limited...',
       'ai_chat_hint_listening': 'Listening...',
-      'ai_chat_limit_reached': 'API limit reached for this Model. Please wait or switch to another Model.',
+      'ai_chat_limit_reached':
+          'API limit reached for this Model. Please wait or switch to another Model.',
       'ai_chat_limit_timer_prefix': 'Model limit reached. Please wait:',
       'ai_chat_switch_model': 'Switch Model',
       'ai_chat_offline_msg': 'Network connection lost. AI is offline.',
@@ -454,7 +481,8 @@ class LanguageProvider with ChangeNotifier {
       'ai_chat_rename_cancel': 'Cancel',
       'ai_chat_delete_session': 'Delete this conversation',
       'ai_chat_delete_all_title': 'Delete all?',
-      'ai_chat_delete_all_msg': 'This action will permanently delete all chat history.',
+      'ai_chat_delete_all_msg':
+          'This action will permanently delete all chat history.',
       'ai_chat_delete_all_btn': 'Delete all',
       'ai_chat_pin': 'Pin conversation',
       'ai_chat_unpin': 'Unpin',
@@ -467,18 +495,23 @@ class LanguageProvider with ChangeNotifier {
       'ai_chat_model_close': 'Close',
       'ai_chat_model_switched_msg': 'Switched to version {version}',
       'ai_chat_url_dialog_title': 'Website and YouTube URL',
-      'ai_chat_url_dialog_subtitle': 'Paste website and YouTube URLs below to upload as a source.',
+      'ai_chat_url_dialog_subtitle':
+          'Paste website and YouTube URLs below to upload as a source.',
       'ai_chat_url_dialog_hint': 'Paste any link',
       'ai_chat_url_insert': 'Insert',
-      'ai_chat_url_note_1': 'To add multiple URLs, separate them with spaces or newlines.',
-      'ai_chat_url_note_2': 'Currently, only visible text on the web page can be imported.',
+      'ai_chat_url_note_1':
+          'To add multiple URLs, separate them with spaces or newlines.',
+      'ai_chat_url_note_2':
+          'Currently, only visible text on the web page can be imported.',
       'ai_chat_url_note_3': 'Paid articles are not supported.',
-      'ai_chat_url_note_4': 'Currently, only YouTube video transcripts can be imported.',
+      'ai_chat_url_note_4':
+          'Currently, only YouTube video transcripts can be imported.',
       'ai_chat_url_note_5': 'Only public YouTube videos are supported.',
       'ai_chat_mic_error': 'Cannot access Microphone. Please grant permission.',
       'ai_chat_website_btn': 'Websites',
       'ai_chat_history_header': 'Chat History',
-      'ai_chat_empty_header': 'How can I help with your financial situation today?',
+      'ai_chat_empty_header':
+          'How can I help with your financial situation today?',
       'ai_chat_continue_header': 'Continue conversation about ',
       'ai_chat_transaction_save_btn': 'Save Transaction',
       'ai_chat_transaction_saved_badge': 'Transaction saved',
@@ -491,9 +524,11 @@ class LanguageProvider with ChangeNotifier {
       'ai_chat_transaction_save_error': 'Error saving: ',
       'ai_chat_transaction_login_required': 'Please login to save transaction.',
       'ai_chat_transaction_notif_success_title': 'Transaction Success',
-      'ai_chat_transaction_notif_success_body': 'Saved "{title}" with amount {amount}',
+      'ai_chat_transaction_notif_success_body':
+          'Saved "{title}" with amount {amount}',
       'ai_chat_transaction_notif_error_title': 'Transaction Failed',
-      'ai_chat_transaction_notif_error_body': 'Cannot save transaction: {title}. Error: {error}',
+      'ai_chat_transaction_notif_error_body':
+          'Cannot save transaction: {title}. Error: {error}',
       'ai_chat_analyze_request': 'Please analyze this content for me.',
       'ai_chat_analyze_content_placeholder': 'Analyze content',
       'ai_chat_time_now': 'Now',
@@ -511,8 +546,10 @@ class LanguageProvider with ChangeNotifier {
       'export_downloading': 'Starting download: {file}',
       'export_error': 'Error exporting database: {error}',
       'selected_count': 'Selected {count}',
-      'confirm_delete_msg_multiple': 'Are you sure you want to delete {count} selected transactions?',
-      'confirm_delete_msg_single': 'This transaction will be permanently deleted.',
+      'confirm_delete_msg_multiple':
+          'Are you sure you want to delete {count} selected transactions?',
+      'confirm_delete_msg_single':
+          'This transaction will be permanently deleted.',
       'delete_success_count': 'Deleted {count} transactions',
       'today': 'Today',
       'yesterday': 'Yesterday',
@@ -534,9 +571,8 @@ class LanguageProvider with ChangeNotifier {
       'friendly_date_today': 'TODAY, ',
       'friendly_date_yesterday': 'YESTERDAY, ',
       'month_format': 'MONTH',
-    }
+    },
   };
-
 
   String translate(String key) {
     return _localizedValues[_locale.languageCode]?[key] ?? key;

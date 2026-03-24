@@ -31,7 +31,9 @@ class AuthFooterTerms extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const TermsAndPrivacyScreen(initialTabIndex: 1), // 1 is Terms
+                      builder: (context) => const TermsAndPrivacyScreen(
+                        initialTabIndex: 1,
+                      ), // 1 is Terms
                     ),
                   );
                 },
@@ -49,7 +51,9 @@ class AuthFooterTerms extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const TermsAndPrivacyScreen(initialTabIndex: 0), // 0 is Privacy
+                      builder: (context) => const TermsAndPrivacyScreen(
+                        initialTabIndex: 0,
+                      ), // 0 is Privacy
                     ),
                   );
                 },

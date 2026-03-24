@@ -32,7 +32,9 @@ class RealtimeDbService {
     }
   }
 
-  Future<void> syncLocalTransactions(List<TransactionModel> transactions) async {
+  Future<void> syncLocalTransactions(
+    List<TransactionModel> transactions,
+  ) async {
     try {
       final Map<String, Map<String, dynamic>> updates = {};
       for (var t in transactions) {
@@ -64,7 +66,10 @@ class RealtimeDbService {
   }
 
   // Generic update for specific fields
-  Future<void> updateTransactionField(String id, Map<String, dynamic> data) async {
+  Future<void> updateTransactionField(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     try {
       await _userRef.child('transactions/$id').update(data);
     } catch (e) {

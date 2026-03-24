@@ -31,7 +31,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -42,7 +45,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         actions: [
           if (_isSelectionMode)
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.redAccent,
+              ),
               onPressed: () {
                 notificationProvider.deleteNotifications(_selectedItems);
                 setState(() {
@@ -81,7 +87,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
           const SizedBox(height: 20),
           Expanded(
             child: filteredNotifications.isEmpty
-                ? const Center(child: Text('Không có dữ liệu', style: TextStyle(color: Colors.white54)))
+                ? const Center(
+                    child: Text(
+                      'Không có dữ liệu',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  )
                 : _buildNotificationList(filteredNotifications),
           ),
         ],
@@ -110,9 +121,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               side: BorderSide.none,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              labelPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
             ),
           );
         }).toList(),
@@ -181,8 +197,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? const Color(0xFFFF6D00).withValues(alpha: 0.1) 
+          color: isSelected
+              ? const Color(0xFFFF6D00).withValues(alpha: 0.1)
               : const Color(0xFF1E293B).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -240,10 +256,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   const SizedBox(height: 12),
                   Text(
                     '${item.timestamp.hour}:${item.timestamp.minute.toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],
               ),
@@ -252,7 +265,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               Checkbox(
                 value: isSelected,
                 onChanged: (val) {
-                   setState(() {
+                  setState(() {
                     if (isSelected) {
                       _selectedItems.remove(item.id);
                     } else {
@@ -269,4 +282,3 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 }
-

@@ -37,8 +37,9 @@ class GoogleAuthService {
     if (_isInitialized) return;
 
     // Configuration for Google Sign-In
-    const String webClientId = '971401377167-fk3p4q28u9ev8clu50ejf437ip183ckb.apps.googleusercontent.com';
-    
+    const String webClientId =
+        '971401377167-fk3p4q28u9ev8clu50ejf437ip183ckb.apps.googleusercontent.com';
+
     _googleSignIn = GoogleSignIn(
       clientId: kIsWeb ? webClientId : null,
       serverClientId: kIsWeb ? null : webClientId,
@@ -50,7 +51,9 @@ class GoogleAuthService {
     );
 
     _isInitialized = true;
-    debugPrint('[GoogleAuthService] Initialized for platform: ${kIsWeb ? "Web" : "Mobile"}');
+    debugPrint(
+      '[GoogleAuthService] Initialized for platform: ${kIsWeb ? "Web" : "Mobile"}',
+    );
   }
 
   /// Interactive sign-in process.
@@ -59,27 +62,34 @@ class GoogleAuthService {
 
     try {
       debugPrint('[GoogleAuthService] Starting interactive sign-in...');
-      
+
       final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
-      
+
       if (googleUser == null) {
         debugPrint('[GoogleAuthService] Sign-in cancelled by user.');
         return null;
       }
 
       debugPrint('[GoogleAuthService] User authenticated: ${googleUser.email}');
-      
+
       // Obtain auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
       final String? idToken = googleAuth.idToken;
       final String? accessToken = googleAuth.accessToken;
       final String? serverAuthCode = googleUser.serverAuthCode;
 
       debugPrint('[GoogleAuthService] Tokens retrieved successfully.');
-      debugPrint('[GoogleAuthService] ID Token: ${idToken != null ? "Yes" : "No"}');
-      debugPrint('[GoogleAuthService] Access Token: ${accessToken != null ? "Yes" : "No"}');
-      debugPrint('[GoogleAuthService] Server Auth Code: ${serverAuthCode != null ? "Yes" : "No"}');
+      debugPrint(
+        '[GoogleAuthService] ID Token: ${idToken != null ? "Yes" : "No"}',
+      );
+      debugPrint(
+        '[GoogleAuthService] Access Token: ${accessToken != null ? "Yes" : "No"}',
+      );
+      debugPrint(
+        '[GoogleAuthService] Server Auth Code: ${serverAuthCode != null ? "Yes" : "No"}',
+      );
 
       return GoogleSignInResult(
         idToken: idToken,
