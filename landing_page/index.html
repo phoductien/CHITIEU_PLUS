@@ -42,148 +42,126 @@
                 ChiTieu<span>Plus</span>
             </div>
             
+            <nav class="nav-links">
+                <a href="#features" data-i18n="nav_features">Tính năng</a>
+                <a href="#pricing" data-i18n="nav_pricing">Giá cả</a>
+                <div class="nav-actions">
+                    <select id="language-selector" class="lang-select">
+                        <option value="vi">VIE</option>
+                        <option value="en">ENG</option>
+                    </select>
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                        <i data-lucide="sun" class="icon-sun"></i>
+                        <i data-lucide="moon" class="icon-moon"></i>
+                    </button>
+                    <a href="#download" class="btn btn-primary" data-i18n="nav_download">Tải ngay</a>
+                </div>
+            </nav>
+
             <!-- Mobile Menu Toggle -->
             <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">
                 <i data-lucide="menu"></i>
             </button>
-            <nav class="nav-links">
-                <a href="#about">Sản phẩm</a>
-                <a href="#features">Tính năng</a>
-                <a href="#requirements">Yêu cầu</a>
-                <a href="#download" class="btn btn-primary">Tải ngay</a>
-                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
-                    <i data-lucide="sun" class="icon-sun"></i>
-                    <i data-lucide="moon" class="icon-moon"></i>
-                </button>
-            </nav>
         </div>
     </header>
 
     <main>
-        <!-- Cinematic Hero -->
-        <section class="hero visible">
-            <div class="container">
-                <h1 class="hero-title">Chinh phục <br><span class="highlight">Dòng tiền của bạn</span></h1>
-                <div class="hero-visual">
-                    <img src="assets/home_mockup.png" alt="ChiTieu Plus Dashboard">
-                </div>
-            </div>
-        </section>
-
-        <!-- Product Discovery -->
-        <section id="about" class="about">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title">Khám phá <span class="highlight">ChiTieu Plus</span></h2>
-                    <p>Ứng dụng quản lý tài chính thế hệ mới, kết hợp sức mạnh AI và thiết kế tối giản để giúp bạn làm
-                        chủ mọi chi tiêu.</p>
-                </div>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="card-visual">
-                            <img src="assets/ai_mockup.png" alt="AI Chat Advisor"
-                                style="width: 100%; border-radius: 15px; margin-bottom: 20px;">
-                        </div>
-                        <h3>Trợ lý AI Thông minh</h3>
-                        <p>Nhận lời khuyên tài chính cá nhân hóa từ AI dựa trên thói quen chi tiêu thực tế của bạn.</p>
+        <!-- Dynamic Hero Section -->
+        <section class="hero">
+            <div class="container hero-grid">
+                <div class="hero-content">
+                    <h1 class="hero-title" data-i18n="hero_title">
+                        QUẢN LÝ TÀI CHÍNH <br> <span class="highlight">THÔNG MINH HƠN</span>
+                    </h1>
+                    <p class="hero-desc" data-i18n="hero_desc">
+                        ChiTieu Plus giúp bạn kiểm soát chi tiêu, lập kế hoạch ngân sách và đạt được mục tiêu tài chính một cách dễ dàng nhất.
+                    </p>
+                    <div class="hero-btns">
+                        <a href="#" class="store-btn">
+                            <i data-lucide="monitor"></i>
+                            <div class="btn-text">
+                                <span class="small">Available on</span>
+                                <span class="large" data-i18n="cta_web">Bản Web</span>
+                            </div>
+                        </a>
+                        <a href="#" class="store-btn dark">
+                            <i data-lucide="smartphone"></i>
+                            <div class="btn-text">
+                                <span class="small">Get it on</span>
+                                <span class="large" data-i18n="cta_android">Android</span>
+                            </div>
+                        </a>
                     </div>
-                    <div class="feature-card">
-                        <div class="card-visual">
-                            <img src="assets/scan_mockup.png" alt="OCR Scanner"
-                                style="width: 100%; border-radius: 15px; margin-bottom: 20px;">
-                        </div>
-                        <h3>Quét hóa đơn tức thì</h3>
-                        <p>Công nghệ OCR hàng đầu giúp bạn tự động nhập liệu chỉ bằng việc chụp ảnh hóa đơn.</p>
+                </div>
+                <div class="hero-mockup">
+                    <div class="mockup-container">
+                        <!-- Using brand asset as fallback since generation is unavailable -->
+                        <img src="assets/favicon.png" alt="ChiTieu Plus Logo" class="app-img fallback">
+                        <div class="glow-effect"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Core Features -->
+        <!-- Features Grid -->
         <section id="features" class="features">
             <div class="container">
                 <div class="section-header">
-                    <h2 class="section-title">Tiện ích <span class="highlight">Tối ưu</span></h2>
+                    <h2 class="section-title" data-i18n="features_title">Tính năng <span class="highlight">Vượt trội</span></h2>
                 </div>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <i data-lucide="zap" size="48" color="#EC5B13"></i>
-                        <h3>Ghi chép siêu tốc</h3>
-                        <p>Tối giản hóa quy trình nhập liệu, tiết kiệm thời gian tối đa cho người bận rộn.</p>
+                        <div class="feature-icon"><i data-lucide="zap"></i></div>
+                        <h3 data-i18n="feature_1_title">Theo dõi tự động</h3>
+                        <p data-i18n="feature_1_desc">Tự động phân loại chi tiêu từ tin nhắn ngân hàng và thông báo ứng dụng.</p>
                     </div>
                     <div class="feature-card">
-                        <i data-lucide="pie-chart" size="48" color="#EC5B13"></i>
-                        <h3>Báo cáo 360°</h3>
-                        <p>Biểu đồ trực quan sinh động giúp bạn nhìn thấu dòng tiền trong nháy mắt.</p>
+                        <div class="feature-icon"><i data-lucide="pie-chart"></i></div>
+                        <h3 data-i18n="feature_2_title">Báo cáo trực quan</h3>
+                        <p data-i18n="feature_2_desc">Biểu đồ chi tiết giúp bạn hiểu rõ dòng tiền và thói quen tiêu dùng.</p>
                     </div>
                     <div class="feature-card">
-                        <i data-lucide="shield-check" size="48" color="#EC5B13"></i>
-                        <h3>An toàn tuyệt đối</h3>
-                        <p>Dữ liệu được bảo vệ bởi công nghệ Firebase và các chuẩn mã hóa tiên tiến.</p>
+                        <div class="feature-icon"><i data-lucide="cloud"></i></div>
+                        <h3 data-i18n="feature_3_title">Đồng bộ đám mây</h3>
+                        <p data-i18n="feature_3_desc">Dữ liệu luôn được cập nhật trên tất cả các thiết bị của bạn ngay lập tức.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- System Requirements -->
-        <section id="requirements" class="requirements">
+        <!-- Pricing Section -->
+        <section id="pricing" class="pricing">
             <div class="container">
                 <div class="section-header">
-                    <h2 class="section-title">Yêu cầu <span class="highlight">Kỹ thuật</span></h2>
+                    <h2 class="section-title" data-i18n="pricing_title">Chọn gói <span class="highlight">Phù hợp</span></h2>
                 </div>
-                <table class="req-table">
-                    <thead>
-                        <tr>
-                            <th>Nền tảng</th>
-                            <th>Phiên bản</th>
-                            <th>Yêu cầu khác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Android</td>
-                            <td>8.0 trở lên</td>
-                            <td>Kết nối internet</td>
-                        </tr>
-                        <tr>
-                            <td>iOS</td>
-                            <td>13.0 trở lên</td>
-                            <td>Dung lượng trống 200MB</td>
-                        </tr>
-                        <tr>
-                            <td>Windows</td>
-                            <td>Windows 10+ (x64)</td>
-                            <td>Hỗ trợ DirectX 11</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Call to Action -->
-        <section id="download" class="download">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title">Trải nghiệm <span class="highlight">Vay giờ</span></h2>
-                    <p>Chọn phiên bản phù hợp và bắt đầu cuộc hành trình tài chính mới.</p>
-                </div>
-                <div class="download-grid">
-                    <a href="https://www.mediafire.com/folder/chitieuplus" target="_blank" class="dl-card">
-                        <i data-lucide="smartphone"></i>
-                        <span>Android</span>
-                        <p>Tải bản APK (V1.0)</p>
-                    </a>
-                    <a href="https://github.com/phoductien/CHITIEU_PLUS/releases" target="_blank" class="dl-card">
-                        <i data-lucide="monitor"></i>
-                        <span>Windows</span>
-                        <p>Cài đặt cho PC</p>
-                    </a>
+                <div class="price-grid">
+                    <div class="price-card">
+                        <h4 data-i18n="pricing_free">Miễn phí</h4>
+                        <div class="price">0đ<span>/mo</span></div>
+                        <p data-i18n="pricing_free_desc">Cơ bản cho cá nhân</p>
+                        <ul class="price-features">
+                            <li><i data-lucide="check"></i> 2 Ví cơ bản</li>
+                            <li><i data-lucide="check"></i> Báo cáo tuần</li>
+                        </ul>
+                    </div>
+                    <div class="price-card featured">
+                        <div class="tag">BEST VALUE</div>
+                        <h4 data-i18n="pricing_pro">Pro Plus</h4>
+                        <div class="price">49k<span>/mo</span></div>
+                        <p data-i18n="pricing_pro_desc">Tối ưu cho gia đình & đầu tư</p>
+                        <ul class="price-features">
+                            <li><i data-lucide="check"></i> Ví không giới hạn</li>
+                            <li><i data-lucide="check"></i> Phân tích AI</li>
+                            <li><i data-lucide="check"></i> Xuất file Excel</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer>
+    <footer class="footer">
         <div class="container">
             <p>&copy; 2026 ChiTieu Plus Core Team. Cảm hứng từ công nghệ hiện đại.</p>
         </div>
