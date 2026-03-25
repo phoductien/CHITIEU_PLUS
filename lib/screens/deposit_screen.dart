@@ -3,15 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/theme_provider.dart';
 import 'package:chitieu_plus/providers/language_provider.dart';
-import 'package:chitieu_plus/providers/transaction_provider.dart';
-import 'package:chitieu_plus/providers/user_provider.dart';
-import 'package:chitieu_plus/models/transaction_model.dart';
-import 'package:chitieu_plus/screens/bank_accounts_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:chitieu_plus/screens/payment_details_screen.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:intl/intl.dart';
-import 'package:chitieu_plus/providers/notification_provider.dart';
-import 'package:chitieu_plus/models/notification_model.dart';
 
 class DepositScreen extends StatefulWidget {
   const DepositScreen({super.key});
@@ -23,7 +17,6 @@ class DepositScreen extends StatefulWidget {
 class _DepositScreenState extends State<DepositScreen> {
   late TextEditingController _amountController;
   int _selectedAmount = 0;
-  String? _selectedMethod; // null means direct deposit
 
   final List<int> _quickAmounts = [50000, 100000, 200000, 500000];
 
@@ -65,128 +58,7 @@ class _DepositScreenState extends State<DepositScreen> {
     });
   }
 
-  String get _walletName {
-    final userProvider = context.read<UserProvider>();
-    final languageProvider = context.read<LanguageProvider>();
-    return userProvider.bankAccounts.isNotEmpty
-        ? userProvider.bankAccounts.first
-        : languageProvider.translate('wallet_demo');
-  }
 
-  Future<void> _handleDeposit() async {
-    final transactionProvider = context.read<TransactionProvider>();
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) return;
-    if (_selectedAmount <= 0) return;
-
-    // Hiển thị loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: Color(0xFFEC5B13)),
-      ),
-    );
-
-    try {
-      final tx = TransactionModel(
-        id: '', // Để service tự generate
-        userId: user.uid,
-        title: 'Nạp tiền vào $_walletName',
-        amount: _selectedAmount.toDouble(),
-        category: 'Nạp tiền',
-        date: DateTime.now(),
-        type: TransactionType.income,
-        wallet: 'main',
-        note: _selectedMethod == null
-            ? 'Nạp tiền trực tiếp'
-            : 'Nạp qua phương thức $_selectedMethod',
-      );
-
-      await transactionProvider.addTransaction(tx);
-
-      if (mounted) {
-        context.read<NotificationProvider>().addNotification(
-          title: 'Nạp tiền thành công',
-          body:
-              'Bạn vừa nạp ${NumberFormat('#,###').format(_selectedAmount)}đ vào $_walletName.',
-          type: NotificationType.transaction,
-        );
-        Navigator.pop(context); // Tắt loading
-        _showSuccessDialog();
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Tắt loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
-    }
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => FadeIn(
-        child: AlertDialog(
-          backgroundColor: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 16),
-              const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.greenAccent,
-                size: 80,
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'NẠP TIỀN THÀNH CÔNG',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Số tiền ${NumberFormat('#,###').format(_selectedAmount)}đ đã được chuyển vào $_walletName.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEC5B13),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.pop(context); // Tắt dialog
-                    Navigator.pop(context); // Quay lại Home
-                  },
-                  child: const Text(
-                    'TUYỆT VỜI',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,8 +86,6 @@ class _DepositScreenState extends State<DepositScreen> {
                           const SizedBox(height: 40),
                           _buildQuickSelection(themeProvider),
                           const SizedBox(height: 40),
-                          _buildPaymentMethods(themeProvider),
-                          const SizedBox(height: 30),
                           _buildActionButton(),
                           const SizedBox(height: 120), // Height for nav bar
                         ],
@@ -387,151 +257,6 @@ class _DepositScreenState extends State<DepositScreen> {
     );
   }
 
-  Widget _buildPaymentMethods(ThemeProvider themeProvider) {
-    return FadeInUp(
-      duration: const Duration(milliseconds: 600),
-      delay: const Duration(milliseconds: 400),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.cyan.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(
-                  Icons.wallet_rounded,
-                  color: Colors.cyan,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Phương thức nạp',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildMethodItem(
-            id: 'momo',
-            icon: Icons.smartphone_rounded,
-            title: 'Ví điện tử',
-            subtitle: 'Momo, ZaloPay',
-            iconColor: Colors.pinkAccent,
-            themeProvider: themeProvider,
-          ),
-          const SizedBox(height: 12),
-          _buildMethodItem(
-            id: 'bank',
-            icon: Icons.account_balance_rounded,
-            title: 'Thẻ ngân hàng',
-            subtitle: 'ATM / Internet Banking',
-            iconColor: Colors.blueAccent,
-            themeProvider: themeProvider,
-          ),
-          const SizedBox(height: 12),
-          _buildMethodItem(
-            id: 'visa',
-            icon: Icons.credit_card_rounded,
-            title: 'Thẻ quốc tế',
-            subtitle: 'Visa, Mastercard, JCB',
-            iconColor: Colors.tealAccent,
-            themeProvider: themeProvider,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMethodItem({
-    required String id,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color iconColor,
-    required ThemeProvider themeProvider,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        if (id == 'bank') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const BankAccountsScreen()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Tính năng nạp qua $title đang được phát triển'),
-              backgroundColor: iconColor.withValues(alpha: 0.8),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: themeProvider.secondaryColor.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: themeProvider.borderColor.withValues(alpha: 0.5),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: themeProvider.foregroundColor.withValues(
-                        alpha: 0.4,
-                      ),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: themeProvider.foregroundColor.withValues(alpha: 0.2),
-              size: 14,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildActionButton() {
     final bool isEnabled = _selectedAmount >= 50000;
@@ -566,7 +291,16 @@ class _DepositScreenState extends State<DepositScreen> {
                 : [],
           ),
           child: InkWell(
-            onTap: isEnabled ? _handleDeposit : null,
+            onTap: isEnabled 
+                ? () => Navigator.push(
+                    context, 
+                    MaterialPageRoute(
+                      builder: (context) => PaymentDetailsScreen(
+                        amount: _selectedAmount.toDouble(),
+                      ),
+                    ),
+                  ) 
+                : null,
             borderRadius: BorderRadius.circular(30),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

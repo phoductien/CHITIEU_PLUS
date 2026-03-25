@@ -23,10 +23,11 @@
     }
   },
   "hosting": {
-    "public": "build/web",
+    "public": "landing_page",
     "ignore": [
       "firebase.json",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "downloads/**"
     ],
     "rewrites": [
       {

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChiTieu Plus - Quản lý tài chính cá nhân thông minh</title>
+    <meta name="description" content="ChiTieu Plus - Ứng dụng quản lý chi tiêu hàng đầu cho người Việt.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container nav">
+            <div class="logo">
+                <div class="logo-plus">+</div>
+                ChiTieu<span>Plus</span>
+            </div>
+            <nav class="nav-links">
+                <a href="#about">Sản phẩm</a>
+                <a href="#features">Tính năng</a>
+                <a href="#requirements">Yêu cầu</a>
+                <a href="#download" class="btn btn-primary">Tải ngay</a>
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                    <i data-lucide="sun" class="icon-sun"></i>
+                    <i data-lucide="moon" class="icon-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container hero-grid">
+                <div class="hero-content">
+                    <h1 class="hero-title">Quản lý tài chính <br><span class="highlight">Không còn là gánh nặng</span></h1>
+                    <p class="hero-desc">ChiTieu Plus giúp bạn tự động hóa việc theo dõi chi tiêu, báo cáo thông minh và tối ưu hóa ngân sách cá nhân.</p>
+                    <div class="hero-actions">
+                        <a href="#download" class="btn btn-primary">Bắt đầu ngay miễn phí</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <!-- Placeholder for App Image -->
+                    <div style="background: var(--bg-card); border-radius: 40px; height: 500px; width: 280px; margin: auto; border: 4px solid var(--primary); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;">
+                        <i data-lucide="smartphone" size="64" color="#EC5B13"></i>
+                        <div style="width: 80%; height: 10px; background: var(--glass-border); border-radius: 5px;"></div>
+                        <div style="width: 60%; height: 10px; background: var(--glass-border); border-radius: 5px;"></div>
+                        <div style="width: 70%; height: 100px; background: var(--primary); border-radius: 20px; opacity: 0.2;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="about">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Về <span class="highlight">Chúng Tôi</span></h2>
+                    <p>ChiTieu Plus được xây dựng với sứ mệnh giúp hàng triệu người Việt làm chủ tài chính cá nhân một cách đơn giản nhất.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Sứ mệnh</h3>
+                        <p>Xóa bỏ rào cản trong việc quản lý tiền bạc bằng công nghệ AI và trải nghiệm người dùng tối giản.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Tầm nhìn</h3>
+                        <p>Trở thành ứng dụng tài chính cá nhân phổ biến nhất tại Việt Nam và Đông Nam Á.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Tính Năng <span class="highlight">Vượt Trội</span></h2>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i data-lucide="zap"></i>
+                        <h3>Ghi chép tức thì</h3>
+                        <p>Nhập liệu thông minh, tự động phân loại danh mục chi tiêu.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i data-lucide="pie-chart"></i>
+                        <h3>Báo cáo 360°</h3>
+                        <p>Biểu đồ trực quan giúp bạn thấy rõ dòng tiền theo ngày, tuần, tháng.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i data-lucide="shield-check"></i>
+                        <h3>Bảo mật tuyệt đối</h3>
+                        <p>Dữ liệu của bạn được mã hóa và bảo vệ bởi các tiêu chuẩn an ninh cao nhất.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="requirements" class="requirements">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Yêu Cầu <span class="highlight">Hệ Thống</span></h2>
+                </div>
+                <table class="req-table">
+                    <thead>
+                        <tr>
+                            <th>Hệ điều hành</th>
+                            <th>Phiên bản tối thiểu</th>
+                            <th>Dung lượng trống</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Android</td>
+                            <td>Android 8.0+</td>
+                            <td>150 MB</td>
+                        </tr>
+                        <tr>
+                            <td>iOS</td>
+                            <td>iOS 13.0+</td>
+                            <td>200 MB</td>
+                        </tr>
+                        <tr>
+                            <td>Windows</td>
+                            <td>Windows 10+ (Architecture x64)</td>
+                            <td>300 MB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="download" class="download">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Tải <span class="highlight">Xuống</span></h2>
+                    <p>Chọn phiên bản phù hợp với thiết bị của bạn.</p>
+                </div>
+                <div class="download-grid">
+                    <a href="https://www.mediafire.com/folder/chitieuplus" target="_blank" class="dl-card">
+                        <i data-lucide="android"></i>
+                        <span>Android</span>
+                        <p>Tải APK (MediaFire)</p>
+                    </a>
+                    <a href="https://github.com/USER/REPO/releases" target="_blank" class="dl-card">
+                        <i data-lucide="apple"></i>
+                        <span>iOS</span>
+                        <p>App Store / IPA</p>
+                    </a>
+                    <a href="https://github.com/USER/REPO/releases" target="_blank" class="dl-card">
+                        <i data-lucide="monitor"></i>
+                        <span>Desktop</span>
+                        <p>Windows (GitHub Releases)</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 ChiTieu Plus. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
