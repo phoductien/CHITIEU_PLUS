@@ -31,6 +31,7 @@ import 'package:chitieu_plus/widgets/main_drawer.dart';
 import 'package:chitieu_plus/screens/user_profile_screen.dart';
 import 'package:chitieu_plus/screens/deposit_screen.dart';
 import 'package:chitieu_plus/widgets/mini_ai_chat_widget.dart';
+import 'package:chitieu_plus/providers/app_session_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? welcomeMessage;
@@ -67,6 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     initializeDateFormatting('vi', null);
+    
+    // Restore session state
+    final session = context.read<AppSessionProvider>();
+    _currentIndex = session.homeTabIndex;
+    session.setLastRoute('home');
+    
     _pageController = PageController(initialPage: _currentIndex);
 
     // Listen for new notifications
@@ -211,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 setState(() {
                   _currentIndex = index;
                 });
+                context.read<AppSessionProvider>().setHomeTabIndex(index);
               },
               children: [
                 HomeTab(

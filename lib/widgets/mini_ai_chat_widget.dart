@@ -50,7 +50,9 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
     } catch (e) {
       debugPrint('Connectivity check err: $e');
     }
-    _connectivitySubscription = connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    _connectivitySubscription = connectivity.onConnectivityChanged.listen(
+      _updateConnectionStatus,
+    );
   }
 
   void _updateConnectionStatus(dynamic result) {
@@ -81,11 +83,11 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
       try {
         final List<dynamic> decoded = jsonDecode(encoded);
         _sessions = decoded.map((e) => ChatSession.fromJson(e)).toList();
-        
+
         if (_sessions.isNotEmpty) {
-           // Create a new session or use the last one? 
-           // The user specifically wants "Cuộc trò chuyện mới"
-           _startNewChat();
+          // Create a new session or use the last one?
+          // The user specifically wants "Cuộc trò chuyện mới"
+          _startNewChat();
         } else {
           _startNewChat();
         }
@@ -106,7 +108,8 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
         messages: [
           {
             'role': 'ai',
-            'text': 'Chào bạn, tôi là trợ lý ảo ChiTieuPlus. Tôi có thể giúp gì cho bạn hôm nay?',
+            'text':
+                'Chào bạn, tôi là trợ lý ảo ChiTieuPlus. Tôi có thể giúp gì cho bạn hôm nay?',
           },
         ],
         createdAt: DateTime.now(),
@@ -119,7 +122,9 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
 
   Future<void> _saveSessions() async {
     final prefs = await SharedPreferences.getInstance();
-    final String encoded = jsonEncode(_sessions.map((s) => s.toJson()).toList());
+    final String encoded = jsonEncode(
+      _sessions.map((s) => s.toJson()).toList(),
+    );
     await prefs.setString(_prefsKey, encoded);
   }
 
@@ -154,7 +159,10 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
     FocusScope.of(context).unfocus();
     Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
 
-    final transactions = Provider.of<TransactionProvider>(context, listen: false).transactions;
+    final transactions = Provider.of<TransactionProvider>(
+      context,
+      listen: false,
+    ).transactions;
     final now = DateTime.now();
     final historyContext =
         "Ngày hiện tại: ${DateFormat('dd/MM/yyyy HH:mm').format(now)}\n${transactions.isEmpty ? "Người dùng hiện chưa có giao dịch nào recorded." : "Lịch sử giao dịch gần đây:\n${transactions.take(30).map((t) => "- ${DateFormat('dd/MM/yyyy').format(t.date)}: ${t.type == TransactionType.expense ? 'Chi' : 'Thu'} ${NumberFormat("#,###").format(t.amount)}đ cho ${t.title} (${t.category})").join("\n")}"}";
@@ -172,8 +180,11 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
       try {
         final decoded = json.decode(response);
         displayMessage = decoded['message'] ?? response;
-        
-        displayMessage = displayMessage.replaceAll('**', '').replaceAll('* ', '• ').replaceAll('*', '');
+
+        displayMessage = displayMessage
+            .replaceAll('**', '')
+            .replaceAll('* ', '• ')
+            .replaceAll('*', '');
 
         if (decoded['transaction'] != null) {
           transactionData = decoded['transaction'];
@@ -231,7 +242,9 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
         amount: (data['amount'] ?? 0).toDouble(),
         category: data['category'] ?? 'Khác',
         date: DateTime.now(),
-        type: data['type'] == 'income' ? TransactionType.income : TransactionType.expense,
+        type: data['type'] == 'income'
+            ? TransactionType.income
+            : TransactionType.expense,
         note: data['note'],
         wallet: data['wallet'] ?? 'main',
       );
@@ -241,13 +254,15 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
       if (mounted) {
         context.read<NotificationProvider>().addNotification(
           title: 'Giao dịch thành công',
-          body: 'Đã lưu "${transaction.title}" với số tiền ${NumberFormat('#,###', 'vi_VN').format(transaction.amount)}đ',
+          body:
+              'Đã lưu "${transaction.title}" với số tiền ${NumberFormat('#,###', 'vi_VN').format(transaction.amount)}đ',
           type: NotificationType.transaction,
         );
       }
 
       setState(() {
-        _currentSession!.messages[messageIndex]['transaction']['isConfirmed'] = true;
+        _currentSession!.messages[messageIndex]['transaction']['isConfirmed'] =
+            true;
       });
       _saveSessions();
     } catch (e) {
@@ -255,7 +270,11 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
     }
   }
 
-  Widget _buildTransactionCard(Map<String, dynamic> data, int messageIndex, Color accentColor) {
+  Widget _buildTransactionCard(
+    Map<String, dynamic> data,
+    int messageIndex,
+    Color accentColor,
+  ) {
     final bool isConfirmed = data['isConfirmed'] ?? false;
     final String title = data['title'] ?? '';
     final double amount = (data['amount'] ?? 0).toDouble();
@@ -274,7 +293,9 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
           Row(
             children: [
               Icon(
-                isConfirmed ? Icons.check_circle_rounded : Icons.receipt_long_rounded,
+                isConfirmed
+                    ? Icons.check_circle_rounded
+                    : Icons.receipt_long_rounded,
                 color: accentColor,
                 size: 16,
               ),
@@ -310,10 +331,15 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                 onPressed: () => _saveTransaction(data, messageIndex),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFEC5B13),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   padding: EdgeInsets.zero,
                 ),
-                child: const Text('Lưu GD', style: TextStyle(color: Colors.white, fontSize: 12)),
+                child: const Text(
+                  'Lưu GD',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
               ),
             ),
           ],
@@ -339,7 +365,7 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
             color: Colors.black54,
             blurRadius: 20,
             offset: Offset(0, 10),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -388,7 +414,9 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: _isOnline ? Colors.greenAccent : Colors.redAccent,
+                              color: _isOnline
+                                  ? Colors.greenAccent
+                                  : Colors.redAccent,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -407,7 +435,11 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                 ),
                 GestureDetector(
                   onTap: widget.onClose,
-                  child: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white54,
+                    size: 20,
+                  ),
                 ),
               ],
             ),
@@ -435,7 +467,9 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                                 height: 28,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC5B13)),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFEC5B13),
+                                  ),
                                 ),
                               ),
                               Container(
@@ -454,7 +488,14 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                             ],
                           ),
                           const SizedBox(width: 10),
-                          const Text('Đang suy nghĩ...', style: TextStyle(color: Colors.white54, fontSize: 12, fontStyle: FontStyle.italic)),
+                          const Text(
+                            'Đang suy nghĩ...',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -468,7 +509,9 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                 final isAnimating = msg['isAnimating'] == true;
 
                 return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -491,11 +534,17 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                       ],
                       Flexible(
                         child: Container(
-                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * (isUser ? 0.7 : 0.65)),
+                          constraints: BoxConstraints(
+                            maxWidth:
+                                MediaQuery.of(context).size.width *
+                                (isUser ? 0.7 : 0.65),
+                          ),
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: isUser ? const Color(0xFFEC5B13) : Colors.white.withValues(alpha: 0.05),
+                            color: isUser
+                                ? const Color(0xFFEC5B13)
+                                : Colors.white.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.only(
                               topLeft: const Radius.circular(12),
                               topRight: const Radius.circular(12),
@@ -527,7 +576,11 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                                   ),
                                 ),
                               if (transaction != null && !isAnimating)
-                                _buildTransactionCard(transaction, index, themeProvider.secondaryColor),
+                                _buildTransactionCard(
+                                  transaction,
+                                  index,
+                                  themeProvider.secondaryColor,
+                                ),
                             ],
                           ),
                         ),
@@ -543,7 +596,9 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+              border: Border(
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+              ),
             ),
             child: Row(
               children: [
@@ -558,10 +613,16 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                       decoration: InputDecoration(
                         hintText: 'Nhập tin nhắn...',
-                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 13),
+                        hintStyle: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 13,
+                        ),
                         border: InputBorder.none,
                         isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),
@@ -570,7 +631,11 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: _sendMessage,
-                  child: const Icon(Icons.send_rounded, color: Color(0xFFEC5B13), size: 20),
+                  child: const Icon(
+                    Icons.send_rounded,
+                    color: Color(0xFFEC5B13),
+                    size: 20,
+                  ),
                 ),
               ],
             ),
@@ -591,7 +656,8 @@ class _TypewriterText extends StatefulWidget {
   State<_TypewriterText> createState() => _TypewriterTextState();
 }
 
-class _TypewriterTextState extends State<_TypewriterText> with SingleTickerProviderStateMixin {
+class _TypewriterTextState extends State<_TypewriterText>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _animation;
   List<String> _words = [];
@@ -605,31 +671,34 @@ class _TypewriterTextState extends State<_TypewriterText> with SingleTickerProvi
     _words = matches.map((m) => m.group(0)!).toList();
 
     if (_words.length > 1) {
-       double maxStaggerMs = (4000.0 - _fadeDurationMs) / (_words.length - 1);
-       if (_staggerMs > maxStaggerMs) {
-          _staggerMs = math.max(maxStaggerMs, 5.0);
-       }
+      double maxStaggerMs = (4000.0 - _fadeDurationMs) / (_words.length - 1);
+      if (_staggerMs > maxStaggerMs) {
+        _staggerMs = math.max(maxStaggerMs, 5.0);
+      }
     }
 
-    double totalMs = _staggerMs * math.max(_words.length - 1, 0) + _fadeDurationMs;
+    double totalMs =
+        _staggerMs * math.max(_words.length - 1, 0) + _fadeDurationMs;
 
     _controller = AnimationController(
-       vsync: this,
-       duration: Duration(milliseconds: totalMs.toInt()),
+      vsync: this,
+      duration: Duration(milliseconds: totalMs.toInt()),
     );
 
-    _animation = Tween<double>(begin: 0.0, end: totalMs).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.linear),
-    )
-      ..addListener(() {
-        setState(() {});
-      })
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          widget.onFinished();
-        }
-      });
-      
+    _animation =
+        Tween<double>(
+            begin: 0.0,
+            end: totalMs,
+          ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear))
+          ..addListener(() {
+            setState(() {});
+          })
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              widget.onFinished();
+            }
+          });
+
     if (_words.isNotEmpty) {
       _controller.forward();
     } else {
@@ -648,44 +717,40 @@ class _TypewriterTextState extends State<_TypewriterText> with SingleTickerProvi
     if (_words.isEmpty) return const SizedBox();
 
     double val = _animation.value;
-    
+
     List<InlineSpan> spans = [];
     StringBuffer visibleBuffer = StringBuffer();
 
     for (int i = 0; i < _words.length; i++) {
       double start = i * _staggerMs;
       if (val < start) {
-         break;
+        break;
       }
-      
+
       double opacity = (val - start) / _fadeDurationMs;
       if (opacity >= 1.0) {
-         visibleBuffer.write(_words[i]);
+        visibleBuffer.write(_words[i]);
       } else {
-         if (visibleBuffer.isNotEmpty) {
-            spans.add(TextSpan(text: visibleBuffer.toString()));
-            visibleBuffer.clear();
-         }
-         spans.add(TextSpan(
-           text: _words[i],
-           style: TextStyle(
-             color: Colors.white.withValues(alpha: opacity),
-           ),
-         ));
+        if (visibleBuffer.isNotEmpty) {
+          spans.add(TextSpan(text: visibleBuffer.toString()));
+          visibleBuffer.clear();
+        }
+        spans.add(
+          TextSpan(
+            text: _words[i],
+            style: TextStyle(color: Colors.white.withValues(alpha: opacity)),
+          ),
+        );
       }
     }
-    
+
     if (visibleBuffer.isNotEmpty) {
-       spans.add(TextSpan(text: visibleBuffer.toString()));
+      spans.add(TextSpan(text: visibleBuffer.toString()));
     }
 
     return Text.rich(
       TextSpan(
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          height: 1.3,
-        ),
+        style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.3),
         children: spans,
       ),
     );

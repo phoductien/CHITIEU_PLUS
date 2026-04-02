@@ -13,6 +13,7 @@ class TransactionModel {
   final String? note;
   final String wallet; // 'main' or 'trial'
   final bool isPinned;
+  final Map<String, dynamic>? aiMetadata;
 
   TransactionModel({
     required this.id,
@@ -25,6 +26,7 @@ class TransactionModel {
     this.note,
     this.wallet = 'main',
     this.isPinned = false,
+    this.aiMetadata,
   });
 
   Map<String, dynamic> toMap() {
@@ -38,6 +40,7 @@ class TransactionModel {
       'note': note,
       'wallet': wallet,
       'isPinned': isPinned,
+      'aiMetadata': aiMetadata,
     };
   }
 
@@ -61,6 +64,7 @@ class TransactionModel {
       note: map['note'],
       wallet: map['wallet'] ?? 'main',
       isPinned: map['isPinned'] ?? false,
+      aiMetadata: map['aiMetadata'],
     );
   }
 
@@ -75,6 +79,7 @@ class TransactionModel {
     String? note,
     String? wallet,
     bool? isPinned,
+    Map<String, dynamic>? aiMetadata,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -87,6 +92,7 @@ class TransactionModel {
       note: note ?? this.note,
       wallet: wallet ?? this.wallet,
       isPinned: isPinned ?? this.isPinned,
+      aiMetadata: aiMetadata ?? this.aiMetadata,
     );
   }
 }

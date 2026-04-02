@@ -5,6 +5,7 @@ import 'package:chitieu_plus/services/ai_service.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
 import 'package:chitieu_plus/models/notification_model.dart';
 import 'package:provider/provider.dart';
+import 'package:chitieu_plus/providers/app_session_provider.dart';
 
 class OcrScanScreen extends StatefulWidget {
   const OcrScanScreen({super.key});
@@ -30,6 +31,7 @@ class _OcrScanScreenState extends State<OcrScanScreen>
   @override
   void initState() {
     super.initState();
+    context.read<AppSessionProvider>().setLastRoute('ocr_scan');
     _initCamera();
 
     _animController = AnimationController(

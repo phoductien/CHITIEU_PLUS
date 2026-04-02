@@ -19,6 +19,7 @@ import 'package:chitieu_plus/providers/transaction_provider.dart';
 import 'package:chitieu_plus/providers/language_provider.dart';
 import 'package:chitieu_plus/providers/theme_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:chitieu_plus/providers/app_session_provider.dart';
 
 class ChatSession {
   final String id;
@@ -104,6 +105,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   @override
   void initState() {
     super.initState();
+    context.read<AppSessionProvider>().setLastRoute('ai_chat');
     AiService().init();
     _loadSessions();
     _initSpeech();
@@ -329,8 +331,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
     _saveSessions();
   }
 
-
-
   void _sendMessage() async {
     final text = _textController.text.trim();
     if (text.isEmpty && _selectedAttachments.isEmpty) return;
@@ -385,7 +385,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       try {
         final decoded = json.decode(response);
         displayMessage = decoded['message'] ?? response;
-        
+
         // Remove markdown asterisks
         displayMessage = displayMessage
             .replaceAll('**', '')
@@ -530,7 +530,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     final aiService = AiService();
     final currentVer = aiService.currentVersion;
     final currentTier = aiService.currentTier;
-    
+
     return Theme(
       data: Theme.of(context).copyWith(
         splashColor: Colors.transparent,
@@ -556,7 +556,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.psychology_rounded, color: Colors.white54, size: 16),
+              const Icon(
+                Icons.psychology_rounded,
+                color: Colors.white54,
+                size: 16,
+              ),
               const SizedBox(width: 6),
               Text(
                 'Gemini $currentVer ($currentTier)',
@@ -567,7 +571,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.expand_less_rounded, color: Colors.white54, size: 16),
+              const Icon(
+                Icons.expand_less_rounded,
+                color: Colors.white54,
+                size: 16,
+              ),
             ],
           ),
         ),
@@ -577,7 +585,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
             '2.5': ['Nhanh', 'Tư duy', 'Pro'],
             '3.0': ['Nhanh', 'Tư duy', 'Pro'],
           };
-          
+
           models.forEach((ver, tiers) {
             for (var tier in tiers) {
               final value = '${ver}_$tier';
@@ -591,14 +599,22 @@ class _AiChatScreenState extends State<AiChatScreen> {
                       Text(
                         'Gemini $ver ($tier)',
                         style: TextStyle(
-                          color: isSelected ? const Color(0xFFEC5B13) : Colors.white,
+                          color: isSelected
+                              ? const Color(0xFFEC5B13)
+                              : Colors.white,
                           fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                       if (isSelected) ...[
                         const Spacer(),
-                        const Icon(Icons.check_circle_rounded, color: Color(0xFFEC5B13), size: 16),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: Color(0xFFEC5B13),
+                          size: 16,
+                        ),
                       ],
                     ],
                   ),
@@ -1095,7 +1111,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-
                           ],
                         ),
                       ),
@@ -1139,7 +1154,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     // Text Input
                     Row(
                       children: [
-
                         IconButton(
                           icon: Icon(
                             Icons.add_circle_outline_rounded,

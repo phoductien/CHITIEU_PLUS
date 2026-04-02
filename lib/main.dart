@@ -10,6 +10,10 @@ import 'package:chitieu_plus/services/google_auth_service.dart';
 import 'package:chitieu_plus/widgets/auth_wrapper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chitieu_plus/screens/home_screen.dart';
+import 'package:chitieu_plus/screens/add_transaction_screen.dart';
+import 'package:chitieu_plus/screens/ocr_scan_screen.dart';
+import 'package:chitieu_plus/screens/ai_chat_screen.dart';
+import 'package:chitieu_plus/providers/app_session_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -62,9 +66,13 @@ void main() async {
   // Initialize Google Auth Service early
   await GoogleAuthService().init();
 
+  final sessionProvider = AppSessionProvider();
+  await sessionProvider.loadSession();
+
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: sessionProvider),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()..loadUserData()),
         ChangeNotifierProvider(
@@ -96,6 +104,7 @@ class _MyAppState extends State<MyApp> {
 
     // Listen to auth state changes to perform global redirects
     _authStream.listen((User? user) {
+      if (!mounted) return;
       if (user != null) {
         if (_isInitialCheck && user.isAnonymous) {
           if (kIsWeb && session_helper.checkIsReload()) {
@@ -137,6 +146,26 @@ class _MyAppState extends State<MyApp> {
             ),
             (route) => false,
           );
+
+          // Restore last route if not home
+          final session = context.read<AppSessionProvider>();
+          if (session.lastRoute != 'home') {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (session.lastRoute == 'add_transaction') {
+                navState.push(
+                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                );
+              } else if (session.lastRoute == 'ocr_scan') {
+                navState.push(
+                  MaterialPageRoute(builder: (_) => const OcrScanScreen()),
+                );
+              } else if (session.lastRoute == 'ai_chat') {
+                navState.push(
+                  MaterialPageRoute(builder: (_) => const AiChatScreen()),
+                );
+              }
+            });
+          }
         }
       } else {
         debugPrint('[DEBUG] main.dart: Auth state changed to LOGGED OUT.');
@@ -144,7 +173,9 @@ class _MyAppState extends State<MyApp> {
         if (!_isInitialCheck) {
           final navState = navigatorKey.currentState;
           if (navState != null) {
-            debugPrint('[DEBUG] main.dart: Redirecting to AuthWrapper on Logout...');
+            debugPrint(
+              '[DEBUG] main.dart: Redirecting to AuthWrapper on Logout...',
+            );
             navState.pushAndRemoveUntil(
               MaterialPageRoute(
                 builder: (context) => const AuthWrapper(skipSplash: true),

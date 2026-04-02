@@ -10,6 +10,7 @@ import 'package:chitieu_plus/models/transaction_model.dart';
 import 'package:chitieu_plus/services/ai_service.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
 import 'package:chitieu_plus/screens/ocr_scan_screen.dart';
+import 'package:chitieu_plus/providers/app_session_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final String? initialOcrResult;
@@ -30,6 +31,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
   String _selectedCategory = 'Ăn uống';
   final ImagePicker _picker = ImagePicker();
   bool _isAiProcessing = false;
+  bool _isAiGenerated = false;
+  Map<String, dynamic>? _aiMetadata;
 
   final List<Map<String, dynamic>> _categories = [
     {
@@ -87,21 +90,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       'icon': Icons.medical_services_rounded,
       'color': Color(0xFFEC4899),
     },
-    {
-      'name': 'Nhà cửa',
-      'icon': Icons.home_rounded,
-      'color': Color(0xFF64748B),
-    },
-    {
-      'name': 'Khác',
-      'icon': Icons.category_rounded,
-      'color': Colors.blueGrey,
-    },
+    {'name': 'Nhà cửa', 'icon': Icons.home_rounded, 'color': Color(0xFF64748B)},
+    {'name': 'Khác', 'icon': Icons.category_rounded, 'color': Colors.blueGrey},
   ];
 
   @override
   void initState() {
     super.initState();
+    context.read<AppSessionProvider>().setLastRoute('add_transaction');
     _tabController = TabController(length: 2, vsync: this);
 
     if (widget.initialOcrResult != null) {
@@ -279,6 +275,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       type: type,
       note: _noteController.text,
       wallet: 'main',
+      aiMetadata: _isAiGenerated ? _aiMetadata : null,
     );
 
     try {
@@ -333,7 +330,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
         // Combine title and note for better context
         final title = data['title']?.toString() ?? '';
         final note = data['note']?.toString() ?? '';
-        _noteController.text = [title, note].where((e) => e.isNotEmpty).join(' - ');
+        _noteController.text = [
+          title,
+          note,
+        ].where((e) => e.isNotEmpty).join(' - ');
 
         // Format amount with dots for display
         if (data['amount'] != null) {
@@ -342,9 +342,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
             '',
           );
           if (amountStr.isNotEmpty) {
-            final formatted = NumberFormat('#,###')
-                .format(int.parse(amountStr))
-                .replaceAll(',', '.');
+            final formatted = NumberFormat(
+              '#,###',
+            ).format(int.parse(amountStr)).replaceAll(',', '.');
             _amountController.text = formatted;
           }
         }
@@ -362,8 +362,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
             _selectedDate = DateTime.parse(data['date']);
           } catch (_) {}
         }
+
+        _isAiGenerated = true;
+        _aiMetadata = {
+          'source': 'ocr',
+          'extracted_at': DateTime.now().toIso8601String(),
+          'model': 'gemini-3-flash',
+        };
       });
-      
+
       _tabController.animateTo(0);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -601,8 +608,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                             vertical: 16,
                           ),
                           decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF334155).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFF334155,
+                            ).withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -615,9 +623,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  DateFormat('dd/MM/yyyy', 'vi').format(
-                                    _selectedDate,
-                                  ),
+                                  DateFormat(
+                                    'dd/MM/yyyy',
+                                    'vi',
+                                  ).format(_selectedDate),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 15,
@@ -640,8 +649,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                             vertical: 16,
                           ),
                           decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF334155).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFF334155,
+                            ).withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -761,9 +771,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                       color: const Color(0xFFEC5B13).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.camera_alt_rounded, color: Color(0xFFEC5B13)),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      color: Color(0xFFEC5B13),
+                    ),
                   ),
-                  title: const Text('Chụp hình', style: TextStyle(color: Colors.white)),
+                  title: const Text(
+                    'Chụp hình',
+                    style: TextStyle(color: Colors.white),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _startOcrScanner();
@@ -776,9 +792,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                       color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.image_rounded, color: Color(0xFF3B82F6)),
+                    child: const Icon(
+                      Icons.image_rounded,
+                      color: Color(0xFF3B82F6),
+                    ),
                   ),
-                  title: const Text('Nhập từ thiết bị', style: TextStyle(color: Colors.white)),
+                  title: const Text(
+                    'Nhập từ thiết bị',
+                    style: TextStyle(color: Colors.white),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _pickImage();
