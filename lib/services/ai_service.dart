@@ -22,11 +22,7 @@ class AiService {
 
   // Mapping of Version + Tier to Model ID (Chủ yếu để hiển thị UI)
   static const Map<String, Map<String, String>> _modelMap = {
-    '2.0': {
-      'Nhanh': 'gemini-2.0-flash-lite',
-      'Tư duy': 'gemini-2.0-flash',
-      'Pro': 'gemini-2.0-flash-001',
-    },
+
     '2.5': {
       'Nhanh': 'gemini-2.5-flash-lite',
       'Tư duy': 'gemini-2.5-flash',
@@ -51,9 +47,14 @@ class AiService {
 
     final prefs = await SharedPreferences.getInstance();
     _currentVersion = prefs.getString(_versionPrefsKey) ?? '3.0';
+    if (_currentVersion == '2.0') {
+      _currentVersion = '3.0';
+      await prefs.setString(_versionPrefsKey, '3.0');
+    }
+    
     _currentTier = prefs.getString(_tierPrefsKey) ?? 'Tư duy';
     _currentModelName =
-        _modelMap[_currentVersion]?[_currentTier] ?? 'gemini-3-flash';
+        _modelMap[_currentVersion]?[_currentTier] ?? 'gemini-3.1-flash-preview';
 
     _initialized = true;
   }

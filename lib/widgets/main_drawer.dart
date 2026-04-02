@@ -15,8 +15,21 @@ import '../screens/user_profile_screen.dart';
 import '../screens/bank_accounts_screen.dart';
 import 'dart:convert';
 
-class MainDrawer extends StatelessWidget {
+class MainDrawer extends StatefulWidget {
   const MainDrawer({super.key});
+
+  @override
+  State<MainDrawer> createState() => _MainDrawerState();
+}
+
+class _MainDrawerState extends State<MainDrawer> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,28 +117,31 @@ class MainDrawer extends StatelessWidget {
 
             // Drawer Items
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.smart_toy_rounded,
-                      title: 'Chat với trợ lý ảo',
-                      iconColor: const Color(0xFFEC5B13),
-                      onTap: () {
-                        Navigator.pop(context); // close drawer
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AiChatScreen(),
-                          ),
-                        );
-                      },
-                    ),
+              child: Scrollbar(
+                controller: _scrollController,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.smart_toy_rounded,
+                        title: 'Chat với trợ lý ảo',
+                        iconColor: const Color(0xFFEC5B13),
+                        onTap: () {
+                          Navigator.pop(context); // close drawer
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AiChatScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     _buildDrawerItem(
                       context: context,
                       themeProvider: themeProvider,
@@ -333,7 +349,8 @@ class MainDrawer extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -379,7 +396,7 @@ class MainDrawer extends StatelessWidget {
                 ),
               ),
             ),
-            if (trailing != null) trailing,
+            ?trailing,
           ],
         ),
       ),

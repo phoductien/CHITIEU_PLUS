@@ -1,0 +1,4 @@
+﻿ERROR|COMPILE_TIME_ERROR|UNDEFINED_NAMED_PARAMETER|D:\\CHITIEU_PLUS\\lib\\screens\\detailed_report_screen.dart|467|24|15|The named parameter 'getTooltipColor' isn't defined.
+WARNING|STATIC_WARNING|UNUSED_IMPORT|D:\\CHITIEU_PLUS\\lib\\screens\\detailed_report_screen.dart|5|8|34|Unused import: '../providers/theme_provider.dart'.
+WARNING|STATIC_WARNING|UNUSED_IMPORT|D:\\CHITIEU_PLUS\\lib\\screens\\detailed_report_screen.dart|7|8|37|Unused import: '../providers/language_provider.dart'.
+INFO|LINT|UNNECESSARY_BRACE_IN_STRING_INTERPS|D:\\CHITIEU_PLUS\\lib\\screens\\detailed_report_screen.dart|247|31|7|Unnecessary braces in a string interpolation.

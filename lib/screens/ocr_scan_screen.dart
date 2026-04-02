@@ -95,8 +95,8 @@ class _OcrScanScreenState extends State<OcrScanScreen>
       Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
       - title: Tên cửa hàng hoặc nội dung chính của hóa đơn (Ví dụ: "Phở Lý Quốc Sư", "Siêu thị Winmart").
       - amount: Tổng số tiền thanh toán (chỉ lấy số).
-      - category: Phân loại vào một trong các mục: Ăn uống, Mua sắm, Di chuyển, Hóa đơn, Giải trí, Sức khỏe, Giáo dục, Khác.
-      - date: Ngày trên hóa đơn (định dạng YYYY-MM-DD). Nếu không thấy hãy để ngày hiện tại.
+      - category: Phân loại vào: Ăn uống, Mua sắm, Di chuyển, Nhà cửa, Học phí, Bảo hiểm, Tiền điện, Tiền nước, Tiền Gas, Nạp điện thoại, Giải trí, Lương, Khác.
+      - date: Ngày giờ trên hóa đơn (chuẩn ISO8601: YYYY-MM-DDTHH:mm:ss). Nếu không thay, hãy để trống.
       - note: Ghi chú thêm nếu cần.
 
       Chỉ trả về JSON, không giải thích gì thêm.

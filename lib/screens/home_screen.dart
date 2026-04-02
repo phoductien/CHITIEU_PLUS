@@ -30,6 +30,7 @@ import 'package:chitieu_plus/widgets/custom_date_picker.dart';
 import 'package:chitieu_plus/widgets/main_drawer.dart';
 import 'package:chitieu_plus/screens/user_profile_screen.dart';
 import 'package:chitieu_plus/screens/deposit_screen.dart';
+import 'package:chitieu_plus/widgets/mini_ai_chat_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? welcomeMessage;
@@ -43,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   late PageController _pageController;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isAiOverlayOpen = false;
 
   String _getAiGreeting(int tabIndex) {
     switch (tabIndex) {
@@ -236,12 +238,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AiChatScreen(),
-                            ),
-                          );
+                          setState(() {
+                            _isAiOverlayOpen = !_isAiOverlayOpen;
+                          });
                         },
                         child: Container(
                           width: 56,
@@ -270,57 +269,78 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      Positioned(
-                        top: -55,
-                        right: 15,
-                        child: FadeInUp(
-                          key: ValueKey<int>(
-                            _currentIndex,
-                          ), // Re-animate when tab changes
-                          duration: const Duration(milliseconds: 600),
-                          delay: const Duration(milliseconds: 500),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: themeProvider.secondaryColor.withValues(
-                                alpha: 0.95,
+                      if (!_isAiOverlayOpen)
+                        Positioned(
+                          top: -55,
+                          right: 15,
+                          child: FadeInUp(
+                            key: ValueKey<int>(
+                              _currentIndex,
+                            ), // Re-animate when tab changes
+                            duration: const Duration(milliseconds: 600),
+                            delay: const Duration(milliseconds: 500),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
                               ),
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                topRight: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                                bottomRight: Radius.circular(4),
-                              ),
-                              border: Border.all(
-                                color: themeProvider.borderColor,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
+                              decoration: BoxDecoration(
+                                color: themeProvider.secondaryColor.withValues(
+                                  alpha: 0.95,
                                 ),
-                              ],
-                            ),
-                            child: Text(
-                              _getAiGreeting(_currentIndex),
-                              style: TextStyle(
-                                color: themeProvider.foregroundColor,
-                                fontSize: 13,
-                                height: 1.4,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  topRight: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(4),
+                                ),
+                                border: Border.all(
+                                  color: themeProvider.borderColor,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                _getAiGreeting(_currentIndex),
+                                style: TextStyle(
+                                  color: themeProvider.foregroundColor,
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
               ),
             ),
+            if (_isAiOverlayOpen)
+              Positioned(
+                bottom: 160, // right above FAB
+                right: 16,
+                child: SafeArea(
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: FadeInUp(
+                      duration: const Duration(milliseconds: 300),
+                      child: MiniAiChatWidget(
+                        onClose: () {
+                          setState(() {
+                            _isAiOverlayOpen = false;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

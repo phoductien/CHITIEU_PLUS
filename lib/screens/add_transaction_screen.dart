@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
 import 'package:chitieu_plus/models/notification_model.dart';
@@ -44,19 +43,44 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       'color': Color(0xFF3B82F6),
     },
     {
+      'name': 'Học phí',
+      'icon': Icons.school_rounded,
+      'color': Color(0xFFFACC15),
+    },
+    {
+      'name': 'Bảo hiểm',
+      'icon': Icons.health_and_safety_rounded,
+      'color': Color(0xFF10B981),
+    },
+    {
+      'name': 'Tiền điện',
+      'icon': Icons.bolt_rounded,
+      'color': Color(0xFFF59E0B),
+    },
+    {
+      'name': 'Tiền nước',
+      'icon': Icons.water_drop_rounded,
+      'color': Color(0xFF0EA5E9),
+    },
+    {
+      'name': 'Tiền Gas',
+      'icon': Icons.local_fire_department_rounded,
+      'color': Color(0xFFEF4444),
+    },
+    {
+      'name': 'Nạp điện thoại',
+      'icon': Icons.phone_android_rounded,
+      'color': Color(0xFF8B5CF6),
+    },
+    {
       'name': 'Di chuyển',
       'icon': Icons.directions_car_rounded,
       'color': Color(0xFFA855F7),
     },
     {
-      'name': 'Hóa đơn',
-      'icon': Icons.description_rounded,
-      'color': Color(0xFFEF4444),
-    },
-    {
       'name': 'Giải trí',
       'icon': Icons.videogame_asset_rounded,
-      'color': Color(0xFF10B981),
+      'color': Color(0xFF14B8A6),
     },
     {
       'name': 'Sức khỏe',
@@ -64,13 +88,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       'color': Color(0xFFEC4899),
     },
     {
-      'name': 'Giáo dục',
-      'icon': Icons.school_rounded,
-      'color': Color(0xFFFACC15),
+      'name': 'Nhà cửa',
+      'icon': Icons.home_rounded,
+      'color': Color(0xFF64748B),
     },
     {
-      'name': 'Thêm',
-      'icon': Icons.add_circle_outline_rounded,
+      'name': 'Khác',
+      'icon': Icons.category_rounded,
       'color': Colors.blueGrey,
     },
   ];
@@ -96,7 +120,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
@@ -115,72 +139,100 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
         );
       },
     );
-    if (picked != null && picked != _selectedDate) {
+    if (pickedDate != null) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDate = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          _selectedDate.hour,
+          _selectedDate.minute,
+        );
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDate),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFFEC5B13),
+              onPrimary: Colors.white,
+              surface: Color(0xFF1E293B),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (pickedTime != null) {
+      setState(() {
+        _selectedDate = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
       });
     }
   }
 
   Future<void> _pickImage() async {
-    final status = await Permission.photos.request();
-    if (status.isGranted) {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null && mounted) {
-        setState(() => _isAiProcessing = true);
-        try {
-          final bytes = await image.readAsBytes();
-          final aiService = AiService();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null && mounted) {
+      setState(() => _isAiProcessing = true);
+      try {
+        final bytes = await image.readAsBytes();
+        final aiService = AiService();
 
-          final prompt = '''
-          Hãy đóng vai một chuyên gia kế toán. Tôi sẽ gửi cho bạn một ảnh hóa đơn hoặc đoạn văn bản hóa đơn. 
-          Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
-          - title: Tên cửa hàng hoặc nội dung chính của hóa đơn (Ví dụ: "Phở Lý Quốc Sư", "Siêu thị Winmart").
-          - amount: Tổng số tiền thanh toán (chỉ lấy số nguyên, ví dụ: 20000).
-          - category: Phân loại vào một trong các mục: Ăn uống, Mua sắm, Di chuyển, Hóa đơn, Giải trí, Sức khỏe, Giáo dục, Khác.
-          - date: Ngày trên hóa đơn (định dạng YYYY-MM-DD). Nếu không thấy hãy để ngày hiện tại.
-          - note: Ghi chú chi tiết về các món đồ hoặc nội dung thanh toán (Ví dụ: "Mua 2 bát phở, 1 coca").
+        final prompt = '''
+        Hãy đóng vai một chuyên gia kế toán. Tôi sẽ gửi cho bạn một ảnh hóa đơn hoặc đoạn văn bản hóa đơn. 
+        Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
+        - title: Tên cửa hàng hoặc nội dung chính của hóa đơn (Ví dụ: "Phở Lý Quốc Sư", "Siêu thị Winmart").
+        - amount: Tổng số tiền thanh toán (chỉ lấy số nguyên, ví dụ: 20000).
+        - category: Phân loại vào: Ăn uống, Mua sắm, Di chuyển, Nhà cửa, Học phí, Bảo hiểm, Tiền điện, Tiền nước, Tiền Gas, Nạp điện thoại, Giải trí, Lương, Khác.
+        - date: Ngày giờ trên hóa đơn (chuẩn ISO8601: YYYY-MM-DDTHH:mm:ss). Nếu không thay, hãy để trống.
+        - note: Ghi chú chi tiết về các món đồ hoặc nội dung thanh toán.
 
-          Chỉ trả về JSON, không giải thích gì thêm.
-          ''';
+        Chỉ trả về JSON, không giải thích gì thêm.
+        ''';
 
-          final responseText = await aiService.sendMessage(
-            prompt,
-            attachments: [
-              {'bytes': bytes, 'mimeType': 'image/jpeg'},
-            ],
-          );
-
-          final jsonStart = responseText.indexOf('{');
-          final jsonEnd = responseText.lastIndexOf('}');
-          if (jsonStart != -1 && jsonEnd != -1) {
-            final jsonStr = responseText.substring(jsonStart, jsonEnd + 1);
-            _parseAiResult(jsonStr);
-          } else {
-            throw Exception("Không thể nhận diện được hóa đơn trong ảnh.");
-          }
-        } catch (e) {
-          if (mounted) {
-            context.read<NotificationProvider>().addNotification(
-              title: 'Lỗi AI Import',
-              body: e.toString(),
-              type: NotificationType.system,
-            );
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-          }
-        } finally {
-          if (mounted) {
-            setState(() => _isAiProcessing = false);
-          }
-        }
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cần quyền truy cập thư viện ảnh')),
+        final responseText = await aiService.sendMessage(
+          prompt,
+          attachments: [
+            {'bytes': bytes, 'mimeType': 'image/jpeg'},
+          ],
         );
+
+        final jsonStart = responseText.indexOf('{');
+        final jsonEnd = responseText.lastIndexOf('}');
+        if (jsonStart != -1 && jsonEnd != -1) {
+          final jsonStr = responseText.substring(jsonStart, jsonEnd + 1);
+          _parseAiResult(jsonStr);
+        } else {
+          throw Exception("Không thể nhận diện được hóa đơn trong ảnh.");
+        }
+      } catch (e) {
+        if (mounted) {
+          context.read<NotificationProvider>().addNotification(
+            title: 'Lỗi AI Import',
+            body: e.toString(),
+            type: NotificationType.system,
+          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isAiProcessing = false);
+        }
       }
     }
   }
@@ -275,17 +327,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
 
   void _parseAiResult(String jsonStr) {
     try {
-      final data = json.decode(jsonStr);
+      final decoded = json.decode(jsonStr);
+      final data = decoded['transaction'] ?? decoded;
       setState(() {
-        _noteController.text = data['title'] ?? data['note'] ?? '';
+        // Combine title and note for better context
+        final title = data['title']?.toString() ?? '';
+        final note = data['note']?.toString() ?? '';
+        _noteController.text = [title, note].where((e) => e.isNotEmpty).join(' - ');
 
-        // Format amount with dots for display if possible
+        // Format amount with dots for display
         if (data['amount'] != null) {
-          final amount = data['amount'].toString().replaceAll(
+          final amountStr = data['amount'].toString().replaceAll(
             RegExp(r'[^0-9]'),
             '',
           );
-          _amountController.text = amount;
+          if (amountStr.isNotEmpty) {
+            final formatted = NumberFormat('#,###')
+                .format(int.parse(amountStr))
+                .replaceAll(',', '.');
+            _amountController.text = formatted;
+          }
         }
 
         final String catName = data['category'] ?? 'Khác';
@@ -302,6 +363,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
           } catch (_) {}
         }
       });
+      
+      _tabController.animateTo(0);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -526,32 +589,84 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                   ),
                 ),
                 const SizedBox(height: 12),
-                GestureDetector(
-                  onTap: () => _selectDate(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF334155).withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.calendar_month_rounded,
-                          color: Colors.white54,
-                          size: 20,
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: GestureDetector(
+                        onTap: () => _selectDate(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFF334155).withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_month_rounded,
+                                color: Colors.white54,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  DateFormat('dd/MM/yyyy', 'vi').format(
+                                    _selectedDate,
+                                  ),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          DateFormat(
-                            'EEEE, d MMMM, y',
-                            'vi',
-                          ).format(_selectedDate),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: GestureDetector(
+                        onTap: () => _selectTime(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFF334155).withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.access_time_rounded,
+                                color: Colors.white54,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  DateFormat('HH:mm').format(_selectedDate),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 25),
                 const Text(
@@ -594,31 +709,86 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionCard(
-                  'Quét hóa đơn (AI Scan)',
-                  Icons.document_scanner_rounded,
-                  const Color(0xFFEC5B13),
-                  onTap: _startOcrScanner,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildActionCard(
-                  'Nhập từ ảnh',
-                  Icons.image_rounded,
-                  const Color(0xFF334155),
-                  onTap: _pickImage,
-                ),
-              ),
-            ],
+          _buildActionCard(
+            'Quét hóa đơn',
+            Icons.document_scanner_rounded,
+            const Color(0xFFEC5B13),
+            onTap: _showScanOptions,
           ),
           const SizedBox(height: 30),
           Expanded(child: _buildManualTab()), // Reuse fields for review
         ],
       ),
+    );
+  }
+
+  void _showScanOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Chọn phương thức',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEC5B13).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.camera_alt_rounded, color: Color(0xFFEC5B13)),
+                  ),
+                  title: const Text('Chụp hình', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _startOcrScanner();
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.image_rounded, color: Color(0xFF3B82F6)),
+                  ),
+                  title: const Text('Nhập từ thiết bị', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -140,6 +140,19 @@ class _MyAppState extends State<MyApp> {
         }
       } else {
         debugPrint('[DEBUG] main.dart: Auth state changed to LOGGED OUT.');
+        // Only redirect manually if this ISN'T the initial startup check
+        if (!_isInitialCheck) {
+          final navState = navigatorKey.currentState;
+          if (navState != null) {
+            debugPrint('[DEBUG] main.dart: Redirecting to AuthWrapper on Logout...');
+            navState.pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const AuthWrapper(skipSplash: true),
+              ),
+              (route) => false,
+            );
+          }
+        }
       }
 
       // After the first event (authenticated or not), it's no longer the initial check
@@ -177,6 +190,28 @@ class _MyAppState extends State<MyApp> {
               TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
               TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
             },
+          ),
+          scrollbarTheme: ScrollbarThemeData(
+            thumbVisibility: WidgetStateProperty.all(false),
+            trackVisibility: WidgetStateProperty.all(false),
+            interactive: true,
+            thickness: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.dragged)) {
+                return 8.0;
+              }
+              return 4.0;
+            }),
+            radius: const Radius.circular(10),
+            thumbColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.dragged)) {
+                return Colors.grey.withValues(alpha: 0.7);
+              }
+              if (states.contains(WidgetState.hovered)) {
+                return Colors.grey.withValues(alpha: 0.5);
+              }
+              return Colors.grey.withValues(alpha: 0.3);
+            }),
           ),
         ),
         home: const AuthWrapper(),

@@ -55,7 +55,7 @@ dependencies:
   path: ^1.9.1
   permission_handler: ^12.0.1
   html: ^0.15.6
-  connectivity_plus: ^7.0.0
+  connectivity_plus: ^7.1.0
   sqflite: ^2.3.3+1
   path_provider: ^2.1.5
   sqflite_common_ffi: ^2.4.0+2
@@ -90,8 +90,6 @@ flutter:
 
   assets:
     - assets/images/logo.png
-    - .env
-
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

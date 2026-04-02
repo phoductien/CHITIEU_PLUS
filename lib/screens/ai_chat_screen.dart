@@ -9,7 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chitieu_plus/services/ai_service.dart';
-import 'package:chitieu_plus/services/url_processor_service.dart';
+
 import 'package:chitieu_plus/models/transaction_model.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:provider/provider.dart';
@@ -329,139 +329,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     _saveSessions();
   }
 
-  void _showUrlDialog() {
-    final TextEditingController urlInputController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: EdgeInsets.zero,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 20,
-        ),
-        title: Container(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: Colors.white70),
-              ),
-              const Text(
-                'URL trang web và YouTube',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, color: Colors.white70),
-              ),
-            ],
-          ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Dán URL trang web và YouTube vào bên dưới để tải lên dưới dạng một nguồn.',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.blueAccent.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: TextField(
-                  controller: urlInputController,
-                  maxLines: 8,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    hintText: 'Dán liên kết bất kỳ',
-                    hintStyle: TextStyle(color: Colors.white38),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ...[
-                'Để thêm nhiều URL, hãy phân tách bằng dấu cách hoặc dòng mới.',
-                'Hiện chỉ nhập được văn bản hiển thị trên trang web.',
-                'Không hỗ trợ bài viết có tính phí.',
-                'Hiện chỉ nhập được bản chép lời của video trên YouTube.',
-                'Chỉ hỗ trợ video công khai trên YouTube.',
-              ].map(
-                (text) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('• ', style: TextStyle(color: Colors.white54)),
-                      Expanded(
-                        child: Text(
-                          text,
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              final content = urlInputController.text.trim();
-              if (content.isEmpty) return;
 
-              Navigator.pop(context);
-              setState(() => _isLoading = true);
-
-              final urls = content
-                  .split(RegExp(r'\s+'))
-                  .where((u) => u.startsWith('http'))
-                  .toList();
-
-              for (var url in urls) {
-                final result = await UrlProcessorService().processUrl(url);
-                setState(() {
-                  _selectedAttachments.add({
-                    'name': result['title'],
-                    'content': result['content'],
-                    'url': url,
-                    'isUrl': true,
-                    'isYouTube': result['isYouTube'] == 'true',
-                  });
-                });
-              }
-
-              setState(() => _isLoading = false);
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.white12,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            child: const Text('Chèn', style: TextStyle(color: Colors.white70)),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _sendMessage() async {
     final text = _textController.text.trim();
@@ -517,6 +385,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
       try {
         final decoded = json.decode(response);
         displayMessage = decoded['message'] ?? response;
+        
+        // Remove markdown asterisks
+        displayMessage = displayMessage
+            .replaceAll('**', '')
+            .replaceAll('* ', '• ')
+            .replaceAll('*', '');
+
         if (decoded['transaction'] != null) {
           transactionData = decoded['transaction'];
           transactionData!['isConfirmed'] = false; // Initial state
@@ -651,277 +526,96 @@ class _AiChatScreenState extends State<AiChatScreen> {
     });
   }
 
-  void _showModelSelector() {
+  Widget _buildModelDropdown() {
     final aiService = AiService();
-    final currentVersion = aiService.currentVersion;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text(
-          'Chọn Phiên bản Gemini',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    final currentVer = aiService.currentVersion;
+    final currentTier = aiService.currentTier;
+    
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+      ),
+      child: PopupMenuButton<String>(
+        tooltip: 'Chọn phiên bản AI',
+        color: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Colors.white10),
         ),
-        content: SingleChildScrollView(
-          child: Column(
+        offset: const Offset(0, -200),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Phiên bản AI',
-                style: TextStyle(
+              const Icon(Icons.psychology_rounded, color: Colors.white54, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                'Gemini $currentVer ($currentTier)',
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 12),
-              _buildVersionOption(
-                'Gemini 3.x (Đời mới)',
-                '3.0',
-                'Flash 3, Pro 3.1',
-                currentVersion,
-              ),
-              _buildVersionOption(
-                'Gemini 2.5 (Ổn định)',
-                '2.5',
-                'Flash 2.5, Pro 1.5',
-                currentVersion,
-              ),
-              _buildVersionOption(
-                'Gemini 2.0 (Thử nghiệm)',
-                '2.0',
-                'Flash 2, Pro 2 Exp',
-                currentVersion,
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Divider(color: Colors.white10),
-              ),
-              const Text(
-                'Thông tin phân nhóm',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildTierDescription(
-                'Gemini Fast (Nhanh)',
-                'Tối ưu cho tốc độ phản hồi gần như tức thì, phù hợp ghi chép và tóm tắt nhanh.',
-              ),
-              _buildTierDescription(
-                'Gemini Thinking (Tư duy)',
-                'Khả năng suy luận Chain-of-Thought, giúp giải toán, lập trình và gỡ lỗi chính xác.',
-              ),
-              _buildTierDescription(
-                'Gemini Pro (Nâng cao)',
-                'Mô hình mạnh mẽ nhất, hiểu ngữ cảnh đa phương thức và sáng tạo chuyên sâu.',
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                child: Divider(color: Colors.white10),
-              ),
-              Text(
-                'Đang sử dụng model: ${AiService().currentModelName}',
-                style: const TextStyle(
-                  color: Colors.white38,
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.expand_less_rounded, color: Colors.white54, size: 16),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVersionOption(
-    String title,
-    String version,
-    String subtitle,
-    String currentVersion,
-  ) {
-    final isSelected = currentVersion == version;
-    return ListTile(
-      onTap: () async {
-        setState(() => _isLoading = true);
-        Navigator.pop(context);
-        await AiService().updateConfig(version: version);
-        _checkAiLimit();
-        setState(() => _isLoading = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Đã chuyển sang phiên bản $title'),
-              backgroundColor: Colors.teal,
-            ),
-          );
-        }
-      },
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isSelected ? Colors.tealAccent : Colors.white70,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(color: Colors.white38, fontSize: 11),
-      ),
-      trailing: isSelected
-          ? const Icon(
-              Icons.check_circle_rounded,
-              color: Colors.tealAccent,
-              size: 18,
-            )
-          : null,
-    );
-  }
-
-  Widget _buildTierDescription(String title, String desc) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.tealAccent,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            desc,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 11,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModelQuickToggles() {
-    final currentTier = AiService().currentTier;
-    final currentVersion = AiService().currentVersion;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          // Version badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Text(
-              'v$currentVersion',
-              style: const TextStyle(
-                color: Colors.white38,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: ['Nhanh', 'Tư duy', 'Pro'].map((tier) {
-                  final isSelected = currentTier == tier;
-
-                  Color accentColor;
-                  IconData icon;
-                  switch (tier) {
-                    case 'Nhanh':
-                      accentColor = Colors.blueAccent;
-                      icon = Icons.bolt_rounded;
-                      break;
-                    case 'Tư duy':
-                      accentColor = Colors.purpleAccent;
-                      icon = Icons.psychology_rounded;
-                      break;
-                    case 'Pro':
-                      accentColor = Colors.amberAccent;
-                      icon = Icons.stars_rounded;
-                      break;
-                    default:
-                      accentColor = Colors.tealAccent;
-                      icon = Icons.smart_toy_rounded;
-                  }
-
-                  return GestureDetector(
-                    onTap: () async {
-                      if (isSelected) return;
-                      setState(() => _isLoading = true);
-                      await AiService().updateConfig(tier: tier);
-                      _checkAiLimit();
-                      setState(() => _isLoading = false);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? accentColor.withValues(alpha: 0.2)
-                            : const Color(0xFF1E293B),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? accentColor : Colors.white10,
-                          width: 1,
+        itemBuilder: (context) {
+          final List<PopupMenuEntry<String>> items = [];
+          final models = {
+            '2.5': ['Nhanh', 'Tư duy', 'Pro'],
+            '3.0': ['Nhanh', 'Tư duy', 'Pro'],
+          };
+          
+          models.forEach((ver, tiers) {
+            for (var tier in tiers) {
+              final value = '${ver}_$tier';
+              final isSelected = ver == currentVer && tier == currentTier;
+              items.add(
+                PopupMenuItem<String>(
+                  value: value,
+                  height: 40,
+                  child: Row(
+                    children: [
+                      Text(
+                        'Gemini $ver ($tier)',
+                        style: TextStyle(
+                          color: isSelected ? const Color(0xFFEC5B13) : Colors.white,
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            icon,
-                            color: isSelected ? accentColor : Colors.white54,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            tier,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white54,
-                              fontSize: 13,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
+                      if (isSelected) ...[
+                        const Spacer(),
+                        const Icon(Icons.check_circle_rounded, color: Color(0xFFEC5B13), size: 16),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }
+            if (ver != '3.0') items.add(const PopupMenuDivider());
+          });
+          return items;
+        },
+        onSelected: (value) async {
+          final parts = value.split('_');
+          setState(() => _isLoading = true);
+          await AiService().updateConfig(version: parts[0], tier: parts[1]);
+          _checkAiLimit();
+          setState(() => _isLoading = false);
+        },
       ),
     );
   }
@@ -1002,9 +696,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 case 'rename':
                   _renameSession(_currentSession!);
                   break;
-                case 'model':
-                  _showModelSelector();
-                  break;
+
                 case 'delete':
                   _deleteSession(_currentSession!);
                   break;
@@ -1049,23 +741,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   ],
                 ),
               ),
-              PopupMenuItem(
-                value: 'model',
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.psychology_rounded,
-                      color: Colors.tealAccent,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Chọn Model AI (v2+)',
-                      style: TextStyle(color: Colors.tealAccent),
-                    ),
-                  ],
-                ),
-              ),
+
               PopupMenuItem(
                 value: 'delete',
                 child: Row(
@@ -1419,17 +1095,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            TextButton(
-                              onPressed: _showModelSelector,
-                              child: const Text(
-                                'Đổi Model khác',
-                                style: TextStyle(
-                                  color: Colors.blueAccent,
-                                  fontSize: 12,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ),
+
                           ],
                         ),
                       ),
@@ -1454,8 +1120,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
                         ),
                       ),
 
-                    // Model Selection Quick Toggles
-                    if (_isOnline) _buildModelQuickToggles(),
+                    // Model Selection
+                    if (_isOnline) _buildModelDropdown(),
 
                     // Suggested Prompts
                     if (_isOnline)
@@ -1473,44 +1139,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     // Text Input
                     Row(
                       children: [
-                        IconButton(
-                          icon: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E293B),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white10),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.link_rounded,
-                                  color: Colors.white70,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.play_circle_fill_rounded,
-                                  color: Colors.red,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                const Text(
-                                  'Trang web',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          onPressed: _isOnline ? _showUrlDialog : null,
-                        ),
+
                         IconButton(
                           icon: Icon(
                             Icons.add_circle_outline_rounded,

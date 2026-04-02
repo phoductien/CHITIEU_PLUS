@@ -58,3 +58,4 @@ macos/Runner/GoogleService-Info.plist
 *.jks
 *.keystore
 key.properties
+.vercel

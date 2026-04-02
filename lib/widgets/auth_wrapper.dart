@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:chitieu_plus/screens/login_screen.dart';
 import 'package:chitieu_plus/screens/splash_screen.dart';
 import 'package:chitieu_plus/screens/home_screen.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 
 class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
+  final bool skipSplash;
+  const AuthWrapper({super.key, this.skipSplash = false});
 
   Future<bool> _isBypassed() async {
     try {
@@ -58,7 +60,7 @@ class AuthWrapper extends StatelessWidget {
               );
 
               if (user == null || UserProvider.isCleaningUpGuest) {
-                return const SplashScreen();
+                return skipSplash ? const LoginScreen() : const SplashScreen();
               } else {
                 return const HomeScreen();
               }

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart'; // Added for Firebase.app()
+import 'dart:async';
 
 class UserProvider with ChangeNotifier {
   String _name = '';
@@ -22,6 +23,7 @@ class UserProvider with ChangeNotifier {
   double _totalBudget = 5000000;
   Map<String, double> _categoryBudgets = {};
   List<String> _bankAccounts = [];
+  StreamSubscription<DocumentSnapshot>? _userDocSubscription;
 
   String get name => _name;
   String get email => _email;
@@ -65,6 +67,12 @@ class UserProvider with ChangeNotifier {
         debugPrint('[UserProvider] Error decoding category budgets: $e');
       }
     }
+    
+    // Proactively start Firebase listener if a user is already authenticated
+    if (FirebaseAuth.instance.currentUser != null) {
+      fetchFromFirebase();
+    }
+    
     notifyListeners();
   }
 
@@ -185,6 +193,7 @@ class UserProvider with ChangeNotifier {
     }
 
     if (docId.isNotEmpty) {
+      _startUserDocumentListener(docId);
       if (!_isGuest) {
         _email = targetEmail;
       }
@@ -225,6 +234,11 @@ class UserProvider with ChangeNotifier {
         await prefs.setStringList('user_bank_accounts', _bankAccounts);
 
         notifyListeners();
+      } else {
+        debugPrint(
+          '[UserProvider] User document DOES NOT exist in Firestore (initial fetch). Triggering logout.',
+        );
+        _handleAccountDeletion();
       }
     }
   }
@@ -276,6 +290,7 @@ class UserProvider with ChangeNotifier {
     }
 
     if (docId.isNotEmpty) {
+      _startUserDocumentListener(docId);
       final data = {
         'name': _name,
         'email': _isGuest ? 'guest@chitieuplus.internal' : targetEmail,
@@ -299,8 +314,7 @@ class UserProvider with ChangeNotifier {
         await FirebaseFirestore.instance
             .collection('users')
             .doc(docId)
-            .set(firestoreData, SetOptions(merge: true))
-            .timeout(const Duration(seconds: 10));
+            .set(firestoreData, SetOptions(merge: true));
       } catch (e) {
         debugPrint('[UserProvider] Error saving to Firestore: $e');
       }
@@ -313,14 +327,9 @@ class UserProvider with ChangeNotifier {
             'updatedAt': DateTime.now().toIso8601String(),
           });
         await FirebaseDatabase.instanceFor(
-              app: Firebase.app(),
-              databaseURL:
-                  'https://chitieuplus-app-default-rtdb.firebaseio.com',
-            )
-            .ref()
-            .child('users/$docId')
-            .update(rtdbData)
-            .timeout(const Duration(seconds: 10));
+          app: Firebase.app(),
+          databaseURL: 'https://chitieuplus-app-default-rtdb.firebaseio.com',
+        ).ref().child('users/$docId').update(rtdbData);
       } catch (e) {
         debugPrint('[UserProvider] Error saving to Realtime Database: $e');
       }
@@ -378,8 +387,7 @@ class UserProvider with ChangeNotifier {
           await FirebaseFirestore.instance
               .collection('users')
               .doc(uid)
-              .delete()
-              .timeout(const Duration(seconds: 5));
+              .delete();
         } catch (e) {
           debugPrint('[UserProvider] Không thể xóa Firestore Khách: $e');
         }
@@ -387,21 +395,16 @@ class UserProvider with ChangeNotifier {
         // 2. Xóa trên Realtime Database (gồm cả profile và transactions)
         try {
           await FirebaseDatabase.instanceFor(
-                app: Firebase.app(),
-                databaseURL:
-                    'https://chitieuplus-app-default-rtdb.firebaseio.com',
-              )
-              .ref()
-              .child('users/$uid')
-              .remove()
-              .timeout(const Duration(seconds: 5));
+            app: Firebase.app(),
+            databaseURL: 'https://chitieuplus-app-default-rtdb.firebaseio.com',
+          ).ref().child('users/$uid').remove();
         } catch (e) {
           debugPrint('[UserProvider] Không thể xóa RTDB Khách: $e');
         }
 
         // 3. Xóa Authenticated User
         try {
-          await user.delete().timeout(const Duration(seconds: 5));
+          await user.delete();
         } catch (e) {
           debugPrint(
             '[UserProvider] Error deleting guest user (token may have expired): $e',
@@ -417,5 +420,43 @@ class UserProvider with ChangeNotifier {
     } finally {
       isCleaningUpGuest = false;
     }
+  }
+
+  void _startUserDocumentListener(String uid) {
+    if (_userDocSubscription != null) return; // Already listening
+
+    debugPrint('[UserProvider] Starting listener for user document: $uid');
+    _userDocSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((snapshot) {
+      if (!snapshot.exists) {
+        debugPrint(
+          '[UserProvider] User document DOES NOT exist or was DELETED from Firestore. Signing out...',
+        );
+        _handleAccountDeletion();
+      }
+    });
+  }
+
+  Future<void> _handleAccountDeletion() async {
+    _userDocSubscription?.cancel();
+    _userDocSubscription = null;
+
+    // Clear local data
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    // Sign out to trigger AuthWrapper redirect
+    await FirebaseAuth.instance.signOut();
+
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _userDocSubscription?.cancel();
+    super.dispose();
   }
 }

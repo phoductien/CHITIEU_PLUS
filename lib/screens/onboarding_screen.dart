@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/screens/login_screen.dart';
 import 'package:chitieu_plus/screens/terms_and_privacy_screen.dart';
+import 'package:chitieu_plus/widgets/app_logo.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -380,78 +381,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Column(
                 children: [
                   // Logo Ví App
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      color: const Color(
-                        0xFFF05D15,
-                      ), // color: Phết nện khối chất mảng cam son nhiệt huyết mây vương
-                      borderRadius: BorderRadius.circular(
-                        24,
-                      ), // borderRadius: Giũa tróc trơn mướt những nanh sắt lượn rìa của khuôn khung
-                    ),
-                    child: Center(
-                      child: Stack(
-                        alignment: Alignment
-                            .center, // alignment: Quy chắt chốt tâm đồng nhất giam hãm ngưng tụ các điểm ảnh xê dịch
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(
-                                10,
-                              ), // borderRadius: Mài giũa tròn trịa bờ cạnh nắp bóp
-                            ),
-                          ),
-                          Positioned(
-                            right:
-                                -1, // right: Vươn ló lọt ranh biên giáp ranh bên thềm sườn phải chệnh chếch
-                            child: Container(
-                              width: 14,
-                              height: 20,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF05D15),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(
-                                    6,
-                                  ), // borderRadius.only: Gọt nén tỉa hớt khéo léo bo tròn ở riêng ranh chóp và gác vách mâm mép
-                                  bottomLeft: Radius.circular(6),
-                                ),
-                              ),
-                              child: Center(
-                                child: Container(
-                                  width: 5,
-                                  height: 5,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape
-                                        .circle, // shape: Nấu nhào thành điệu viên mãn tròn vo nốt khối
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 6,
-                            left: 6,
-                            right: 14,
-                            child: Container(
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFFF05D15,
-                                ).withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  const AppLogo(size: 110, showShadow: true),
                   const SizedBox(height: 32),
                   const Text(
                     'Chào mừng đến\nvới\nChiTieuPlus',

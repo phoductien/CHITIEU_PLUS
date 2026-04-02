@@ -52,6 +52,13 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
+# Firebase C++ SDK setup
+# To avoid automated download issues, manually download version 13.4.0 and extract into windows/firebase_cpp_sdk
+set(LOCAL_FIREBASE_SDK "${CMAKE_CURRENT_SOURCE_DIR}/firebase_cpp_sdk/firebase_cpp_sdk_windows")
+if(EXISTS "${LOCAL_FIREBASE_SDK}/include/firebase/version.h")
+  message(STATUS "Found local Firebase C++ SDK at ${LOCAL_FIREBASE_SDK}")
+  set(ENV{FIREBASE_CPP_SDK_DIR} "${LOCAL_FIREBASE_SDK}")
+endif()
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.

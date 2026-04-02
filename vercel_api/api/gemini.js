@@ -2,11 +2,6 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Mapping of Version + Tier to Model ID (matches Dart implementation)
 const modelMap = {
-  '2.0': {
-    'Nhanh': 'gemini-2.0-flash-lite',
-    'Tư duy': 'gemini-2.0-flash',
-    'Pro': 'gemini-2.0-flash-001',
-  },
   '2.5': {
     'Nhanh': 'gemini-2.5-flash-lite',
     'Tư duy': 'gemini-2.5-flash',
@@ -37,20 +32,22 @@ LOGIC TÀI CHÍNH QUAN TRỌNG:
 
 QUY TẮC CỐ ĐỊNH:
 1. Luôn phản hồi JSON.
-2. Cấu trúc JSON:
+2. Cấu trúc JSON bắt buộc:
 {
   "message": "Lời nhắn tự nhiên",
   "transaction": {
     "title": "Tiêu đề",
     "amount": 20000,
-    "category": "Ăn uống|Mua sắm|Di chuyển|Nhà cửa|Giải trí|Lương|Khác",
+    "category": "Ăn uống|Mua sắm|Di chuyển|Nhà cửa|Học phí|Bảo hiểm|Tiền điện|Tiền nước|Tiền Gas|Nạp điện thoại|Giải trí|Lương|Khác",
+    "date": "2024-05-13T14:30:00",
     "type": "expense",
     "note": "Ghi chú",
     "wallet": "main"
   }
-} (transaction để null nếu chỉ câu hỏi đáp/phân tích).
-3. Luôn ưu tiên độ chính xác số tiền (k=1000, tr=1tr).
-4. Ngôn ngữ: Tiếng Việt.
+} (transaction để null nếu chỉ câu hỏi đáp/phân tích. Trong đó date là ngày giờ trên hóa đơn theo chuẩn ISO8601 YYYY-MM-DDTHH:mm:ss, nếu chỉ có ngày thì để YYYY-MM-DD, nếu không thấy để rỗng).
+4. Luôn ưu tiên độ chính xác số tiền (k=1000, tr=1tr).
+5. Phân loại chuẩn xác: Hãy phân loại theo nhóm category gần nhất, nếu không khớp nhóm nào thì trả về "Khác".
+6. Ngôn ngữ: Tiếng Việt.
 `;
 
 module.exports = async function (req, res) {
@@ -81,16 +78,16 @@ module.exports = async function (req, res) {
 
     const ai = new GoogleGenerativeAI(apiKey);
     const body = req.body || {};
-    
+
     // Feature requested: title, category or chat
-    const { 
+    const {
       type = 'chat', // 'chat', 'title', 'category'
-      message = '', 
-      history = [], 
-      attachments = [], 
-      contextStrings = [], 
-      version = '3.0', 
-      tier = 'Tư duy' 
+      message = '',
+      history = [],
+      attachments = [],
+      contextStrings = [],
+      version = '3.0',
+      tier = 'Tư duy'
     } = body;
 
     const modelName = (modelMap[version] && modelMap[version][tier]) ? modelMap[version][tier] : 'gemini-3-flash';
@@ -162,13 +159,13 @@ module.exports = async function (req, res) {
 
     const response = await chat.sendMessage(parts);
     const responseText = response.response.text();
-    
+
     return res.status(200).json({ response: responseText });
 
   } catch (error) {
     console.error("Gemini API Error:", error);
     if (error.message && error.message.includes('Quota exceeded')) {
-       return res.status(429).json({ error: 'LIMIT_EXCEEDED' });
+      return res.status(429).json({ error: 'LIMIT_EXCEEDED' });
     }
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
