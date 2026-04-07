@@ -10,8 +10,12 @@
         ],
         "app": [
           "chitieuplus-app"
+        ],
+        "admin": [
+          "chitieuplus-admin"
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }

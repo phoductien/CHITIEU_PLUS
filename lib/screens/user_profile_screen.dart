@@ -480,8 +480,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             value: _selectedGender,
                             items: ['Nam', 'Nữ', 'Khác'],
                             onChanged: (val) {
-                              if (val != null)
+                              if (val != null) {
                                 setState(() => _selectedGender = val);
+                              }
                             },
                           ),
                         ),

@@ -153,7 +153,9 @@ class _MyAppState extends State<MyApp> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (session.lastRoute == 'add_transaction') {
                 navState.push(
-                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const AddTransactionScreen(),
+                  ),
                 );
               } else if (session.lastRoute == 'ocr_scan') {
                 navState.push(

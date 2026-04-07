@@ -50,8 +50,9 @@ class ThemeProvider with ChangeNotifier {
 
   // Dynamic Foreground Color (Text, Icons)
   Color get foregroundColor {
-    if (_isEyeProtection)
+    if (_isEyeProtection) {
       return const Color(0xFF5D4037); // Deep Brown for sepia
+    }
     return _isDarkMode
         ? Colors.white
         : Colors.white; // White for both when background is dark

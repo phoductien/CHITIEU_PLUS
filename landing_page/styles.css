@@ -38,6 +38,11 @@ body.light-mode {
     -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+    height: 100%;
+    min-height: 100vh;
+}
+
 html {
     scroll-behavior: smooth;
     font-size: 16px;

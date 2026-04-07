@@ -67,10 +67,11 @@ class _OcrScanScreenState extends State<OcrScanScreen>
           });
         }
       } else {
-        if (mounted)
+        if (mounted) {
           setState(
             () => _cameraError = 'Không tìm thấy camera nào trên thiết bị.',
           );
+        }
       }
     } catch (e) {
       if (mounted) setState(() => _cameraError = 'Lỗi khởi tạo camera: $e');
@@ -149,8 +150,9 @@ class _OcrScanScreenState extends State<OcrScanScreen>
   Future<void> _captureImage() async {
     if (_cameraController == null ||
         !_isCameraInitialized ||
-        _cameraError != null)
+        _cameraError != null) {
       return;
+    }
     try {
       final XFile image = await _cameraController!.takePicture();
       await _processImage(image);

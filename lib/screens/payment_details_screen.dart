@@ -25,8 +25,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
   bool _isProcessing = false;
 
   String _formatCurrency(double amount) {
-    return NumberFormat('#,###', 'vi_VN').format(amount).replaceAll(',', '.') +
-        'đ';
+    return '${NumberFormat('#,###', 'vi_VN').format(amount).replaceAll(',', '.')}đ';
   }
 
   Future<void> _handleConfirm() async {
