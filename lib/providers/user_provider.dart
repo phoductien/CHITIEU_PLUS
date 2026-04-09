@@ -234,11 +234,10 @@ class UserProvider with ChangeNotifier {
         await prefs.setStringList('user_bank_accounts', _bankAccounts);
 
         notifyListeners();
-      } else {
         debugPrint(
-          '[UserProvider] User document DOES NOT exist in Firestore (initial fetch). Triggering logout.',
+          '[UserProvider] User document DOES NOT exist in Firestore (initial fetch). Auto-creating profile...',
         );
-        _handleAccountDeletion();
+        await syncToFirebase();
       }
     }
   }
@@ -425,7 +424,6 @@ class UserProvider with ChangeNotifier {
   void _startUserDocumentListener(String uid) {
     if (_userDocSubscription != null) return; // Already listening
 
-    debugPrint('[UserProvider] Starting listener for user document: $uid');
     _userDocSubscription = FirebaseFirestore.instance
         .collection('users')
         .doc(uid)
@@ -433,9 +431,10 @@ class UserProvider with ChangeNotifier {
         .listen((snapshot) {
       if (!snapshot.exists) {
         debugPrint(
-          '[UserProvider] User document DOES NOT exist or was DELETED from Firestore. Signing out...',
+          '[UserProvider] User document DOES NOT exist or was DELETED from Firestore. Ensuring it exists...',
         );
-        _handleAccountDeletion();
+        // Thay vì đăng xuất, ta tự động tạo lại/đồng bộ lại thông tin từ Auth
+        syncToFirebase();
       }
     });
   }

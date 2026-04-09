@@ -87,4 +87,34 @@ class RealtimeDbService {
       rethrow;
     }
   }
+
+  /// Clears the existing transactions node and writes a fresh list from Firestore.
+  /// Used for "Repair Sync" functionality.
+  Future<void> overwriteUserTransactions(
+    List<TransactionModel> transactions,
+  ) async {
+    try {
+      // 1. Clear existing
+      await _userRef.child('transactions').remove();
+
+      // 2. Prepare bulk update
+      if (transactions.isEmpty) return;
+
+      final Map<String, Map<String, dynamic>> updates = {};
+      for (var t in transactions) {
+        final map = t.toMap();
+        map['date'] = t.date.toIso8601String();
+        updates['transactions/${t.id}'] = map;
+      }
+
+      // 3. Apply
+      await _userRef.update(updates);
+      debugPrint(
+        '[RealtimeDB] Overwrite sync completed with ${transactions.length} items.',
+      );
+    } catch (e) {
+      debugPrint('[RealtimeDB] Overwrite sync error: $e');
+      rethrow;
+    }
+  }
 }

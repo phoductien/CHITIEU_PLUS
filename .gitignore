@@ -59,3 +59,17 @@ macos/Runner/GoogleService-Info.plist
 *.keystore
 key.properties
 .vercel
+
+# Databases
+*.db
+*.sqlite
+*.sqlite-journal
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Build and IDE extras
+node_modules/
+dist/
+.env*
+!.env.example

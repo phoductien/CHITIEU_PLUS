@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to identify the Admin
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'phoductienta260204@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true)
+      );
+    }
+
+    // User profiles: Users can read/write their own profiles
+    match /users/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+    
+    // Transactions: Users can read/write documents where the userId field matches their UID
+    match /transactions/{docId} {
+      // Allow creation if the userId field matches the auth UID
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow read, update, delete if the document owner matches the auth UID or is Admin
+      allow read, update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      // Allow listing/querying if applying the correct filter (userId == auth.uid)
+      allow list: if request.auth != null && (request.query.limit <= 1000 || isAdmin());
+    }
+
+    // Global Admin override for other potential collections (feedback, categories, etc.)
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

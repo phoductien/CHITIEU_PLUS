@@ -78,100 +78,98 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Listen for new notifications
     final notificationProvider = context.read<NotificationProvider>();
-    _notificationSubscription =
-        notificationProvider.onNewNotification.listen((notification) {
+    _notificationSubscription = notificationProvider.onNewNotification.listen((
+      notification,
+    ) {
       if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              behavior: SnackBarBehavior.floating,
-              content: FadeInDown(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: notification.color.withValues(alpha: 0.5),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            behavior: SnackBarBehavior.floating,
+            content: FadeInDown(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: notification.color.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          notification.icon,
-                          color: notification.color,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              notification.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            Text(
-                              notification.body,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const NotificationScreen(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'Xem',
-                          style: TextStyle(color: Color(0xFFFF6D00)),
-                        ),
-                      ),
-                    ],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: notification.color.withValues(alpha: 0.5),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: notification.color.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        notification.icon,
+                        color: notification.color,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            notification.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            notification.body,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Xem',
+                        style: TextStyle(color: Color(0xFFFF6D00)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          );
-        });
+          ),
+        );
       }
     });
 
@@ -548,20 +546,33 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
+class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
   bool _isBalanceVisible = true;
   double _totalBalance = 0;
   late Timer _timer;
   DateTime _currentTime = DateTime.now();
+  late AnimationController _syncController;
+  Timer? _lastSyncRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
+      if (mounted)
         setState(() {
           _currentTime = DateTime.now();
         });
+    });
+
+    _syncController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+
+    // Refresh "time ago" every 30 seconds
+    _lastSyncRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        setState(() {});
       }
     });
   }
@@ -569,7 +580,22 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     _timer.cancel();
+    _lastSyncRefreshTimer?.cancel();
+    _syncController.dispose();
     super.dispose();
+  }
+
+  String _getRelativeSyncTime(DateTime? lastSyncTime) {
+    if (lastSyncTime == null) return 'Chưa đồng bộ';
+
+    final diff = DateTime.now().difference(lastSyncTime);
+
+    if (diff.inSeconds < 60) return 'Vừa xong';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
+    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
+    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
+
+    return DateFormat('dd/MM/yyyy').format(lastSyncTime);
   }
 
   String _getFormattedDateTime() {
@@ -857,6 +883,69 @@ class _HomeTabState extends State<HomeTab> {
                               Row(
                                 children: [
                                   GestureDetector(
+                                    onTap: () async {
+                                      if (_syncController.isAnimating) return;
+                                      _syncController.repeat();
+                                      try {
+                                        await context
+                                            .read<TransactionProvider>()
+                                            .syncDataWithFirestore();
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Đồng bộ dữ liệu thành công!',
+                                              ),
+                                              backgroundColor: Colors.green,
+                                              duration: Duration(seconds: 1),
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text('Lỗi: $e'),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      } finally {
+                                        _syncController.stop();
+                                        _syncController.reset();
+                                      }
+                                    },
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          _getRelativeSyncTime(
+                                            transactionProvider.lastSyncTime,
+                                          ),
+                                          style: TextStyle(
+                                            color: themeProvider.foregroundColor
+                                                .withValues(alpha: 0.35),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        RotationTransition(
+                                          turns: _syncController,
+                                          child: Icon(
+                                            Icons.sync_rounded,
+                                            color: themeProvider.foregroundColor
+                                                .withValues(alpha: 0.5),
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  GestureDetector(
                                     onTap: () => setState(
                                       () => _isBalanceVisible =
                                           !_isBalanceVisible,
@@ -1098,11 +1187,10 @@ class _HomeTabState extends State<HomeTab> {
     double income = 0;
     double expense = 0;
     for (var tx in transactions) {
-      if (tx.type == TransactionType.income) {
+      if (tx.type == TransactionType.income)
         income += tx.amount;
-      } else {
+      else
         expense += tx.amount;
-      }
     }
     double total = income + expense;
     double expensePercent = total > 0 ? expense / total : 0;
@@ -1559,20 +1647,87 @@ class _TransactionTabState extends State<TransactionTab> {
     }
   }
 
+  List<TransactionModel> _getFilteredTransactions(List<TransactionModel> transactions) {
+    final query = _searchController.text.toLowerCase();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+    final monthStart = DateTime(now.year, now.month, 1);
+
+    return transactions.where((tx) {
+      final matchesQuery =
+          tx.title.toLowerCase().contains(query) ||
+          tx.category.toLowerCase().contains(query);
+
+      bool matchesDate = true;
+      if (_activeFilter == 'Hôm nay') {
+        matchesDate =
+            tx.date.year == today.year &&
+            tx.date.month == today.month &&
+            tx.date.day == today.day;
+      } else if (_activeFilter == 'Tuần này') {
+        matchesDate = tx.date.isAfter(
+          weekStart.subtract(const Duration(seconds: 1)),
+        );
+      } else if (_activeFilter == 'Tháng này') {
+        matchesDate =
+            tx.date.year == monthStart.year &&
+            tx.date.month == monthStart.month;
+      } else if (_activeFilter == 'Tùy chỉnh' &&
+          _customStartDate != null &&
+          _customEndDate != null) {
+        final start = DateTime(
+          _customStartDate!.year,
+          _customStartDate!.month,
+          _customStartDate!.day,
+        );
+        final end = DateTime(
+          _customEndDate!.year,
+          _customEndDate!.month,
+          _customEndDate!.day,
+          23,
+          59,
+          59,
+        );
+        matchesDate =
+            tx.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
+            tx.date.isBefore(end.add(const Duration(seconds: 1)));
+      }
+
+      return matchesQuery && matchesDate;
+    }).toList();
+  }
+
+  void _toggleSelectAll(List<TransactionModel> filtered) {
+    setState(() {
+      if (_selectedIds.length == filtered.length) {
+        _selectedIds.clear();
+        _isSelectionMode = false;
+      } else {
+        _selectedIds.clear();
+        for (var tx in filtered) {
+          _selectedIds.add(tx.id);
+        }
+        _isSelectionMode = true;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final transactionProvider = context.watch<TransactionProvider>();
     final themeProvider = context.watch<ThemeProvider>();
     final isLoading = transactionProvider.isLoading;
     final allTransactions = transactionProvider.transactions;
+    final filteredTransactions = _getFilteredTransactions(allTransactions);
 
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(themeProvider),
-            _buildSearchAndFilters(themeProvider),
+            _buildHeader(themeProvider, filteredTransactions),
+            _buildSearchAndFilters(themeProvider, filteredTransactions),
             Expanded(
               child: isLoading
                   ? const Center(
@@ -1581,7 +1736,7 @@ class _TransactionTabState extends State<TransactionTab> {
                       ),
                     )
                   : _buildGroupedTransactionList(
-                      allTransactions,
+                      filteredTransactions,
                       themeProvider,
                     ),
             ),
@@ -1591,7 +1746,10 @@ class _TransactionTabState extends State<TransactionTab> {
     );
   }
 
-  Widget _buildHeader(ThemeProvider themeProvider) {
+  Widget _buildHeader(
+    ThemeProvider themeProvider,
+    List<TransactionModel> filtered,
+  ) {
     if (_isSelectionMode) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -1752,33 +1910,87 @@ class _TransactionTabState extends State<TransactionTab> {
     }
   }
 
-  Widget _buildSearchAndFilters(ThemeProvider themeProvider) {
+  Widget _buildSearchAndFilters(
+    ThemeProvider themeProvider,
+    List<TransactionModel> filtered,
+  ) {
+    final isAllSelected =
+        filtered.isNotEmpty && _selectedIds.length == filtered.length;
+
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            decoration: BoxDecoration(
-              color: themeProvider.secondaryColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: TextField(
-              controller: _searchController,
-              style: TextStyle(color: themeProvider.foregroundColor),
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm giao dịch...',
-                hintStyle: TextStyle(
-                  color: themeProvider.foregroundColor.withValues(alpha: 0.4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: themeProvider.secondaryColor,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    style: TextStyle(color: themeProvider.foregroundColor),
+                    decoration: InputDecoration(
+                      hintText: 'Tìm kiếm giao dịch...',
+                      hintStyle: TextStyle(
+                        color:
+                            themeProvider.foregroundColor.withValues(alpha: 0.4),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color:
+                            themeProvider.foregroundColor.withValues(alpha: 0.3),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                    ),
+                    onChanged: (value) => setState(() {}),
+                  ),
                 ),
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  color: themeProvider.foregroundColor.withValues(alpha: 0.3),
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 15),
               ),
-              onChanged: (value) => setState(() {}),
-            ),
+              if (_isSelectionMode) ...[
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: () => _toggleSelectAll(filtered),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Chọn tất cả',
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor.withValues(
+                            alpha: 0.7,
+                          ),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: isAllSelected,
+                          onChanged: (_) => _toggleSelectAll(filtered),
+                          activeColor: const Color(0xFFEC5B13),
+                          checkColor: Colors.white,
+                          side: BorderSide(
+                            color: themeProvider.foregroundColor.withValues(
+                              alpha: 0.3,
+                            ),
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         const SizedBox(height: 8),
@@ -1876,55 +2088,7 @@ class _TransactionTabState extends State<TransactionTab> {
     List<TransactionModel> transactions,
     ThemeProvider themeProvider,
   ) {
-    // Basic search filtering
-    final query = _searchController.text.toLowerCase();
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final weekStart = today.subtract(Duration(days: today.weekday - 1));
-    final monthStart = DateTime(now.year, now.month, 1);
-
-    final filtered = transactions.where((tx) {
-      final matchesQuery =
-          tx.title.toLowerCase().contains(query) ||
-          tx.category.toLowerCase().contains(query);
-
-      bool matchesDate = true;
-      if (_activeFilter == 'Hôm nay') {
-        matchesDate =
-            tx.date.year == today.year &&
-            tx.date.month == today.month &&
-            tx.date.day == today.day;
-      } else if (_activeFilter == 'Tuần này') {
-        matchesDate = tx.date.isAfter(
-          weekStart.subtract(const Duration(seconds: 1)),
-        );
-      } else if (_activeFilter == 'Tháng này') {
-        matchesDate =
-            tx.date.year == monthStart.year &&
-            tx.date.month == monthStart.month;
-      } else if (_activeFilter == 'Tùy chỉnh' &&
-          _customStartDate != null &&
-          _customEndDate != null) {
-        final start = DateTime(
-          _customStartDate!.year,
-          _customStartDate!.month,
-          _customStartDate!.day,
-        );
-        final end = DateTime(
-          _customEndDate!.year,
-          _customEndDate!.month,
-          _customEndDate!.day,
-          23,
-          59,
-          59,
-        );
-        matchesDate =
-            tx.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
-            tx.date.isBefore(end.add(const Duration(seconds: 1)));
-      }
-
-      return matchesQuery && matchesDate;
-    }).toList();
+    final filtered = transactions;
 
     if (filtered.isEmpty) {
       return Center(

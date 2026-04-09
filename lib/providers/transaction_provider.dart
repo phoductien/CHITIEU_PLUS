@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
 import '../services/transaction_service.dart';
 import '../services/realtime_db_service.dart';
@@ -13,11 +14,14 @@ class TransactionProvider with ChangeNotifier {
   StreamSubscription? _authSubscription;
   final RealtimeDbService _rtdbService = RealtimeDbService();
   final TransactionService _service = TransactionService();
+  DateTime? _lastSyncTime;
 
   List<TransactionModel> get transactions => _transactions;
   bool get isLoading => _isLoading;
+  DateTime? get lastSyncTime => _lastSyncTime;
 
   TransactionProvider() {
+    _loadLastSyncTime();
     _initAuthListener();
     _init();
   }
@@ -109,33 +113,74 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  Future<void> _loadLastSyncTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final timestamp = prefs.getString('last_sync_time');
+    if (timestamp != null) {
+      _lastSyncTime = DateTime.parse(timestamp);
+      notifyListeners();
+    }
+  }
+
+  Future<void> _updateSyncTime() async {
+    final now = DateTime.now();
+    _lastSyncTime = now;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_sync_time', now.toIso8601String());
+    notifyListeners();
+  }
+
   Future<void> refresh() async {
     _init();
   }
 
   Future<void> addTransaction(TransactionModel tx) async {
     await _service.addTransaction(tx);
+    await syncDataWithFirestore();
   }
 
   Future<void> deleteTransaction(String id) async {
     await _service.deleteTransaction(id);
+    await syncDataWithFirestore();
   }
 
   Future<void> deleteTransactions(List<String> ids) async {
     await _service.deleteTransactions(ids);
+    await syncDataWithFirestore();
   }
 
   Future<void> updateTransaction(TransactionModel tx) async {
     await _service.updateTransaction(tx);
+    await syncDataWithFirestore();
   }
 
   Future<void> togglePin(String id, bool currentStatus) async {
     await _service.togglePin(id, currentStatus);
+    await syncDataWithFirestore();
   }
 
   Future<void> deleteAllTransactions() async {
     await _service.deleteAllTransactions();
+    await syncDataWithFirestore();
+  }
+
+  /// Manually triggers a re-sync from Firestore to Realtime DB
+  Future<void> syncDataWithFirestore() async {
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      await _service.syncFirestoreToRealtime();
+      // _init() will be triggered by data change in RTDB as well,
+      // but we explicitly refresh anyway.
+      _init();
+      await _updateSyncTime();
+    } catch (e) {
+      debugPrint('[TransactionProvider] Sync Error: $e');
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
   }
 
   @override

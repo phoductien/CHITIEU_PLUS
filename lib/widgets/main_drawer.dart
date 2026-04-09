@@ -142,213 +142,214 @@ class _MainDrawerState extends State<MainDrawer> {
                           );
                         },
                       ),
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.mail_rounded,
-                      title: 'Liên hệ',
-                      onTap: () {},
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.chat_bubble_rounded,
-                      title: 'Phản hồi',
-                      onTap: () {},
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.open_in_browser_rounded,
-                      title: 'Mở trang web',
-                      onTap: () async {
-                        final url = Uri.parse(
-                          'https://chitieuplus-app.web.app',
-                        );
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode.externalApplication,
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.mail_rounded,
+                        title: 'Liên hệ',
+                        onTap: () {},
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.chat_bubble_rounded,
+                        title: 'Phản hồi',
+                        onTap: () {},
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.open_in_browser_rounded,
+                        title: 'Mở trang web',
+                        onTap: () async {
+                          final url = Uri.parse(
+                            'https://chitieuplus-app.web.app',
                           );
-                        } else {
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(
+                              url,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Không thể mở liên kết'),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        child: Divider(
+                          color: themeProvider.borderColor,
+                          thickness: 1,
+                        ),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          'CÀI ĐẶT',
+                          style: TextStyle(
+                            color: themeProvider.foregroundColor.withValues(
+                              alpha: 0.5,
+                            ),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.language_rounded,
+                        title: 'Ngôn ngữ',
+                        trailing: Text(
+                          'Tiếng Việt',
+                          style: TextStyle(
+                            color: themeProvider.foregroundColor.withValues(
+                              alpha: 0.5,
+                            ),
+                            fontSize: 13,
+                          ),
+                        ),
+                        onTap: () {},
+                      ),
+                      _buildDrawerSwitch(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.dark_mode_rounded,
+                        title: 'Chế độ sáng/tối',
+                        value: themeProvider.isDarkMode,
+                        onChanged: (val) => themeProvider.toggleDarkMode(val),
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.visibility_rounded,
+                        title: 'Chế độ bảo vệ mắt',
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EyeProtectionScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.notifications_rounded,
+                        title: 'Thông báo',
+                        onTap: () {},
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.policy_rounded,
+                        title: 'Chính sách & Điều khoản',
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TermsAndPrivacyScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.account_balance_rounded,
+                        title: 'Tài khoản ngân hàng',
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const BankAccountsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.delete_forever_rounded,
+                        title: 'Xóa toàn bộ dữ liệu',
+                        titleColor: Colors.redAccent,
+                        iconColor: Colors.redAccent,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _deleteAllData(context);
+                        },
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        child: Divider(
+                          color: themeProvider.borderColor,
+                          thickness: 1,
+                        ),
+                      ),
+
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.logout_rounded,
+                        title: 'Đăng xuất',
+                        titleColor: const Color(0xFFE53935),
+                        iconColor: const Color(0xFFE53935),
+                        onTap: () async {
+                          await UserProvider.cleanupGuestIfAny();
+                          await FirebaseAuth.instance.signOut();
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.remove('is_bypassed_auth');
+                          await prefs.remove('bypassed_email');
+
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Không thể mở liên kết'),
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (context) => const AuthWrapper(),
                               ),
+                              (route) => false,
                             );
                           }
-                        }
-                      },
-                    ),
+                        },
+                      ),
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      child: Divider(
-                        color: themeProvider.borderColor,
-                        thickness: 1,
-                      ),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        'CÀI ĐẶT',
-                        style: TextStyle(
-                          color: themeProvider.foregroundColor.withValues(
-                            alpha: 0.5,
-                          ),
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.language_rounded,
-                      title: 'Ngôn ngữ',
-                      trailing: Text(
-                        'Tiếng Việt',
-                        style: TextStyle(
-                          color: themeProvider.foregroundColor.withValues(
-                            alpha: 0.5,
-                          ),
-                          fontSize: 13,
-                        ),
-                      ),
-                      onTap: () {},
-                    ),
-                    _buildDrawerSwitch(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.dark_mode_rounded,
-                      title: 'Chế độ sáng/tối',
-                      value: themeProvider.isDarkMode,
-                      onChanged: (val) => themeProvider.toggleDarkMode(val),
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.visibility_rounded,
-                      title: 'Chế độ bảo vệ mắt',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const EyeProtectionScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.notifications_rounded,
-                      title: 'Thông báo',
-                      onTap: () {},
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.policy_rounded,
-                      title: 'Chính sách & Điều khoản',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TermsAndPrivacyScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.account_balance_rounded,
-                      title: 'Tài khoản ngân hàng',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const BankAccountsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.delete_forever_rounded,
-                      title: 'Xóa toàn bộ dữ liệu',
-                      titleColor: Colors.redAccent,
-                      iconColor: Colors.redAccent,
-                      onTap: () {
-                        Navigator.pop(context);
-                        _deleteAllData(context);
-                      },
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      child: Divider(
-                        color: themeProvider.borderColor,
-                        thickness: 1,
-                      ),
-                    ),
-
-                    _buildDrawerItem(
-                      context: context,
-                      themeProvider: themeProvider,
-                      icon: Icons.logout_rounded,
-                      title: 'Đăng xuất',
-                      titleColor: const Color(0xFFE53935),
-                      iconColor: const Color(0xFFE53935),
-                      onTap: () async {
-                        await UserProvider.cleanupGuestIfAny();
-                        await FirebaseAuth.instance.signOut();
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.remove('is_bypassed_auth');
-                        await prefs.remove('bypassed_email');
-
-                        if (context.mounted) {
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                              builder: (context) => const AuthWrapper(),
+                      const SizedBox(height: 30),
+                      Center(
+                        child: Text(
+                          'Phiên bản : 2.0.4',
+                          style: TextStyle(
+                            color: themeProvider.foregroundColor.withValues(
+                              alpha: 0.3,
                             ),
-                            (route) => false,
-                          );
-                        }
-                      },
-                    ),
-
-                    const SizedBox(height: 30),
-                    Center(
-                      child: Text(
-                        'Phiên bản : 2.0.4',
-                        style: TextStyle(
-                          color: themeProvider.foregroundColor.withValues(
-                            alpha: 0.3,
+                            fontSize: 12,
                           ),
-                          fontSize: 12,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),

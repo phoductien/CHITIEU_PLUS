@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chitieu_plus/screens/onboarding_screen.dart';
+import 'package:chitieu_plus/screens/login_screen.dart';
+import 'package:chitieu_plus/screens/home_screen.dart';
 import 'package:chitieu_plus/widgets/app_logo.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -81,19 +85,40 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward().then((_) {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 800),
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const OnboardingScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-          ),
-        );
+        _navigateToNext();
       }
     });
+  }
+
+  Future<void> _navigateToNext() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final prefs = await SharedPreferences.getInstance();
+    final bool hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+
+    Widget nextScreen;
+
+    if (user != null) {
+      debugPrint('[DEBUG] SplashScreen: User logged in. Going to Home.');
+      nextScreen = const HomeScreen();
+    } else if (hasSeenOnboarding) {
+      debugPrint('[DEBUG] SplashScreen: Onboarding seen. Going to Login.');
+      nextScreen = const LoginScreen();
+    } else {
+      debugPrint('[DEBUG] SplashScreen: First time. Going to Onboarding.');
+      nextScreen = const OnboardingScreen();
+    }
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 800),
+        pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
   }
 
   @override

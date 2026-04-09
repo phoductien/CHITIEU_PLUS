@@ -207,6 +207,30 @@ class TransactionService {
     await _local.clearAllData();
   }
 
+  /// Force syncs the Realtime Database to match Firestore.
+  /// This is used when the databases get out of sync due to manual console edits.
+  Future<void> syncFirestoreToRealtime() async {
+    if (_userId == null) return;
+
+    // 1. Fetch ALL transactions from Firestore for this user
+    final snapshot = await _transactionsRef
+        .where('userId', isEqualTo: _userId)
+        .get();
+
+    final firestoreTransactions = snapshot.docs.map((doc) {
+      return TransactionModel.fromMap(
+        doc.id,
+        doc.data() as Map<String, dynamic>,
+      );
+    }).toList();
+
+    // 2. Overwrite Realtime DB with the Firestore list
+    await _realtime.overwriteUserTransactions(firestoreTransactions);
+    debugPrint(
+      '[TransactionService] Re-sync from Firestore completed. Count: ${firestoreTransactions.length}',
+    );
+  }
+
   Future<String> exportAllToSqlite() async {
     // Keep this for compatibility if needed, though we prefer the bytes version
     await exportAllToSqliteBytes();

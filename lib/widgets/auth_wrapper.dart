@@ -62,7 +62,8 @@ class AuthWrapper extends StatelessWidget {
               if (user == null || UserProvider.isCleaningUpGuest) {
                 return skipSplash ? const LoginScreen() : const SplashScreen();
               } else {
-                return const HomeScreen();
+                // To allow the splash screen to show even for logged in users on startup:
+                return skipSplash ? const HomeScreen() : const SplashScreen();
               }
             }
 

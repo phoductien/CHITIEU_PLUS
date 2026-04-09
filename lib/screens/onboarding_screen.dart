@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/screens/login_screen.dart';
 import 'package:chitieu_plus/screens/terms_and_privacy_screen.dart';
@@ -41,30 +42,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             .easeIn, // curve: Thay đổi tùy chỉnh cảm giác tốc độ lướt trượt trang (có gia tốc)
       );
     } else {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const LoginScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.ease;
-            var tween = Tween(
-              begin: begin,
-              end: end,
-            ).chain(CurveTween(curve: curve));
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            );
-          },
-        ),
-      );
+      _finishOnboarding();
     }
   }
 
-  void _skip() {
+  Future<void> _finishOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
+
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
@@ -85,6 +71,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         },
       ),
     );
+  }
+
+  void _skip() {
+    _finishOnboarding();
   }
 
   @override

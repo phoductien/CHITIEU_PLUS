@@ -26,7 +26,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
   final TextEditingController _amountController = TextEditingController(
     text: '0',
   );
-  final TextEditingController _titleController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _selectedCategory = 'Ăn uống';
@@ -100,7 +99,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
     super.initState();
     context.read<AppSessionProvider>().setLastRoute('add_transaction');
     _tabController = TabController(length: 2, vsync: this);
-    _titleController.text = ''; // Initialize or set default
 
     if (widget.initialOcrResult != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -113,7 +111,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
   void dispose() {
     _tabController.dispose();
     _amountController.dispose();
-    _titleController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -269,8 +266,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
     final transaction = TransactionModel(
       id: '', // Firestore will generate this
       userId: user.uid,
-      title: _titleController.text.isNotEmpty
-          ? _titleController.text
+      title: _noteController.text.isNotEmpty
+          ? _noteController.text
           : _selectedCategory,
       amount: amount,
       category: _selectedCategory,
@@ -330,9 +327,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       final decoded = json.decode(jsonStr);
       final data = decoded['transaction'] ?? decoded;
       setState(() {
-        // Update title and note from AI results
-        _titleController.text = data['title']?.toString() ?? '';
-        _noteController.text = data['note']?.toString() ?? '';
+        // Combine title and note for better context
+        final title = data['title']?.toString() ?? '';
+        final note = data['note']?.toString() ?? '';
+        _noteController.text = [
+          title,
+          note,
+        ].where((e) => e.isNotEmpty).join(' - ');
 
         // Format amount with dots for display
         if (data['amount'] != null) {
@@ -530,32 +531,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'TÊN GIAO DỊCH',
-                  style: TextStyle(
-                    color: Colors.white60,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF334155).withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _titleController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: 'VD: Mua trà sữa, Ăn tối...',
-                      hintStyle: TextStyle(color: Colors.white24, fontSize: 14),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 25),
                 const Text(
                   'DANH MỤC',
                   style: TextStyle(

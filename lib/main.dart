@@ -140,12 +140,16 @@ class _MyAppState extends State<MyApp> {
               ? null
               : 'Đăng nhập thành công!';
 
-          navState.pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => HomeScreen(welcomeMessage: welcomeMsg),
-            ),
-            (route) => false,
-          );
+          // Only redirect if NOT the initial check. 
+          // Initial routing is now handled by SplashScreen via AuthWrapper.
+          if (!_isInitialCheck) {
+            navState.pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(welcomeMessage: welcomeMsg),
+              ),
+              (route) => false,
+            );
+          }
 
           // Restore last route if not home
           final session = context.read<AppSessionProvider>();

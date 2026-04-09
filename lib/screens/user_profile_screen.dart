@@ -6,6 +6,7 @@ import 'dart:io';
 
 import '../providers/theme_provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/transaction_provider.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -518,6 +519,85 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
+
+                    // 3. Data Management Section
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Quản lý dữ liệu',
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Nếu dữ liệu bị sai lệch hoặc không hiển thị đúng so với Cloud, hãy nhấn nút bên dưới để dọn dẹp và đồng bộ lại.',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withValues(
+                          alpha: 0.6,
+                        ),
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          setState(() => _isLoading = true);
+                          try {
+                            await context
+                                .read<TransactionProvider>()
+                                .syncDataWithFirestore();
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Đồng bộ dữ liệu thành công!',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Lỗi đồng bộ: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.sync_rounded),
+                        label: const Text(
+                          'Đồng bộ lại từ Cloud',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.blue,
+                          side: const BorderSide(color: Colors.blue),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 48),
                   ],
                 ),
               ),
