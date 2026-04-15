@@ -23,7 +23,7 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
   final Color _bgColor = const Color(0xFF141824);
   final Color _cardColor = const Color(0xFF1F2636);
   final Color _incomeColor = const Color(0xFF00F0FF);
-  final Color _expenseColor = const Color(0xFFFFB74D); 
+  final Color _expenseColor = const Color(0xFFFFB74D);
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +31,17 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     final allTransactions = transactionProvider.transactions;
 
     // Current period
-    final currentTx = _filterTransactions(allTransactions, _selectedPeriod, false);
+    final currentTx = _filterTransactions(
+      allTransactions,
+      _selectedPeriod,
+      false,
+    );
     // Previous period
-    final previousTx = _filterTransactions(allTransactions, _selectedPeriod, true);
+    final previousTx = _filterTransactions(
+      allTransactions,
+      _selectedPeriod,
+      true,
+    );
 
     double currentIncome = _calculateTotal(currentTx, TransactionType.income);
     double currentExpense = _calculateTotal(currentTx, TransactionType.expense);
@@ -42,13 +50,18 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     double prevExpense = _calculateTotal(previousTx, TransactionType.expense);
 
     // Calculate percentages
-    double incomePct = prevIncome == 0 ? 0 : ((currentIncome - prevIncome) / prevIncome) * 100;
-    double expensePct = prevExpense == 0 ? 0 : ((currentExpense - prevExpense) / prevExpense) * 100;
+    double incomePct = prevIncome == 0
+        ? 0
+        : ((currentIncome - prevIncome) / prevIncome) * 100;
+    double expensePct = prevExpense == 0
+        ? 0
+        : ((currentExpense - prevExpense) / prevExpense) * 100;
 
     Map<String, double> categorySpending = {};
     for (var tx in currentTx) {
       if (tx.type == TransactionType.expense) {
-        categorySpending[tx.category] = (categorySpending[tx.category] ?? 0) + tx.amount;
+        categorySpending[tx.category] =
+            (categorySpending[tx.category] ?? 0) + tx.amount;
       }
     }
 
@@ -71,24 +84,41 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
             padding: const EdgeInsets.only(right: 16.0, top: 10, bottom: 10),
             child: ElevatedButton.icon(
               onPressed: () async {
-                 try {
-                   final service = TransactionService();
-                   await service.exportAllToSqliteBytes(webFormat: 'csv');
-                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Xuất file thành công')));
-                 } catch (e) {
-                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-                 }
+                try {
+                  final service = TransactionService();
+                  await service.exportAllToSqliteBytes(webFormat: 'csv');
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Xuất file thành công')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+                  }
+                }
               },
-              icon: const Icon(Icons.file_upload_outlined, size: 16, color: Color(0xFFFFB74D)),
-              label: const Text('Xuất Excel', style: TextStyle(color: Color(0xFFFFB74D), fontSize: 12)),
+              icon: const Icon(
+                Icons.file_upload_outlined,
+                size: 16,
+                color: Color(0xFFFFB74D),
+              ),
+              label: const Text(
+                'Xuất Excel',
+                style: TextStyle(color: Color(0xFFFFB74D), fontSize: 12),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2A201C),
                 side: const BorderSide(color: Color(0xFFFFB74D), width: 1),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 elevation: 0,
               ),
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -98,7 +128,12 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
           children: [
             _buildPeriodSelector(),
             const SizedBox(height: 24),
-            _buildSummaryCards(currentIncome, currentExpense, incomePct, expensePct),
+            _buildSummaryCards(
+              currentIncome,
+              currentExpense,
+              incomePct,
+              expensePct,
+            ),
             const SizedBox(height: 24),
             _buildAiAdvice(categorySpending, currentExpense),
             const SizedBox(height: 24),
@@ -107,14 +142,18 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
             _buildBarChart(currentTx),
             const SizedBox(height: 24),
             _buildBudgetLimits(categorySpending),
-            const SizedBox(height: 80), 
+            const SizedBox(height: 80),
           ],
         ),
       ),
     );
   }
 
-  List<TransactionModel> _filterTransactions(List<TransactionModel> transactions, ReportPeriod period, bool isPrevious) {
+  List<TransactionModel> _filterTransactions(
+    List<TransactionModel> transactions,
+    ReportPeriod period,
+    bool isPrevious,
+  ) {
     final now = DateTime.now();
     DateTime start;
     DateTime end;
@@ -136,25 +175,35 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
         end = DateTime(now.year, now.month - 1, 0, 23, 59, 59);
       }
     } else {
-       if (_customDateRange != null) {
-          start = _customDateRange!.start;
-          end = _customDateRange!.end.add(const Duration(hours: 23, minutes: 59, seconds: 59));
-          if (isPrevious) {
-             final duration = end.difference(start);
-             end = start.subtract(const Duration(seconds: 1));
-             start = start.subtract(duration);
-          }
-       } else {
-          start = DateTime(2000);
-          end = now;
-       }
+      if (_customDateRange != null) {
+        start = _customDateRange!.start;
+        end = _customDateRange!.end.add(
+          const Duration(hours: 23, minutes: 59, seconds: 59),
+        );
+        if (isPrevious) {
+          final duration = end.difference(start);
+          end = start.subtract(const Duration(seconds: 1));
+          start = start.subtract(duration);
+        }
+      } else {
+        start = DateTime(2000);
+        end = now;
+      }
     }
 
-    return transactions.where((tx) => tx.date.isAfter(start.subtract(const Duration(seconds: 1))) && tx.date.isBefore(end.add(const Duration(seconds: 1)))).toList();
+    return transactions
+        .where(
+          (tx) =>
+              tx.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
+              tx.date.isBefore(end.add(const Duration(seconds: 1))),
+        )
+        .toList();
   }
 
   double _calculateTotal(List<TransactionModel> txs, TransactionType type) {
-     return txs.where((t) => t.type == type).fold(0.0, (sum, t) => sum + t.amount);
+    return txs
+        .where((t) => t.type == type)
+        .fold(0.0, (sum, t) => sum + t.amount);
   }
 
   Widget _buildPeriodSelector() {
@@ -226,21 +275,44 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     );
   }
 
-  Widget _buildSummaryCards(double income, double expense, double incomePct, double expensePct) {
+  Widget _buildSummaryCards(
+    double income,
+    double expense,
+    double incomePct,
+    double expensePct,
+  ) {
     return Row(
       children: [
         Expanded(
-          child: _buildSummaryCardItem('TỔNG THU NHẬP', '+', income, incomePct, _incomeColor),
+          child: _buildSummaryCardItem(
+            'TỔNG THU NHẬP',
+            '+',
+            income,
+            incomePct,
+            _incomeColor,
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: _buildSummaryCardItem('TỔNG CHI TIÊU', '-', expense, expensePct, _expenseColor),
+          child: _buildSummaryCardItem(
+            'TỔNG CHI TIÊU',
+            '-',
+            expense,
+            expensePct,
+            _expenseColor,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSummaryCardItem(String title, String sign, double amount, double pct, Color mainColor) {
+  Widget _buildSummaryCardItem(
+    String title,
+    String sign,
+    double amount,
+    double pct,
+    Color mainColor,
+  ) {
     final currencyFormat = NumberFormat('#,###', 'vi_VN');
     String formattedAmount = '$sign${currencyFormat.format(amount)}k';
     if (amount == 0) formattedAmount = '0k';
@@ -256,43 +328,65 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(color: mainColor, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: TextStyle(
+              color: mainColor,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
           Text(
             formattedAmount,
-            style: TextStyle(color: mainColor, fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: mainColor,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-               Icon(pct >= 0 ? Icons.trending_up : Icons.trending_down, size: 12, color: Colors.white54),
-               const SizedBox(width: 4),
-               Expanded(
-                 child: Text(
-                   pctText,
-                   style: const TextStyle(color: Colors.white54, fontSize: 10),
-                   maxLines: 2,
-                 ),
-               ),
+              Icon(
+                pct >= 0 ? Icons.trending_up : Icons.trending_down,
+                size: 12,
+                color: Colors.white54,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  pctText,
+                  style: const TextStyle(color: Colors.white54, fontSize: 10),
+                  maxLines: 2,
+                ),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAiAdvice(Map<String, double> categorySpending, double totalExpense) {
-     String topCategory = 'Ăn uống';
-     if (categorySpending.isNotEmpty) {
-       topCategory = categorySpending.entries.reduce((a, b) => a.value > b.value ? a : b).key;
-     }
+  Widget _buildAiAdvice(
+    Map<String, double> categorySpending,
+    double totalExpense,
+  ) {
+    String topCategory = 'Ăn uống';
+    if (categorySpending.isNotEmpty) {
+      topCategory = categorySpending.entries
+          .reduce((a, b) => a.value > b.value ? a : b)
+          .key;
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: const Border(left: BorderSide(color: Color(0xFF00F0FF), width: 4)),
+        border: const Border(
+          left: BorderSide(color: Color(0xFF00F0FF), width: 4),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,30 +394,60 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
           Row(
             children: [
               Container(
-                 padding: const EdgeInsets.all(4),
-                 decoration: BoxDecoration(
-                   color: const Color(0xFF00F0FF).withAlpha(25),
-                   borderRadius: BorderRadius.circular(4),
-                 ),
-                 child: const Icon(Icons.auto_awesome, color: Color(0xFF00F0FF), size: 16),
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00F0FF).withAlpha(25),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Color(0xFF00F0FF),
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 8),
-              const Text('Lời khuyên từ AI', style: TextStyle(color: Color(0xFF00F0FF), fontWeight: FontWeight.bold, fontSize: 14)),
+              const Text(
+                'Lời khuyên từ AI',
+                style: TextStyle(
+                  color: Color(0xFF00F0FF),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           RichText(
             text: TextSpan(
-              style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                height: 1.5,
+              ),
               children: [
                 const TextSpan(text: 'Bạn đã chi tiêu cho '),
-                TextSpan(text: topCategory, style: const TextStyle(color: Color(0xFFFFB74D), fontWeight: FontWeight.bold)),
-                const TextSpan(text: ' chiếm tỷ trọng lớn nhất. Hãy thử sử dụng gói coupon mới để tiết kiệm khoảng '),
-                const TextSpan(text: '1,200k', style: TextStyle(color: Color(0xFF00F0FF), fontWeight: FontWeight.bold)),
+                TextSpan(
+                  text: topCategory,
+                  style: const TextStyle(
+                    color: Color(0xFFFFB74D),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      ' chiếm tỷ trọng lớn nhất. Hãy thử sử dụng gói coupon mới để tiết kiệm khoảng ',
+                ),
+                const TextSpan(
+                  text: '1,200k',
+                  style: TextStyle(
+                    color: Color(0xFF00F0FF),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: ' trong tuần tới.'),
-              ]
+              ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -342,13 +466,31 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Phân bổ chi tiêu', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-              IconButton(icon: const Icon(Icons.more_horiz, color: Colors.white54), onPressed: () {}),
+              const Text(
+                'Phân bổ chi tiêu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.more_horiz, color: Colors.white54),
+                onPressed: () {},
+              ),
             ],
           ),
           const SizedBox(height: 16),
           if (total == 0 || spending.isEmpty)
-            const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('Chưa có dữ liệu', style: TextStyle(color: Colors.white54))))
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Text(
+                  'Chưa có dữ liệu',
+                  style: TextStyle(color: Colors.white54),
+                ),
+              ),
+            )
           else
             Row(
               children: [
@@ -369,10 +511,23 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
                       const Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('TỔNG', style: TextStyle(color: Colors.white54, fontSize: 10)),
-                          Text('100%', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                          Text(
+                            'TỔNG',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10,
+                            ),
+                          ),
+                          Text(
+                            '100%',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -391,31 +546,56 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     );
   }
 
-  List<PieChartSectionData> _generatePieSections(Map<String, double> spending, double total) {
-    final sorted = spending.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+  List<PieChartSectionData> _generatePieSections(
+    Map<String, double> spending,
+    double total,
+  ) {
+    final sorted = spending.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     return sorted.map((e) {
-       return PieChartSectionData(
-         color: _getCategoryChartColor(e.key),
-         value: e.value,
-         title: '',
-         radius: 12,
-         showTitle: false,
-       );
+      return PieChartSectionData(
+        color: _getCategoryChartColor(e.key),
+        value: e.value,
+        title: '',
+        radius: 12,
+        showTitle: false,
+      );
     }).toList();
   }
 
   List<Widget> _generateLegend(Map<String, double> spending, double total) {
-    final sorted = spending.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = spending.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     return sorted.take(4).map((e) {
       double pct = (e.value / total) * 100;
       return Padding(
         padding: const EdgeInsets.only(bottom: 8.0),
         child: Row(
           children: [
-            Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: _getCategoryChartColor(e.key))),
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _getCategoryChartColor(e.key),
+              ),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: Text(e.key, style: const TextStyle(color: Colors.white70, fontSize: 12), overflow: TextOverflow.ellipsis)),
-            Text('${pct.toStringAsFixed(0)}%', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: Text(
+                e.key,
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              '${pct.toStringAsFixed(0)}%',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       );
@@ -424,16 +604,21 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
 
   Color _getCategoryChartColor(String category) {
     switch (category) {
-      case 'Ăn uống': return const Color(0xFFFFB74D); 
-      case 'Mua sắm': return const Color(0xFF00F0FF); 
-      case 'Di chuyển': return const Color(0xFF7986CB); 
-      case 'Giáo dục': return const Color(0xFF81C784); 
-      default: return Colors.white24;
+      case 'Ăn uống':
+        return const Color(0xFFFFB74D);
+      case 'Mua sắm':
+        return const Color(0xFF00F0FF);
+      case 'Di chuyển':
+        return const Color(0xFF7986CB);
+      case 'Giáo dục':
+        return const Color(0xFF81C784);
+      default:
+        return Colors.white24;
     }
   }
 
   Widget _buildBarChart(List<TransactionModel> transactions) {
-     return Container(
+    return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _cardColor,
@@ -442,76 +627,114 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Xu hướng chi tiêu', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-              const Text('Theo tuần', style: TextStyle(color: Colors.white54, fontSize: 12)),
+              const Text(
+                'Xu hướng chi tiêu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Text(
+                'Theo tuần',
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
             ],
           ),
           const SizedBox(height: 24),
-          if (transactions.where((t) => t.type == TransactionType.expense).isEmpty)
-             const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('Chưa có dữ liệu', style: TextStyle(color: Colors.white54))))
+          if (transactions
+              .where((t) => t.type == TransactionType.expense)
+              .isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Text(
+                  'Chưa có dữ liệu',
+                  style: TextStyle(color: Colors.white54),
+                ),
+              ),
+            )
           else
             SizedBox(
               height: 160,
               child: BarChart(
-                 BarChartData(
-                   alignment: BarChartAlignment.spaceAround,
-                   maxY: _getMaxBarValue(transactions) * 1.2,
-                   barTouchData: BarTouchData(
-                     enabled: true,
-                     touchTooltipData: BarTouchTooltipData(
-                       tooltipBgColor: const Color(0xFFF57C00),
-                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                          return BarTooltipItem('${rod.toY.toStringAsFixed(0)}k', const TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
-                       }
-                     )
-                   ),
-                   titlesData: FlTitlesData(
-                     show: true,
-                     bottomTitles: AxisTitles(
-                       sideTitles: SideTitles(
-                         showTitles: true,
-                         getTitlesWidget: (value, meta) {
-                           return Padding(
-                             padding: const EdgeInsets.only(top: 8.0),
-                             child: Text(_getBarXLabel(value.toInt()), style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                           );
-                         },
-                         reservedSize: 22,
-                       )
-                     ),
-                     leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                     topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                     rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                   ),
-                   gridData: const FlGridData(show: false),
-                   borderData: FlBorderData(show: false),
-                   barGroups: _generateBarGroups(transactions),
-                 )
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: _getMaxBarValue(transactions) * 1.2,
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipBgColor: const Color(0xFFF57C00),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        return BarTooltipItem(
+                          '${rod.toY.toStringAsFixed(0)}k',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              _getBarXLabel(value.toInt()),
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
+                        },
+                        reservedSize: 22,
+                      ),
+                    ),
+                    leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                  gridData: const FlGridData(show: false),
+                  borderData: FlBorderData(show: false),
+                  barGroups: _generateBarGroups(transactions),
+                ),
               ),
             ),
         ],
-      )
-     );
+      ),
+    );
   }
 
   double _getMaxBarValue(List<TransactionModel> txs) {
-     final groups = _groupTransactionsForBarChart(txs);
-     double maxV = 0;
-     for (var v in groups.values) {
-       if (v > maxV) maxV = v;
-     }
-     return maxV == 0 ? 100 : maxV;
+    final groups = _groupTransactionsForBarChart(txs);
+    double maxV = 0;
+    for (var v in groups.values) {
+      if (v > maxV) maxV = v;
+    }
+    return maxV == 0 ? 100 : maxV;
   }
 
   Map<int, double> _groupTransactionsForBarChart(List<TransactionModel> txs) {
     Map<int, double> result = {};
     for (var tx in txs) {
       if (tx.type == TransactionType.expense) {
-         int key = tx.date.weekday; // 1 to 7
-         result[key] = (result[key] ?? 0) + (tx.amount / 1000); 
+        int key = tx.date.weekday; // 1 to 7
+        result[key] = (result[key] ?? 0) + (tx.amount / 1000);
       }
     }
     return result;
@@ -522,95 +745,137 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     double maxV = _getMaxBarValue(txs);
     List<BarChartGroupData> data = [];
     for (int i = 1; i <= 7; i++) {
-       double val = groups[i] ?? 0;
-       bool isMax = val == maxV && val > 0;
-       data.add(
-         BarChartGroupData(
-           x: i,
-           barRods: [
-             BarChartRodData(
-               toY: val,
-               color: isMax ? const Color(0xFFFFB74D) : Colors.white12,
-               width: 32,
-               borderRadius: BorderRadius.circular(4),
-               backDrawRodData: BackgroundBarChartRodData(
-                 show: false,
-               ),
-             )
-           ],
-           showingTooltipIndicators: isMax ? [0] : [],
-         )
-       );
+      double val = groups[i] ?? 0;
+      bool isMax = val == maxV && val > 0;
+      data.add(
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            BarChartRodData(
+              toY: val,
+              color: isMax ? const Color(0xFFFFB74D) : Colors.white12,
+              width: 32,
+              borderRadius: BorderRadius.circular(4),
+              backDrawRodData: BackgroundBarChartRodData(show: false),
+            ),
+          ],
+          showingTooltipIndicators: isMax ? [0] : [],
+        ),
+      );
     }
     return data;
   }
 
   String _getBarXLabel(int index) {
-     switch (index) {
-       case 1: return 'T2';
-       case 2: return 'T3';
-       case 3: return 'T4';
-       case 4: return 'T5';
-       case 5: return 'T6';
-       case 6: return 'T7';
-       case 7: return 'CN';
-       default: return '';
-     }
+    switch (index) {
+      case 1:
+        return 'T2';
+      case 2:
+        return 'T3';
+      case 3:
+        return 'T4';
+      case 4:
+        return 'T5';
+      case 5:
+        return 'T6';
+      case 6:
+        return 'T7';
+      case 7:
+        return 'CN';
+      default:
+        return '';
+    }
   }
 
   Widget _buildBudgetLimits(Map<String, double> categorySpending) {
-     if (categorySpending.isEmpty) return const SizedBox.shrink();
+    if (categorySpending.isEmpty) return const SizedBox.shrink();
 
-     return Column(
-       crossAxisAlignment: CrossAxisAlignment.start,
-       children: [
-         const Text('Ngân sách mục tiêu', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-         const SizedBox(height: 16),
-         
-         if (categorySpending.containsKey('Ăn uống'))
-            _buildBudgetRow('Ăn uống', categorySpending['Ăn uống'] ?? 0, 10000000, const Color(0xFFFFB74D), Icons.restaurant),
-         if (categorySpending.containsKey('Di chuyển'))
-         ...[
-            const SizedBox(height: 16),
-            _buildBudgetRow('Di chuyển', categorySpending['Di chuyển'] ?? 0, 5000000, const Color(0xFF00F0FF), Icons.directions_car)
-         ]
-       ],
-     );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ngân sách mục tiêu',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        if (categorySpending.containsKey('Ăn uống'))
+          _buildBudgetRow(
+            'Ăn uống',
+            categorySpending['Ăn uống'] ?? 0,
+            10000000,
+            const Color(0xFFFFB74D),
+            Icons.restaurant,
+          ),
+        if (categorySpending.containsKey('Di chuyển')) ...[
+          const SizedBox(height: 16),
+          _buildBudgetRow(
+            'Di chuyển',
+            categorySpending['Di chuyển'] ?? 0,
+            5000000,
+            const Color(0xFF00F0FF),
+            Icons.directions_car,
+          ),
+        ],
+      ],
+    );
   }
 
-  Widget _buildBudgetRow(String title, double current, double limit, Color color, IconData icon) {
-     final currencyFormat = NumberFormat('#,###', 'vi_VN');
-     double pct = limit > 0 ? current / limit : 0;
-     if (pct > 1) pct = 1;
+  Widget _buildBudgetRow(
+    String title,
+    double current,
+    double limit,
+    Color color,
+    IconData icon,
+  ) {
+    final currencyFormat = NumberFormat('#,###', 'vi_VN');
+    double pct = limit > 0 ? current / limit : 0;
+    if (pct > 1) pct = 1;
 
-     return Container(
-       padding: const EdgeInsets.all(16),
-       decoration: BoxDecoration(
-         color: _cardColor,
-         borderRadius: BorderRadius.circular(16)
-       ),
-       child: Column(
-         children: [
-           Row(
-             children: [
-               Icon(icon, color: color, size: 20),
-               const SizedBox(width: 8),
-               Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14))),
-               Text('${currencyFormat.format(current/1000)}k / ${currencyFormat.format(limit/1000)}k', style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
-             ],
-           ),
-           const SizedBox(height: 12),
-           ClipRRect(
-             borderRadius: BorderRadius.circular(4),
-             child: LinearProgressIndicator(
-               value: pct,
-               minHeight: 6,
-               backgroundColor: color.withAlpha(51), // 0.2
-               valueColor: AlwaysStoppedAnimation(color),
-             ),
-           )
-         ],
-       ),
-     );
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ),
+              Text(
+                '${currencyFormat.format(current / 1000)}k / ${currencyFormat.format(limit / 1000)}k',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: pct,
+              minHeight: 6,
+              backgroundColor: color.withAlpha(51), // 0.2
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

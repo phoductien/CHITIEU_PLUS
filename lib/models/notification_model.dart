@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum NotificationType { transaction, aiReminder, system, security }
+enum NotificationType { transaction, fluctuation, aiReminder, system, security }
 
 class NotificationModel {
   final int id;
@@ -22,6 +22,8 @@ class NotificationModel {
   IconData get icon {
     switch (type) {
       case NotificationType.transaction:
+        return Icons.shopping_bag_rounded;
+      case NotificationType.fluctuation:
         return Icons.account_balance_wallet_rounded;
       case NotificationType.aiReminder:
         return Icons.smart_toy_rounded;
@@ -36,6 +38,8 @@ class NotificationModel {
     switch (type) {
       case NotificationType.transaction:
         return Colors.green;
+      case NotificationType.fluctuation:
+        return Colors.lightBlueAccent;
       case NotificationType.aiReminder:
         return Colors.orange;
       case NotificationType.system:
@@ -49,6 +53,8 @@ class NotificationModel {
     switch (type) {
       case NotificationType.transaction:
         return 'Giao dịch';
+      case NotificationType.fluctuation:
+        return 'Biến động';
       case NotificationType.aiReminder:
         return 'AI Nhắc nhở';
       case NotificationType.system:

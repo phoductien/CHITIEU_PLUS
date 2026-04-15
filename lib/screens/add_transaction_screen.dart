@@ -11,6 +11,7 @@ import 'package:chitieu_plus/services/ai_service.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
 import 'package:chitieu_plus/screens/ocr_scan_screen.dart';
 import 'package:chitieu_plus/providers/app_session_provider.dart';
+import 'package:chitieu_plus/providers/user_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final String? initialOcrResult;
@@ -263,6 +264,55 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
         ? TransactionType.income
         : TransactionType.expense;
 
+    final userProvider = context.read<UserProvider>();
+    final isGuest = userProvider.bankAccounts.isEmpty;
+    final walletType = (isGuest && type == TransactionType.expense) ? 'demo' : 'main';
+
+    if (type == TransactionType.expense) {
+      final transactions = context.read<TransactionProvider>().transactions;
+      double currentBalance = 0;
+      double demoExpenses = 0;
+      
+      for (var t in transactions) {
+        if (t.wallet == 'main') {
+          currentBalance += (t.type == TransactionType.income ? t.amount : -t.amount);
+        } else if (t.wallet == 'demo' && t.type == TransactionType.expense) {
+          demoExpenses += t.amount;
+        }
+      }
+
+      double checkBalance = isGuest ? (currentBalance - demoExpenses) : currentBalance;
+
+      if (checkBalance < amount) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: const Color(0xFF1E293B),
+              title: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Text('Số dư không đủ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                ],
+              ),
+              content: Text(
+                'Ví của bạn hiện tại còn ${NumberFormat('#,###').format(checkBalance)}đ, không đủ để thực hiện giao dịch này. Vui lòng nạp thêm tiền!',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Đã hiểu', style: TextStyle(color: Color(0xFFEC5B13))),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+    }
+
     final transaction = TransactionModel(
       id: '', // Firestore will generate this
       userId: user.uid,
@@ -274,7 +324,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       date: _selectedDate,
       type: type,
       note: _noteController.text,
-      wallet: 'main',
+      wallet: walletType,
       aiMetadata: _isAiGenerated ? _aiMetadata : null,
     );
 

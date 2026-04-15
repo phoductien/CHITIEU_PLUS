@@ -67,12 +67,12 @@ class UserProvider with ChangeNotifier {
         debugPrint('[UserProvider] Error decoding category budgets: $e');
       }
     }
-    
+
     // Proactively start Firebase listener if a user is already authenticated
     if (FirebaseAuth.instance.currentUser != null) {
       fetchFromFirebase();
     }
-    
+
     notifyListeners();
   }
 
@@ -429,14 +429,14 @@ class UserProvider with ChangeNotifier {
         .doc(uid)
         .snapshots()
         .listen((snapshot) {
-      if (!snapshot.exists) {
-        debugPrint(
-          '[UserProvider] User document DOES NOT exist or was DELETED from Firestore. Ensuring it exists...',
-        );
-        // Thay vì đăng xuất, ta tự động tạo lại/đồng bộ lại thông tin từ Auth
-        syncToFirebase();
-      }
-    });
+          if (!snapshot.exists) {
+            debugPrint(
+              '[UserProvider] User document DOES NOT exist or was DELETED from Firestore. Ensuring it exists...',
+            );
+            // Thay vì đăng xuất, ta tự động tạo lại/đồng bộ lại thông tin từ Auth
+            syncToFirebase();
+          }
+        });
   }
 
   Future<void> _handleAccountDeletion() async {

@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:chitieu_plus/models/notification_model.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
+import 'package:chitieu_plus/providers/transaction_provider.dart';
+import 'package:chitieu_plus/models/transaction_model.dart';
+import 'package:intl/intl.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -19,11 +22,27 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     final notificationProvider = context.watch<NotificationProvider>();
-    final notifications = notificationProvider.notifications;
+    final transactionProvider = context.watch<TransactionProvider>();
+    
+    final txNotifications = transactionProvider.transactions.map((tx) {
+      final isTopUp = tx.note == 'Nạp qua Ví dùng thử';
+      final isIncome = tx.type == TransactionType.income;
+      return NotificationModel(
+        id: tx.id.hashCode,
+        title: isTopUp ? 'Biến động số dư' : (isIncome ? 'Thu nhập: ${tx.category}' : 'Chi tiêu: ${tx.category}'),
+        body: '${isIncome ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ • ${tx.title}\nTài khoản: ${tx.wallet == 'main' ? 'Ví chính' : 'Ví dùng thử'}',
+        timestamp: tx.date,
+        type: isTopUp ? NotificationType.fluctuation : NotificationType.transaction,
+        isRead: true, 
+      );
+    }).toList();
+
+    final allItems = [...notificationProvider.notifications, ...txNotifications];
+    allItems.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
     final filteredNotifications = _selectedFilter == 'Tất cả'
-        ? notifications
-        : notifications.where((n) => n.typeString == _selectedFilter).toList();
+        ? allItems
+        : allItems.where((n) => n.typeString == _selectedFilter).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
@@ -101,7 +120,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Widget _buildFilterBar() {
-    final filters = ['Tất cả', 'Giao dịch', 'Hệ thống', 'AI Nhắc nhở'];
+    final filters = ['Tất cả', 'Giao dịch', 'Biến động', 'Hệ thống', 'AI Nhắc nhở'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -181,6 +200,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     return GestureDetector(
       onTap: () {
+        if (item.type == NotificationType.transaction || item.type == NotificationType.fluctuation) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Xem và chỉnh sửa hóa đơn tại mục Giao Dịch dưới thanh Bottom Bar')));
+           return;
+        }
         if (_isSelectionMode) {
           setState(() {
             if (isSelected) {
@@ -261,7 +284,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ],
               ),
             ),
-            if (_isSelectionMode)
+            if (_isSelectionMode && item.type != NotificationType.transaction && item.type != NotificationType.fluctuation)
               Checkbox(
                 value: isSelected,
                 onChanged: (val) {

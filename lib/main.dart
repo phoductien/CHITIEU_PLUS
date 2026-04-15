@@ -140,7 +140,7 @@ class _MyAppState extends State<MyApp> {
               ? null
               : 'Đăng nhập thành công!';
 
-          // Only redirect if NOT the initial check. 
+          // Only redirect if NOT the initial check.
           // Initial routing is now handled by SplashScreen via AuthWrapper.
           if (!_isInitialCheck) {
             navState.pushAndRemoveUntil(

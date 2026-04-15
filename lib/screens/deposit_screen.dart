@@ -58,8 +58,6 @@ class _DepositScreenState extends State<DepositScreen> {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
@@ -257,7 +255,6 @@ class _DepositScreenState extends State<DepositScreen> {
     );
   }
 
-
   Widget _buildActionButton() {
     final bool isEnabled = _selectedAmount >= 50000;
     return FadeInUp(
@@ -291,15 +288,15 @@ class _DepositScreenState extends State<DepositScreen> {
                 : [],
           ),
           child: InkWell(
-            onTap: isEnabled 
+            onTap: isEnabled
                 ? () => Navigator.push(
-                    context, 
+                    context,
                     MaterialPageRoute(
                       builder: (context) => PaymentDetailsScreen(
                         amount: _selectedAmount.toDouble(),
                       ),
                     ),
-                  ) 
+                  )
                 : null,
             borderRadius: BorderRadius.circular(30),
             child: Row(

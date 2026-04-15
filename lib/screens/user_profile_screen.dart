@@ -558,9 +558,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text(
-                                    'Đồng bộ dữ liệu thành công!',
-                                  ),
+                                  content: Text('Đồng bộ dữ liệu thành công!'),
                                   backgroundColor: Colors.green,
                                 ),
                               );

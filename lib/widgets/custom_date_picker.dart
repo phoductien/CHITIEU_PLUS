@@ -47,7 +47,10 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
               onPrimary: Colors.white,
               surface: themeProvider.backgroundColor,
               onSurface: themeProvider.foregroundColor,
-            ), dialogTheme: DialogThemeData(backgroundColor: themeProvider.secondaryColor),
+            ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: themeProvider.secondaryColor,
+            ),
           ),
           child: child!,
         );

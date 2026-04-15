@@ -93,7 +93,8 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _navigateToNext() async {
     final user = FirebaseAuth.instance.currentUser;
     final prefs = await SharedPreferences.getInstance();
-    final bool hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+    final bool hasSeenOnboarding =
+        prefs.getBool('has_seen_onboarding') ?? false;
 
     Widget nextScreen;
 

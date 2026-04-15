@@ -67,12 +67,7 @@ const _titleKeys = [
   'ten_dich_vu',
 ];
 
-const _categoryKeys = [
-  'category',
-  'loai',
-  'phan_loai',
-  'danh_muc',
-];
+const _categoryKeys = ['category', 'loai', 'phan_loai', 'danh_muc'];
 
 dynamic _firstKey(Map<dynamic, dynamic> map, List<String> keys) {
   for (final k in keys) {
@@ -165,7 +160,9 @@ Map<String, dynamic> unwrapInvoicePayload(dynamic decoded) {
 /// Ghép title + note từ nhiều key có thể có trên hóa đơn.
 String buildNoteFromInvoice(Map<String, dynamic> data) {
   final title = pickTitle(data)?.toString().trim() ?? '';
-  final note = (data['note'] ?? data['ghi_chu'] ?? data['mo_ta'])?.toString().trim() ?? '';
+  final note =
+      (data['note'] ?? data['ghi_chu'] ?? data['mo_ta'])?.toString().trim() ??
+      '';
   return [title, note].where((e) => e.isNotEmpty).join(' - ');
 }
 

@@ -58,38 +58,8 @@ class NotificationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Initial dummy data for demo
+  // Initial fake data disabled as requested by user
   void loadInitialNotifications() {
-    if (_notifications.isNotEmpty) return;
-
-    _notifications.addAll([
-      NotificationModel(
-        id: 1,
-        title: 'Giao dịch thành công',
-        body: 'Bạn vừa chi 50.000đ cho Phở Lý Quốc Sư',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        type: NotificationType.transaction,
-        isRead: false,
-      ),
-      NotificationModel(
-        id: 2,
-        title: 'Cảnh báo chi tiêu',
-        body:
-            'Bạn đã tiêu 80% ngân sách ăn uống tuần này. Hãy cân nhắc các bữa ăn tại nhà nhé!',
-        timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-        type: NotificationType.aiReminder,
-        isRead: false,
-      ),
-      NotificationModel(
-        id: 3,
-        title: 'Cập nhật hệ thống',
-        body:
-            'ChiTieuPlus vừa bổ sung tính năng quét hóa đơn tự động bằng AI mới.',
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        type: NotificationType.system,
-        isRead: true,
-      ),
-    ]);
-    notifyListeners();
+    // No longer loads demo notifications
   }
 }

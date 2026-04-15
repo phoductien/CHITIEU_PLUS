@@ -5,7 +5,7 @@ class AppSessionProvider with ChangeNotifier {
   String _lastRoute = 'home';
   int _homeTabIndex = 0;
   int _addTransactionTabIndex = 0;
-  
+
   String get lastRoute => _lastRoute;
   int get homeTabIndex => _homeTabIndex;
   int get addTransactionTabIndex => _addTransactionTabIndex;
@@ -41,7 +41,7 @@ class AppSessionProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('add_transaction_tab_index', index);
   }
-  
+
   Future<void> clearSession() async {
     _lastRoute = 'home';
     _homeTabIndex = 0;
