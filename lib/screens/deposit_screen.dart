@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/theme_provider.dart';
 import 'package:chitieu_plus/providers/language_provider.dart';
+import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/screens/payment_details_screen.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:chitieu_plus/providers/app_session_provider.dart';
 import 'package:intl/intl.dart';
 
 class DepositScreen extends StatefulWidget {
@@ -25,6 +27,10 @@ class _DepositScreenState extends State<DepositScreen> {
     super.initState();
     _amountController = TextEditingController(text: "500.000");
     _amountController.addListener(_onAmountChanged);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AppSessionProvider>().setLastRoute('deposit');
+    });
   }
 
   @override
@@ -62,6 +68,7 @@ class _DepositScreenState extends State<DepositScreen> {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final languageProvider = context.watch<LanguageProvider>();
+    final userProvider = context.watch<UserProvider>();
 
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
@@ -84,7 +91,7 @@ class _DepositScreenState extends State<DepositScreen> {
                           const SizedBox(height: 40),
                           _buildQuickSelection(themeProvider),
                           const SizedBox(height: 40),
-                          _buildActionButton(),
+                          _buildActionButton(userProvider),
                           const SizedBox(height: 120), // Height for nav bar
                         ],
                       ),
@@ -255,71 +262,98 @@ class _DepositScreenState extends State<DepositScreen> {
     );
   }
 
-  Widget _buildActionButton() {
-    final bool isEnabled = _selectedAmount >= 50000;
+  Widget _buildActionButton(UserProvider userProvider) {
+    final bool hasBank = userProvider.bankAccounts.isNotEmpty;
+    final bool canDeposit = userProvider.isGuest || hasBank;
+    final bool isEnabled = _selectedAmount >= 50000 && canDeposit;
+
     return FadeInUp(
       duration: const Duration(milliseconds: 600),
       delay: const Duration(milliseconds: 800),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: isEnabled ? 1.0 : 0.4,
-        child: Container(
-          width: double.infinity,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: isEnabled
-                ? const LinearGradient(
-                    colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  )
-                : LinearGradient(
-                    colors: [Colors.grey[800]!, Colors.grey[900]!],
-                  ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: isEnabled
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFFEC5B13).withValues(alpha: 0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : [],
-          ),
-          child: InkWell(
-            onTap: isEnabled
-                ? () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PaymentDetailsScreen(
-                        amount: _selectedAmount.toDouble(),
+      child: Column(
+        children: [
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: isEnabled ? 1.0 : 0.4,
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: isEnabled
+                    ? const LinearGradient(
+                        colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      )
+                    : LinearGradient(
+                        colors: [Colors.grey[800]!, Colors.grey[900]!],
+                      ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: isEnabled
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFEC5B13).withValues(alpha: 0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: InkWell(
+                onTap: isEnabled
+                    ? () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PaymentDetailsScreen(
+                            amount: _selectedAmount.toDouble(),
+                          ),
+                        ),
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(30),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Nạp tiền ngay',
+                      style: TextStyle(
+                        color: isEnabled ? Colors.black : Colors.white24,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  )
-                : null,
-            borderRadius: BorderRadius.circular(30),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Nạp tiền ngay',
-                  style: TextStyle(
-                    color: isEnabled ? Colors.black : Colors.white24,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.bolt_rounded,
+                      color: isEnabled ? Colors.black : Colors.white24,
+                      size: 24,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.bolt_rounded,
-                  color: isEnabled ? Colors.black : Colors.white24,
-                  size: 24,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (!canDeposit)
+            Padding(
+              padding: const EdgeInsets.only(top: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.info_outline_rounded,
+                      color: Colors.orangeAccent, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Vui lòng liên kết ngân hàng để nạp tiền',
+                    style: TextStyle(
+                      color: Colors.orangeAccent.withValues(alpha: 0.8),
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

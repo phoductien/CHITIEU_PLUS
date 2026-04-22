@@ -91,7 +91,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: \$e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -291,7 +291,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (picked != null) {
       setState(() {
         _selectedDob =
-            "\${picked.day.toString().padLeft(2, '0')}/\${picked.month.toString().padLeft(2, '0')}/\${picked.year}";
+            "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
       });
     }
   }
@@ -551,12 +551,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () async {
                           setState(() => _isLoading = true);
+                          final messenger = ScaffoldMessenger.of(context);
                           try {
                             await context
                                 .read<TransactionProvider>()
                                 .syncDataWithFirestore();
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 const SnackBar(
                                   content: Text('Đồng bộ dữ liệu thành công!'),
                                   backgroundColor: Colors.green,
@@ -565,7 +566,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Lỗi đồng bộ: $e'),
                                   backgroundColor: Colors.red,

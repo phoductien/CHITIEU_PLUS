@@ -29,6 +29,8 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
         'Ăn uống': 0,
         'Mua sắm': 0,
         'Di chuyển': 0,
+        'Nhà cửa': 0,
+        'Giải trí': 0,
         'Hóa đơn': 0,
         'Khác': 0,
       };
@@ -48,6 +50,8 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
     'Ăn uống': Icons.restaurant,
     'Mua sắm': Icons.shopping_bag,
     'Di chuyển': Icons.directions_car,
+    'Nhà cửa': Icons.home,
+    'Giải trí': Icons.theater_comedy,
     'Hóa đơn': Icons.receipt,
     'Khác': Icons.more_horiz,
   };
@@ -56,6 +60,8 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
     'Ăn uống': const Color(0xFFF05D15),
     'Mua sắm': Colors.blue,
     'Di chuyển': Colors.green,
+    'Nhà cửa': Colors.brown,
+    'Giải trí': Colors.pink,
     'Hóa đơn': Colors.purple,
     'Khác': Colors.grey,
   };

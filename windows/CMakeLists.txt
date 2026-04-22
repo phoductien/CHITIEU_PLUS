@@ -60,6 +60,9 @@ if(EXISTS "${LOCAL_FIREBASE_SDK}/include/firebase/version.h")
   set(ENV{FIREBASE_CPP_SDK_DIR} "${LOCAL_FIREBASE_SDK}")
 endif()
 
+# Set local nuget path to bypass FetchContent download in plugins (e.g., permission_handler_windows)
+set(NUGET "${CMAKE_CURRENT_SOURCE_DIR}/nuget.exe" CACHE FILEPATH "Path to nuget.exe")
+
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)

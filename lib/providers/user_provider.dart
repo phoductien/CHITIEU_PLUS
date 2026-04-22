@@ -219,6 +219,11 @@ class UserProvider with ChangeNotifier {
         _bankAccounts = List<String>.from(
           data['bankAccounts'] ?? _bankAccounts,
         );
+        if (data['categoryBudgets'] != null) {
+          _categoryBudgets = (data['categoryBudgets'] as Map<String, dynamic>).map(
+            (k, v) => MapEntry(k, (v as num).toDouble()),
+          );
+        }
 
         // Cập nhật SharedPreferences
         final prefs = await SharedPreferences.getInstance();
@@ -232,6 +237,7 @@ class UserProvider with ChangeNotifier {
         await prefs.setBool('is_guest', _isGuest);
         await prefs.setDouble('user_total_budget', _totalBudget);
         await prefs.setStringList('user_bank_accounts', _bankAccounts);
+        await prefs.setString('user_category_budgets', jsonEncode(_categoryBudgets));
 
         notifyListeners();
         debugPrint(
@@ -300,6 +306,7 @@ class UserProvider with ChangeNotifier {
         'gender': _gender,
         'isGuest': _isGuest,
         'totalBudget': _totalBudget,
+        'categoryBudgets': _categoryBudgets,
         'bankAccounts': _bankAccounts,
       };
 
@@ -439,19 +446,6 @@ class UserProvider with ChangeNotifier {
         });
   }
 
-  Future<void> _handleAccountDeletion() async {
-    _userDocSubscription?.cancel();
-    _userDocSubscription = null;
-
-    // Clear local data
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-
-    // Sign out to trigger AuthWrapper redirect
-    await FirebaseAuth.instance.signOut();
-
-    notifyListeners();
-  }
 
   @override
   void dispose() {

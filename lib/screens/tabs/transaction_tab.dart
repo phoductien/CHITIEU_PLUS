@@ -1061,11 +1061,14 @@ class _TransactionTabState extends State<TransactionTab> {
     
     walletTransactions.sort((a, b) => a.date.compareTo(b.date));
     double runningBalance = 0;
-    for(var t in walletTransactions) {
-      if(t.type == TransactionType.income) runningBalance += t.amount;
-      else runningBalance -= t.amount;
-      
-      if(t.id == tx.id) break;
+    for (var t in walletTransactions) {
+      if (t.type == TransactionType.income) {
+        runningBalance += t.amount;
+      } else {
+        runningBalance -= t.amount;
+      }
+
+      if (t.id == tx.id) break;
     }
     
     final endingBalance = runningBalance;

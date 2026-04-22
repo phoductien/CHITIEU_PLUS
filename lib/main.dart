@@ -13,7 +13,12 @@ import 'package:chitieu_plus/screens/home_screen.dart';
 import 'package:chitieu_plus/screens/add_transaction_screen.dart';
 import 'package:chitieu_plus/screens/ocr_scan_screen.dart';
 import 'package:chitieu_plus/screens/ai_chat_screen.dart';
+import 'package:chitieu_plus/screens/qr_scanner_screen.dart';
+import 'package:chitieu_plus/screens/deposit_screen.dart';
+import 'package:chitieu_plus/screens/add_saving_goal_screen.dart';
 import 'package:chitieu_plus/providers/app_session_provider.dart';
+import 'package:chitieu_plus/providers/saving_goal_provider.dart';
+import 'package:chitieu_plus/providers/debt_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -68,6 +73,17 @@ void main() async {
 
   final sessionProvider = AppSessionProvider();
   await sessionProvider.loadSession();
+  
+  // Decide whether to skip splash screen (warm start check)
+  bool shouldSkipSplash = false;
+  if (kIsWeb && session_helper.checkIsReload()) {
+    shouldSkipSplash = true;
+  } else if (sessionProvider.lastActive != null) {
+    final diff = DateTime.now().difference(sessionProvider.lastActive!);
+    if (diff.inSeconds < 30) {
+      shouldSkipSplash = true;
+    }
+  }
 
   runApp(
     MultiProvider(
@@ -79,15 +95,18 @@ void main() async {
           create: (_) => NotificationProvider()..loadInitialNotifications(),
         ),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        ChangeNotifierProvider(create: (_) => SavingGoalProvider()),
+        ChangeNotifierProvider(create: (_) => DebtProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
-      child: const MyApp(),
+      child: MyApp(skipSplash: shouldSkipSplash),
     ),
   );
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final bool skipSplash;
+  const MyApp({super.key, this.skipSplash = false});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -169,6 +188,20 @@ class _MyAppState extends State<MyApp> {
                 navState.push(
                   MaterialPageRoute(builder: (_) => const AiChatScreen()),
                 );
+              } else if (session.lastRoute == 'qr_scanner') {
+                navState.push(
+                  MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+                );
+              } else if (session.lastRoute == 'deposit') {
+                navState.push(
+                  MaterialPageRoute(builder: (_) => const DepositScreen()),
+                );
+              } else if (session.lastRoute == 'add_saving_goal') {
+                navState.push(
+                  MaterialPageRoute(
+                    builder: (_) => const AddSavingGoalScreen(),
+                  ),
+                );
               }
             });
           }
@@ -182,9 +215,10 @@ class _MyAppState extends State<MyApp> {
             debugPrint(
               '[DEBUG] main.dart: Redirecting to AuthWrapper on Logout...',
             );
+            // After logout, WE WANT to see the Splash screen (as requested)
             navState.pushAndRemoveUntil(
               MaterialPageRoute(
-                builder: (context) => const AuthWrapper(skipSplash: true),
+                builder: (context) => const AuthWrapper(skipSplash: false),
               ),
               (route) => false,
             );
@@ -251,7 +285,7 @@ class _MyAppState extends State<MyApp> {
             }),
           ),
         ),
-        home: const AuthWrapper(),
+        home: AuthWrapper(skipSplash: widget.skipSplash),
       ),
     );
   }

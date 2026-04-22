@@ -52,15 +52,15 @@ class NotificationModel {
   String get typeString {
     switch (type) {
       case NotificationType.transaction:
-        return 'Giao dịch';
+        return 'Biến động';
       case NotificationType.fluctuation:
         return 'Biến động';
       case NotificationType.aiReminder:
-        return 'AI Nhắc nhở';
+        return 'Tin khác';
       case NotificationType.system:
-        return 'Hệ thống';
+        return 'Tin khác';
       case NotificationType.security:
-        return 'Bảo mật';
+        return 'Quan trọng';
     }
   }
 

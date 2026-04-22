@@ -24,6 +24,15 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
   String? _selectedSource; // null means Trial Wallet, otherwise bank name
   bool _isProcessing = false;
 
+  @override
+  void initState() {
+    super.initState();
+    final userProvider = context.read<UserProvider>();
+    if (!userProvider.isGuest && userProvider.bankAccounts.isNotEmpty) {
+      _selectedSource = userProvider.bankAccounts.first;
+    }
+  }
+
   String _formatCurrency(double amount) {
     return '${NumberFormat('#,###', 'vi_VN').format(amount).replaceAll(',', '.')}đ';
   }
@@ -139,7 +148,11 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
           children: [
             FadeInDown(
               duration: const Duration(milliseconds: 500),
-              child: _buildTransactionCard(themeProvider, languageProvider),
+              child: _buildTransactionCard(
+                themeProvider,
+                languageProvider,
+                userProvider,
+              ),
             ),
             const SizedBox(height: 30),
             FadeInLeft(
@@ -161,19 +174,21 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
               child: _buildSourceSelection(
                 themeProvider,
                 languageProvider,
+                userProvider,
                 bankAccounts,
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomAction(themeProvider),
+      bottomNavigationBar: _buildBottomAction(themeProvider, userProvider),
     );
   }
 
   Widget _buildTransactionCard(
     ThemeProvider themeProvider,
     LanguageProvider languageProvider,
+    UserProvider userProvider,
   ) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -199,7 +214,10 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
           const Divider(height: 30, color: Colors.white10),
           _buildDetailRow(
             'Nguồn tiền',
-            _selectedSource ?? 'Ví dùng thử (Demo)',
+            _selectedSource ??
+                (userProvider.isGuest
+                    ? 'Ví dùng thử (Demo)'
+                    : 'Ví của bạn'),
             themeProvider,
             valueColor: _selectedSource == null ? Colors.orange : Colors.blue,
           ),
@@ -270,19 +288,46 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
   Widget _buildSourceSelection(
     ThemeProvider themeProvider,
     LanguageProvider languageProvider,
+    UserProvider userProvider,
     List<String> bankAccounts,
   ) {
     return Column(
       children: [
-        _buildSourceItem(
-          title: 'Ví dùng thử',
-          subtitle: 'Số dư vô hạn (Dành cho Demo)',
-          icon: Icons.account_balance_wallet_rounded,
-          color: Colors.orange,
-          isSelected: _selectedSource == null,
-          onTap: () => setState(() => _selectedSource = null),
-          themeProvider: themeProvider,
-        ),
+        if (userProvider.isGuest)
+          _buildSourceItem(
+            title: 'Ví dùng thử',
+            subtitle: 'Số dư vô hạn (Dành cho Demo)',
+            icon: Icons.account_balance_wallet_rounded,
+            color: Colors.orange,
+            isSelected: _selectedSource == null,
+            onTap: () => setState(() => _selectedSource = null),
+            themeProvider: themeProvider,
+          ),
+        if (!userProvider.isGuest && bankAccounts.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.only(bottom: 15),
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Bạn chưa liên kết ngân hàng. Vui lòng liên kết ngân hàng để nạp tiền.',
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor.withValues(alpha: 0.8),
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ...bankAccounts.map(
           (account) => _buildSourceItem(
             title: account,
@@ -370,7 +415,13 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
     );
   }
 
-  Widget _buildBottomAction(ThemeProvider themeProvider) {
+  Widget _buildBottomAction(
+    ThemeProvider themeProvider,
+    UserProvider userProvider,
+  ) {
+    final bool canConfirm = userProvider.isGuest || _selectedSource != null;
+    final bool isEnabled = !_isProcessing && canConfirm;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -386,36 +437,46 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
       child: SafeArea(
         child: FadeInUp(
           duration: const Duration(milliseconds: 500),
-          child: Container(
-            width: double.infinity,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
-              ),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFEC5B13).withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: InkWell(
-              onTap: _isProcessing ? null : _handleConfirm,
-              borderRadius: BorderRadius.circular(30),
-              child: Center(
-                child: _isProcessing
-                    ? const CircularProgressIndicator(color: Colors.black)
-                    : const Text(
-                        'Xác nhận',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: isEnabled ? 1.0 : 0.4,
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: isEnabled
+                    ? const LinearGradient(
+                        colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
+                      )
+                    : LinearGradient(
+                        colors: [Colors.grey[800]!, Colors.grey[900]!],
                       ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: isEnabled
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFEC5B13).withValues(alpha: 0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: InkWell(
+                onTap: isEnabled ? _handleConfirm : null,
+                borderRadius: BorderRadius.circular(30),
+                child: Center(
+                  child: _isProcessing
+                      ? const CircularProgressIndicator(color: Colors.black)
+                      : Text(
+                          'Xác nhận',
+                          style: TextStyle(
+                            color: isEnabled ? Colors.black : Colors.white24,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
               ),
             ),
           ),

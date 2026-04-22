@@ -6,6 +6,7 @@ import 'package:chitieu_plus/providers/notification_provider.dart';
 import 'package:chitieu_plus/models/notification_model.dart';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/app_session_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class OcrScanScreen extends StatefulWidget {
   const OcrScanScreen({super.key});
@@ -44,8 +45,24 @@ class _OcrScanScreenState extends State<OcrScanScreen>
     );
   }
 
-  Future<void> _initCamera() async {
+  Future<void> _initCamera({CameraDescription? specificCamera}) async {
     if (!mounted) return;
+
+    // Explicitly check for camera permission
+    var status = await Permission.camera.status;
+    if (!status.isGranted) {
+      status = await Permission.camera.request();
+      if (!status.isGranted) {
+        if (mounted) {
+          setState(
+            () => _cameraError =
+                'Bạn cần cấp quyền truy cập máy ảnh để sử dụng tính năng này.',
+          );
+        }
+        return;
+      }
+    }
+
     setState(() {
       _cameraError = null;
       _isCameraInitialized = false;
@@ -54,8 +71,24 @@ class _OcrScanScreenState extends State<OcrScanScreen>
     try {
       _cameras = await availableCameras();
       if (_cameras != null && _cameras!.isNotEmpty) {
+        CameraDescription selectedCamera;
+
+        if (specificCamera != null) {
+          selectedCamera = specificCamera;
+        } else {
+          // Automatically select the back camera by default
+          try {
+            selectedCamera = _cameras!.firstWhere(
+              (camera) => camera.lensDirection == CameraLensDirection.back,
+            );
+          } catch (e) {
+            // If no back camera found, use the first available one
+            selectedCamera = _cameras!.first;
+          }
+        }
+
         _cameraController = CameraController(
-          _cameras![1],
+          selectedCamera,
           ResolutionPreset.high,
           enableAudio: false,
         );
@@ -75,6 +108,38 @@ class _OcrScanScreenState extends State<OcrScanScreen>
       }
     } catch (e) {
       if (mounted) setState(() => _cameraError = 'Lỗi khởi tạo camera: $e');
+    }
+  }
+
+  Future<void> _toggleCamera() async {
+    if (_cameras == null || _cameras!.isEmpty) return;
+
+    final currentDescription = _cameraController?.description;
+    CameraDescription? nextCamera;
+
+    if (currentDescription?.lensDirection == CameraLensDirection.back) {
+      // Switch to front
+      try {
+        nextCamera = _cameras!.firstWhere(
+          (c) => c.lensDirection == CameraLensDirection.front,
+        );
+      } catch (_) {
+        // Stay on current if no front camera
+      }
+    } else {
+      // Switch to back
+      try {
+        nextCamera = _cameras!.firstWhere(
+          (c) => c.lensDirection == CameraLensDirection.back,
+        );
+      } catch (_) {
+        // Stay on current if no back camera
+      }
+    }
+
+    if (nextCamera != null && nextCamera != currentDescription) {
+      await _cameraController?.dispose();
+      _initCamera(specificCamera: nextCamera);
     }
   }
 
@@ -407,6 +472,14 @@ class _OcrScanScreenState extends State<OcrScanScreen>
                 );
               }
             },
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.cameraswitch_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+            onPressed: _toggleCamera,
           ),
           IconButton(
             icon: const Icon(

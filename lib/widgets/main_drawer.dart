@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'dart:math';
 
 import '../providers/theme_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/auth_wrapper.dart';
 import '../screens/ai_chat_screen.dart';
+import '../screens/debt_list_screen.dart';
 import '../screens/terms_and_privacy_screen.dart';
 import '../screens/eye_protection_screen.dart';
 import '../screens/user_profile_screen.dart';
@@ -24,6 +29,13 @@ class MainDrawer extends StatefulWidget {
 
 class _MainDrawerState extends State<MainDrawer> {
   final ScrollController _scrollController = ScrollController();
+  String _cacheSize = '0.00 B';
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateCacheSize();
+  }
 
   @override
   void dispose() {
@@ -145,6 +157,22 @@ class _MainDrawerState extends State<MainDrawer> {
                       _buildDrawerItem(
                         context: context,
                         themeProvider: themeProvider,
+                        icon: Icons.handshake_rounded,
+                        title: 'Quản lý Nợ & Cho vay',
+                        iconColor: const Color(0xFF10B981),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DebtListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
                         icon: Icons.mail_rounded,
                         title: 'Liên hệ',
                         onTap: () {},
@@ -250,6 +278,23 @@ class _MainDrawerState extends State<MainDrawer> {
                           );
                         },
                       ),
+                      if (!kIsWeb)
+                        _buildDrawerItem(
+                          context: context,
+                          themeProvider: themeProvider,
+                          icon: Icons.cleaning_services_rounded,
+                          title: 'Dọn dẹp bộ nhớ đệm',
+                          trailing: Text(
+                            _cacheSize,
+                            style: TextStyle(
+                              color: themeProvider.foregroundColor.withValues(
+                                alpha: 0.5,
+                              ),
+                              fontSize: 13,
+                            ),
+                          ),
+                          onTap: () => _handleClearCache(context, themeProvider),
+                        ),
                       _buildDrawerItem(
                         context: context,
                         themeProvider: themeProvider,
@@ -279,6 +324,17 @@ class _MainDrawerState extends State<MainDrawer> {
                         icon: Icons.account_balance_rounded,
                         title: 'Tài khoản ngân hàng',
                         onTap: () {
+                          if (userProvider.isGuest) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Tính năng này yêu cầu đăng nhập để sử dụng.',
+                                ),
+                                backgroundColor: Color(0xFFEC5B13),
+                              ),
+                            );
+                            return;
+                          }
                           Navigator.pop(context);
                           Navigator.push(
                             context,
@@ -447,6 +503,151 @@ class _MainDrawerState extends State<MainDrawer> {
         ],
       ),
     );
+  }
+
+  Future<void> _calculateCacheSize() async {
+    if (kIsWeb) {
+      setState(() => _cacheSize = 'N/A');
+      return;
+    }
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final cacheDir = await getApplicationCacheDirectory();
+
+      int totalSize = 0;
+      totalSize += await _getDirSize(tempDir);
+      totalSize += await _getDirSize(cacheDir);
+
+      if (mounted) {
+        setState(() {
+          _cacheSize = _formatSize(totalSize);
+        });
+      }
+    } catch (e) {
+      debugPrint('[Cache] Error calculating size: $e');
+    }
+  }
+
+  Future<int> _getDirSize(Directory directory) async {
+    int size = 0;
+    try {
+      if (await directory.exists()) {
+        await for (var entity in directory.list(recursive: true, followLinks: false)) {
+          if (entity is File) {
+            size += await entity.length();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[Cache] Error listing directory: $e');
+    }
+    return size;
+  }
+
+  String _formatSize(int bytes) {
+    if (bytes <= 0) return "0.00 B";
+    const suffixes = ["B", "KB", "MB", "GB", "TB"];
+    var i = (log(bytes) / log(1024)).floor();
+    return '${(bytes / pow(1024, i)).toStringAsFixed(2)} ${suffixes[i]}';
+  }
+
+  Future<void> _handleClearCache(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không hỗ trợ dọn dẹp cache trên Web')),
+      );
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: themeProvider.secondaryColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: themeProvider.borderColor),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.cleaning_services_rounded, color: Color(0xFFEC5B13)),
+            const SizedBox(width: 10),
+            Text(
+              'Dọn dẹp bộ nhớ đệm?',
+              style: TextStyle(color: themeProvider.foregroundColor),
+            ),
+          ],
+        ),
+        content: Text(
+          'Hành động này sẽ xóa các tệp tạm thời. Dữ liệu quan trọng của bạn vẫn sẽ được giữ an toàn.',
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Hủy',
+              style: TextStyle(
+                color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEC5B13),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('Dọn dẹp ngay'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      try {
+        final tempDir = await getTemporaryDirectory();
+        final cacheDir = await getApplicationCacheDirectory();
+
+        if (await tempDir.exists()) {
+          await for (var entity in tempDir.list()) {
+            await entity.delete(recursive: true);
+          }
+        }
+        if (await cacheDir.exists()) {
+          await for (var entity in cacheDir.list()) {
+            await entity.delete(recursive: true);
+          }
+        }
+
+        await _calculateCacheSize();
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã dọn dẹp bộ nhớ đệm thành công'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Lỗi khi dọn dẹp: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _deleteAllData(BuildContext context) async {

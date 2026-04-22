@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
@@ -184,161 +185,264 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  Future<bool> _showExitDialog() async {
+    final themeProvider = context.read<ThemeProvider>();
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: themeProvider.secondaryColor,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(color: themeProvider.borderColor),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF6D00).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.exit_to_app_rounded,
+                    color: Color(0xFFFF6D00),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Thoát ứng dụng',
+                  style: TextStyle(
+                    color: themeProvider.foregroundColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'Bạn có chắc chắn muốn đóng ứng dụng ChiTieuPlus và kết thúc phiên làm việc không?',
+              style: TextStyle(
+                color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+                fontSize: 15,
+                height: 1.5,
+              ),
+            ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Hủy',
+                  style: TextStyle(
+                    color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6D00),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Thoát',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final languageProvider = context.watch<LanguageProvider>();
 
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: const MainDrawer(),
-      backgroundColor: themeProvider.backgroundColor,
-      body: Container(
-        decoration: BoxDecoration(gradient: themeProvider.backgroundGradient),
-        child: Stack(
-          children: [
-            PageView(
-              controller: _pageController,
-              physics: const BouncingScrollPhysics(),
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-                context.read<AppSessionProvider>().setHomeTabIndex(index);
-              },
-              children: [
-                HomeTab(
-                  onTabChange: (index) {
-                    _pageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                ),
-                const TransactionTab(),
-                const BudgetTab(),
-                const ReportTab(),
-              ],
-            ),
-            Positioned(
-              right: 16,
-              bottom: 85, // Nằm ngay trên tab điều hướng
-              child: SafeArea(
-                child: ZoomIn(
-                  duration: const Duration(milliseconds: 300),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isAiOverlayOpen = !_isAiOverlayOpen;
-                          });
-                        },
-                        child: Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFFEC5B13,
-                                ).withValues(alpha: 0.4),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.smart_toy_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ),
-                      if (!_isAiOverlayOpen)
-                        Positioned(
-                          top: -55,
-                          right: 15,
-                          child: FadeInUp(
-                            key: ValueKey<int>(
-                              _currentIndex,
-                            ), // Re-animate when tab changes
-                            duration: const Duration(milliseconds: 600),
-                            delay: const Duration(milliseconds: 500),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: themeProvider.secondaryColor.withValues(
-                                  alpha: 0.95,
-                                ),
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(16),
-                                  topRight: Radius.circular(16),
-                                  bottomLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(4),
-                                ),
-                                border: Border.all(
-                                  color: themeProvider.borderColor,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                _getAiGreeting(_currentIndex),
-                                style: TextStyle(
-                                  color: themeProvider.foregroundColor,
-                                  fontSize: 13,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        final shouldExit = await _showExitDialog();
+        if (shouldExit) {
+          // Thoát hoàn toàn ứng dụng và tiến trình terminal (tương đương nhấn 'q')
+          exit(0);
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        drawer: const MainDrawer(),
+        backgroundColor: themeProvider.backgroundColor,
+        body: Container(
+          decoration: BoxDecoration(gradient: themeProvider.backgroundGradient),
+          child: Stack(
+            children: [
+              PageView(
+                controller: _pageController,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                  context.read<AppSessionProvider>().setHomeTabIndex(index);
+                },
+                children: [
+                  HomeTab(
+                    onTabChange: (index) {
+                      _pageController.animateToPage(
+                        index,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                      );
+                    },
                   ),
-                ),
+                  const TransactionTab(),
+                  const BudgetTab(),
+                  const ReportTab(),
+                ],
               ),
-            ),
-            if (_isAiOverlayOpen)
               Positioned(
-                bottom: 160, // right above FAB
                 right: 16,
+                bottom: 85, // Nằm ngay trên tab điều hướng
                 child: SafeArea(
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: FadeInUp(
-                      duration: const Duration(milliseconds: 300),
-                      child: MiniAiChatWidget(
-                        onClose: () {
-                          setState(() {
-                            _isAiOverlayOpen = false;
-                          });
-                        },
-                      ),
+                  child: ZoomIn(
+                    duration: const Duration(milliseconds: 300),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isAiOverlayOpen = !_isAiOverlayOpen;
+                            });
+                          },
+                          child: Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFEC5B13,
+                                  ).withValues(alpha: 0.4),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.smart_toy_rounded,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                        ),
+                        if (!_isAiOverlayOpen)
+                          Positioned(
+                            top: -55,
+                            right: 15,
+                            child: FadeInUp(
+                              key: ValueKey<int>(
+                                _currentIndex,
+                              ), // Re-animate when tab changes
+                              duration: const Duration(milliseconds: 600),
+                              delay: const Duration(milliseconds: 500),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: themeProvider.secondaryColor.withValues(
+                                    alpha: 0.95,
+                                  ),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(16),
+                                    topRight: Radius.circular(16),
+                                    bottomLeft: Radius.circular(16),
+                                    bottomRight: Radius.circular(4),
+                                  ),
+                                  border: Border.all(
+                                    color: themeProvider.borderColor,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  _getAiGreeting(_currentIndex),
+                                  style: TextStyle(
+                                    color: themeProvider.foregroundColor,
+                                    fontSize: 13,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
               ),
-          ],
+              if (_isAiOverlayOpen)
+                Positioned(
+                  bottom: 160, // right above FAB
+                  right: 16,
+                  child: SafeArea(
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: FadeInUp(
+                        duration: const Duration(milliseconds: 300),
+                        child: MiniAiChatWidget(
+                          onClose: () {
+                            setState(() {
+                              _isAiOverlayOpen = false;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
+        bottomNavigationBar: _buildBottomNavBar(themeProvider, languageProvider),
       ),
-      bottomNavigationBar: _buildBottomNavBar(themeProvider, languageProvider),
     );
   }
 

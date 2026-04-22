@@ -14,6 +14,11 @@ import 'package:intl/intl.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
 import 'package:chitieu_plus/screens/user_profile_screen.dart';
 import 'package:chitieu_plus/screens/deposit_screen.dart';
+import 'package:chitieu_plus/screens/qr_scanner_screen.dart';
+import 'package:chitieu_plus/screens/add_transaction_screen.dart';
+import 'package:chitieu_plus/providers/saving_goal_provider.dart';
+import 'package:chitieu_plus/widgets/saving_goal_card.dart';
+import 'package:chitieu_plus/screens/saving_goals_list_screen.dart';
 
 class HomeTab extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -235,6 +240,28 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                           themeProvider: themeProvider,
                         ),
                         const SizedBox(width: 12),
+                        _buildHeaderButton(
+                          icon: Icons.qr_code_scanner_rounded,
+                          onTap: () async {
+                            final navigator = Navigator.of(context);
+                            final result = await navigator.push(
+                              MaterialPageRoute(
+                                builder: (_) => const QrScannerScreen(),
+                              ),
+                            );
+                            if (result != null && mounted) {
+                              navigator.push(
+                                MaterialPageRoute(
+                                  builder: (_) => AddTransactionScreen(
+                                    initialQrResult: result,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          themeProvider: themeProvider,
+                        ),
+                        const SizedBox(width: 12),
                         GestureDetector(
                           onTap: () => Navigator.push(
                             context,
@@ -346,9 +373,9 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                   Text(
                                     userProvider.bankAccounts.isNotEmpty
                                         ? userProvider.bankAccounts.first
-                                        : languageProvider.translate(
-                                            'wallet_demo',
-                                          ),
+                                        : (userProvider.isGuest
+                                            ? languageProvider.translate('wallet_demo')
+                                            : languageProvider.translate('wallet_main')),
                                     style: TextStyle(
                                       color: themeProvider.foregroundColor
                                           .withValues(alpha: 0.7),
@@ -361,42 +388,39 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                               Row(
                                 children: [
                                   GestureDetector(
-                                    onTap: () async {
-                                      if (_syncController.isAnimating) return;
-                                      _syncController.repeat();
-                                      try {
-                                        await context
-                                            .read<TransactionProvider>()
-                                            .syncDataWithFirestore();
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Đồng bộ dữ liệu thành công!',
+                                      onTap: () async {
+                                        if (_syncController.isAnimating) return;
+                                        final messenger = ScaffoldMessenger.of(context);
+                                        _syncController.repeat();
+                                        try {
+                                          await context
+                                              .read<TransactionProvider>()
+                                              .syncDataWithFirestore();
+                                          if (mounted) {
+                                            messenger.showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Đồng bộ dữ liệu thành công!',
+                                                ),
+                                                backgroundColor: Colors.green,
+                                                duration: Duration(seconds: 1),
                                               ),
-                                              backgroundColor: Colors.green,
-                                              duration: Duration(seconds: 1),
-                                            ),
-                                          );
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (mounted) {
+                                            messenger.showSnackBar(
+                                              SnackBar(
+                                                content: Text('Lỗi: $e'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          }
+                                        } finally {
+                                          _syncController.stop();
+                                          _syncController.reset();
                                         }
-                                      } catch (e) {
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Lỗi: $e'),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                        }
-                                      } finally {
-                                        _syncController.stop();
-                                        _syncController.reset();
-                                      }
-                                    },
+                                      },
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -507,6 +531,9 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                 const SizedBox(width: 12),
                                 GestureDetector(
                                   onTap: () async {
+                                    final navigator = Navigator.of(context);
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    final txProvider = context.read<TransactionProvider>();
                                     final confirm = await showDialog<bool>(
                                       context: context,
                                       builder: (context) => AlertDialog(
@@ -517,18 +544,17 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                           style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7)),
                                         ),
                                         actions: [
-                                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
-                                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xóa', style: TextStyle(color: Colors.redAccent))),
+                                          TextButton(onPressed: () => navigator.pop(false), child: const Text('Hủy')),
+                                          TextButton(onPressed: () => navigator.pop(true), child: const Text('Xóa', style: TextStyle(color: Colors.redAccent))),
                                         ],
                                       ),
                                     );
                                     if (confirm == true && mounted) {
-                                      final txProvider = context.read<TransactionProvider>();
                                       final demoIds = txProvider.transactions.where((tx) => tx.note == 'Nạp qua Ví dùng thử' || tx.wallet == 'demo').map((tx) => tx.id).toList();
                                       if (demoIds.isNotEmpty) {
                                         await txProvider.deleteTransactions(demoIds);
                                         if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa số dư ví dùng thử')));
+                                          messenger.showSnackBar(const SnackBar(content: Text('Đã xóa số dư ví dùng thử')));
                                         }
                                       }
                                     }
@@ -553,6 +579,10 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
               _buildAnalysisSection(themeProvider, transactions),
               const SizedBox(height: 30),
 
+              // Saving Goals Section
+              _buildSavingGoalsSection(context, themeProvider),
+              const SizedBox(height: 30),
+
               _buildSectionHeader('Giao dịch gần đây', 'Tất cả', themeProvider),
               const SizedBox(height: 16),
               if (isLoading)
@@ -575,8 +605,9 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
   Widget _buildSectionHeader(
     String title,
     String? actionText,
-    ThemeProvider themeProvider,
-  ) {
+    ThemeProvider themeProvider, {
+    VoidCallback? onActionTap,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -590,7 +621,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
         ),
         if (actionText != null)
           GestureDetector(
-            onTap: () {
+            onTap: onActionTap ?? () {
               if (actionText == 'Tất cả' || title == 'Giao dịch gần đây') {
                 widget.onTabChange?.call(1);
               }
@@ -700,6 +731,80 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSavingGoalsSection(BuildContext context, ThemeProvider themeProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          'Mục tiêu tiết kiệm',
+          'Tất cả',
+          themeProvider,
+          onActionTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SavingGoalsListScreen()),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Consumer<SavingGoalProvider>(
+          builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return const SizedBox(
+                height: 160,
+                child: Center(child: CircularProgressIndicator(color: Color(0xFFF05D15))),
+              );
+            }
+
+            if (provider.goals.isEmpty) {
+              return GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SavingGoalsListScreen()),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  decoration: BoxDecoration(
+                    color: themeProvider.secondaryColor.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: themeProvider.borderColor, style: BorderStyle.solid),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.add_task_rounded, color: themeProvider.foregroundColor.withValues(alpha: 0.3), size: 32),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Chưa có mục tiêu. Nhấn để tạo mới!',
+                        style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return SizedBox(
+              height: 170,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: provider.goals.length,
+                itemBuilder: (context, index) {
+                  return SavingGoalCard(
+                    goal: provider.goals[index],
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SavingGoalsListScreen()),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 

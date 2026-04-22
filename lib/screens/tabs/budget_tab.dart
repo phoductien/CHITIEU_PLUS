@@ -31,7 +31,13 @@ class _BudgetTabState extends State<BudgetTab> {
       'Ăn uống': 0,
       'Mua sắm': 0,
       'Di chuyển': 0,
+      'Nhà cửa': 0,
+      'Giải trí': 0,
       'Hóa đơn': 0,
+      'Học phí': 0,
+      'Bảo hiểm': 0,
+      'Tiền điện': 0,
+      'Tiền nước': 0,
       'Khác': 0,
     };
 
@@ -265,30 +271,61 @@ class _BudgetTabState extends State<BudgetTab> {
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(2),
                                     child: LinearProgressIndicator(
-                                      value: budgetLimit > 0
-                                          ? (catSpent[cat]! / budgetLimit)
+                                      value: (userProvider.categoryBudgets[cat] ?? budgetLimit) > 0
+                                          ? (catSpent[cat]! / (userProvider.categoryBudgets[cat] ?? budgetLimit))
                                                 .clamp(0.0, 1.0)
                                           : 0,
                                       backgroundColor: themeProvider
                                           .foregroundColor
                                           .withValues(alpha: 0.1),
                                       valueColor:
-                                          const AlwaysStoppedAnimation<Color>(
-                                            Colors.blue,
+                                          AlwaysStoppedAnimation<Color>(
+                                            catSpent[cat]! > (userProvider.categoryBudgets[cat] ?? budgetLimit)
+                                                ? Colors.redAccent
+                                                : Colors.blue,
                                           ),
                                       minHeight: 4,
                                     ),
                                   ),
+                                  if (userProvider.categoryBudgets.containsKey(cat))
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        'Hạn mức: đ ${NumberFormat('#,###').format(userProvider.categoryBudgets[cat])}',
+                                        style: TextStyle(
+                                          color: themeProvider.foregroundColor.withValues(alpha: 0.4),
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
                             const SizedBox(width: 16),
-                            Text(
-                              'đ ${NumberFormat('#,###').format(catSpent[cat])}',
-                              style: TextStyle(
-                                color: themeProvider.foregroundColor,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'đ ${NumberFormat('#,###').format(catSpent[cat])}',
+                                  style: TextStyle(
+                                    color: themeProvider.foregroundColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (userProvider.categoryBudgets.containsKey(cat))
+                                  Text(
+                                    catSpent[cat]! > userProvider.categoryBudgets[cat]!
+                                        ? 'Vượt ${NumberFormat('#,###').format(catSpent[cat]! - userProvider.categoryBudgets[cat]!)}'
+                                        : 'Còn ${NumberFormat('#,###').format(userProvider.categoryBudgets[cat]! - catSpent[cat]!)}',
+                                    style: TextStyle(
+                                      color: catSpent[cat]! > userProvider.categoryBudgets[cat]!
+                                          ? Colors.redAccent
+                                          : const Color(0xFF10B981),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ],
                         ),

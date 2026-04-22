@@ -4,6 +4,14 @@ import 'package:chitieu_plus/providers/theme_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:chitieu_plus/models/transaction_model.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
+import 'dart:ui' as ui;
+import 'dart:io' as io;
+import 'dart:typed_data';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:universal_html/html.dart' as u_html;
 
 class ReportTab extends StatefulWidget {
   const ReportTab({super.key});
@@ -13,6 +21,70 @@ class ReportTab extends StatefulWidget {
 }
 
 class _ReportTabState extends State<ReportTab> {
+  final GlobalKey _reportKey = GlobalKey();
+  bool _isSharing = false;
+
+  Future<void> _captureAndShareReport() async {
+    if (_isSharing) return;
+
+    setState(() => _isSharing = true);
+
+    try {
+      // 1. Capture the widget
+      final boundary = _reportKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
+
+      final pngBytes = byteData.buffer.asUint8List();
+
+      if (kIsWeb) {
+        // Web Implementation: Use XFile.fromData or simple download
+        try {
+          await Share.shareXFiles(
+            [XFile.fromData(pngBytes, mimeType: 'image/png', name: 'bao_cao_tai_chinh.png')],
+            text: 'Báo cáo tài chính từ CHITIEU PLUS 📊',
+          );
+        } catch (webShareError) {
+          // Fallback for Web: Download the image if Share API is not supported
+          final blob = u_html.Blob([pngBytes]);
+          final url = u_html.Url.createObjectUrlFromBlob(blob);
+          final anchor = u_html.AnchorElement(href: url)
+            ..setAttribute("download", "bao_cao_tai_chinh_${DateTime.now().millisecondsSinceEpoch}.png")
+            ..click();
+          u_html.Url.revokeObjectUrl(url);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Trình duyệt không hỗ trợ chia sẻ trực tiếp. Đã tự động tải ảnh về máy.')),
+            );
+          }
+        }
+      } else {
+        // Mobile/Desktop Implementation (using dart:io and path_provider)
+        final tempDir = await getTemporaryDirectory();
+        final file = await io.File('${tempDir.path}/bao_cao_tai_chinh_${DateTime.now().millisecondsSinceEpoch}.png').create();
+        await file.writeAsBytes(pngBytes);
+
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          text: 'Báo cáo tài chính từ CHITIEU PLUS 📊',
+        );
+      }
+    } catch (e) {
+      debugPrint('[ReportTab] Error sharing report: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi chia sẻ: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
@@ -77,80 +149,98 @@ class _ReportTabState extends State<ReportTab> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: themeProvider.secondaryColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.share_rounded,
-                      color: Colors.white,
-                      size: 20,
+                  GestureDetector(
+                    onTap: _captureAndShareReport,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: themeProvider.secondaryColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _isSharing
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.share_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                     ),
                   ),
                 ],
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
-                    Text(
-                      'CƠ CẤU CHI TIÊU',
-                      style: TextStyle(
-                        color: themeProvider.foregroundColor.withValues(
-                          alpha: 0.6,
+              child: RepaintBoundary(
+                key: _reportKey,
+                child: Container(
+                  color: themeProvider.backgroundColor, // Ensure background is captured
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        Text(
+                          'CƠ CẤU CHI TIÊU',
+                          style: TextStyle(
+                            color: themeProvider.foregroundColor.withValues(
+                              alpha: 0.6,
+                            ),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
                         ),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: themeProvider.secondaryColor.withValues(
-                          alpha: 0.4,
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: themeProvider.secondaryColor.withValues(
+                              alpha: 0.4,
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: themeProvider.borderColor),
+                          ),
+                          child: _buildDonutChart(themeProvider, pieValues),
                         ),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: themeProvider.borderColor),
-                      ),
-                      child: _buildDonutChart(themeProvider, pieValues),
-                    ),
-                    const SizedBox(height: 35),
-                    Text(
-                      'XU HƯỚNG CHI TIÊU',
-                      style: TextStyle(
-                        color: themeProvider.foregroundColor.withValues(
-                          alpha: 0.6,
+                        const SizedBox(height: 35),
+                        Text(
+                          'XU HƯỚNG CHI TIÊU',
+                          style: TextStyle(
+                            color: themeProvider.foregroundColor.withValues(
+                              alpha: 0.6,
+                            ),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
                         ),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      height: 180,
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
-                      decoration: BoxDecoration(
-                        color: themeProvider.secondaryColor.withValues(
-                          alpha: 0.4,
+                        const SizedBox(height: 16),
+                        Container(
+                          height: 180,
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+                          decoration: BoxDecoration(
+                            color: themeProvider.secondaryColor.withValues(
+                              alpha: 0.4,
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: themeProvider.borderColor),
+                          ),
+                          child: _buildBarChart(themeProvider, barValues),
                         ),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: themeProvider.borderColor),
-                      ),
-                      child: _buildBarChart(themeProvider, barValues),
+                        const SizedBox(height: 100),
+                      ],
                     ),
-                    const SizedBox(height: 100),
-                  ],
+                  ),
                 ),
               ),
             ),

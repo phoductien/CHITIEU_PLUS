@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import '../models/transaction_model.dart';
+import '../models/saving_goal_model.dart';
+import '../models/debt_model.dart';
 
 class RealtimeDbService {
   final FirebaseDatabase _db = FirebaseDatabase.instanceFor(
@@ -65,6 +67,32 @@ class RealtimeDbService {
     }
   }
 
+  // --- SAVING GOALS ---
+
+  Future<void> saveGoal(SavingGoalModel goal) async {
+    try {
+      final map = goal.toMap();
+      await _userRef.child('goals/${goal.id}').set(map);
+      debugPrint('[RealtimeDB] Goal saved: ${goal.id}');
+    } catch (e) {
+      debugPrint('[RealtimeDB] Error saving goal: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteGoal(String id) async {
+    try {
+      await _userRef.child('goals/$id').remove();
+    } catch (e) {
+      debugPrint('[RealtimeDB] Error deleting goal: $e');
+      rethrow;
+    }
+  }
+
+  Stream<DatabaseEvent> getGoalsStream() {
+    return _userRef.child('goals').onValue;
+  }
+
   // Generic update for specific fields
   Future<void> updateTransactionField(
     String id,
@@ -116,5 +144,19 @@ class RealtimeDbService {
       debugPrint('[RealtimeDB] Overwrite sync error: $e');
       rethrow;
     }
+  }
+
+  // --- DEBT & LOAN OPERATIONS ---
+
+  Future<void> saveDebt(DebtModel debt) async {
+    await _userRef.child('debts').child(debt.id).set(debt.toMap());
+  }
+
+  Future<void> deleteDebt(String debtId) async {
+    await _userRef.child('debts').child(debtId).remove();
+  }
+
+  Stream<DatabaseEvent> getDebtsStream() {
+    return _userRef.child('debts').onValue;
   }
 }

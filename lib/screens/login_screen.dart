@@ -184,19 +184,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 elevation: 0,
                               ),
-                              child: _isLoading
-                                  ? const AppLoadingIndicator(
-                                      size: 24,
-                                      color: Colors.white,
-                                    )
-                                  : const Text(
-                                      'Đăng nhập',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                              child: Text(
+                                'Đăng nhập',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: _isLoading 
+                                    ? Colors.white.withValues(alpha: 0.7) 
+                                    : Colors.white,
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 24),
 
@@ -349,18 +346,38 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // Full screen loading overlay with blur effect
+          // Full screen loading overlay with blur effect and boxed spinner
           if (_isLoading)
             Positioned.fill(
               child: BackdropFilter(
                 filter: ColorFilter.mode(
-                  Colors.black.withValues(alpha: 0.6),
+                  Colors.black.withValues(alpha: 0.4),
                   BlendMode.darken,
                 ),
                 child: Container(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  child: const Center(
-                    child: AppLoadingIndicator(size: 48, color: Colors.white),
+                  color: Colors.black.withValues(alpha: 0.2),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 15,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: const AppLoadingIndicator(
+                        size: 48,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),

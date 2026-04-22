@@ -10,12 +10,18 @@ import 'package:chitieu_plus/models/transaction_model.dart';
 import 'package:chitieu_plus/services/ai_service.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
 import 'package:chitieu_plus/screens/ocr_scan_screen.dart';
+import 'package:chitieu_plus/screens/qr_scanner_screen.dart';
 import 'package:chitieu_plus/providers/app_session_provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final String? initialOcrResult;
-  const AddTransactionScreen({super.key, this.initialOcrResult});
+  final String? initialQrResult;
+  const AddTransactionScreen({
+    super.key,
+    this.initialOcrResult,
+    this.initialQrResult,
+  });
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -104,6 +110,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
     if (widget.initialOcrResult != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _parseAiResult(widget.initialOcrResult!);
+      });
+    } else if (widget.initialQrResult != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _processQrResult(widget.initialQrResult!);
       });
     }
   }
@@ -265,7 +275,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
         : TransactionType.expense;
 
     final userProvider = context.read<UserProvider>();
-    final isGuest = userProvider.bankAccounts.isEmpty;
+    final isGuest = userProvider.isGuest;
     final walletType = (isGuest && type == TransactionType.expense) ? 'demo' : 'main';
 
     if (type == TransactionType.expense) {
@@ -369,6 +379,68 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
 
     if (result != null) {
       _parseAiResult(result);
+    }
+  }
+
+  Future<void> _processQrResult(String qrText) async {
+    setState(() {
+      _isAiProcessing = true;
+    });
+
+    try {
+      final aiService = AiService();
+      final prompt = '''
+Dựa vào nội dung QR code sau (có thể là VietQR hoặc text thông thường), hãy trích xuất thông tin giao dịch.
+Nội dung: "$qrText"
+
+Trả về DUY NHẤT một mã JSON với cấu trúc:
+{
+  "amount": số tiền (number),
+  "category": "Ăn uống" | "Mua sắm" | "Học phí" | "Di chuyển" | "Giải trí" | "Lương" | "Khác" (chọn cái phù hợp nhất),
+  "note": "Mô tả ngắn gọn nội dung giao dịch"
+}
+''';
+      final response = await aiService.sendMessage(prompt);
+      
+      // Clean and parse JSON from response
+      String jsonStr = response;
+      if (jsonStr.contains('```json')) {
+        jsonStr = jsonStr.split('```json')[1].split('```')[0].trim();
+      } else if (jsonStr.contains('```')) {
+        jsonStr = jsonStr.split('```')[1].split('```')[0].trim();
+      }
+
+      final data = jsonDecode(jsonStr);
+
+      setState(() {
+        if (data['amount'] != null) {
+          _amountController.text = data['amount'].toString();
+        }
+        if (data['category'] != null) {
+          _selectedCategory = data['category'];
+        }
+        if (data['note'] != null) {
+          _noteController.text = data['note'];
+        }
+        _isAiGenerated = true;
+        _aiMetadata = {
+          'source': 'QR Scan',
+          'type': qrText.startsWith('000201') ? 'VietQR' : 'Text',
+        };
+      });
+    } catch (e) {
+      debugPrint('QR Processing Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi xử lý QR: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAiProcessing = false;
+        });
+      }
     }
   }
 
@@ -774,6 +846,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
             Icons.document_scanner_rounded,
             const Color(0xFFEC5B13),
             onTap: _showScanOptions,
+          ),
+          const SizedBox(height: 16),
+          _buildActionCard(
+            'Quét mã QR',
+            Icons.qr_code_scanner_rounded,
+            const Color(0xFF3B82F6),
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+              );
+              if (result != null && mounted) {
+                _processQrResult(result);
+              }
+            },
           ),
           const SizedBox(height: 30),
           Expanded(child: _buildManualTab()), // Reuse fields for review

@@ -120,7 +120,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Widget _buildFilterBar() {
-    final filters = ['Tất cả', 'Giao dịch', 'Biến động', 'Hệ thống', 'AI Nhắc nhở'];
+    final filters = ['Tất cả', 'Quan trọng', 'Biến động', 'Tin khác'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -185,10 +185,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   ),
                 ),
               ),
-            FadeInUp(
-              duration: Duration(milliseconds: 400 + (index * 100)),
-              child: _buildNotificationCard(item),
-            ),
+            _buildNotificationCard(item),
           ],
         );
       },
@@ -199,6 +196,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final isSelected = _selectedItems.contains(item.id);
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         if (item.type == NotificationType.transaction || item.type == NotificationType.fluctuation) {
            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Xem và chỉnh sửa hóa đơn tại mục Giao Dịch dưới thanh Bottom Bar')));
