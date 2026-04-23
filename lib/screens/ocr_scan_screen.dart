@@ -9,7 +9,8 @@ import 'package:chitieu_plus/providers/app_session_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class OcrScanScreen extends StatefulWidget {
-  const OcrScanScreen({super.key});
+  final String? customPrompt;
+  const OcrScanScreen({super.key, this.customPrompt});
 
   @override
   State<OcrScanScreen> createState() => _OcrScanScreenState();
@@ -158,7 +159,7 @@ class _OcrScanScreenState extends State<OcrScanScreen>
       final bytes = await image.readAsBytes();
       final aiService = AiService();
 
-      final prompt = '''
+      final prompt = widget.customPrompt ?? '''
       Hãy đóng vai một chuyên gia kế toán. Tôi sẽ gửi cho bạn một ảnh hóa đơn. 
       Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
       - title: Tên cửa hàng hoặc nội dung chính của hóa đơn (Ví dụ: "Phở Lý Quốc Sư", "Siêu thị Winmart").

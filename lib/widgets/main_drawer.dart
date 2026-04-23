@@ -17,7 +17,7 @@ import '../screens/debt_list_screen.dart';
 import '../screens/terms_and_privacy_screen.dart';
 import '../screens/eye_protection_screen.dart';
 import '../screens/user_profile_screen.dart';
-import '../screens/bank_accounts_screen.dart';
+import '../screens/bank_transfer_screen.dart';
 import 'dart:convert';
 
 class MainDrawer extends StatefulWidget {
@@ -322,7 +322,7 @@ class _MainDrawerState extends State<MainDrawer> {
                         context: context,
                         themeProvider: themeProvider,
                         icon: Icons.account_balance_rounded,
-                        title: 'Tài khoản ngân hàng',
+                        title: 'Chuyển tiền ngân hàng',
                         onTap: () {
                           if (userProvider.isGuest) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -339,7 +339,7 @@ class _MainDrawerState extends State<MainDrawer> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const BankAccountsScreen(),
+                              builder: (context) => const BankTransferScreen(),
                             ),
                           );
                         },
