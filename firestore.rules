@@ -12,11 +12,16 @@ service cloud.firestore {
       );
     }
 
-    // User profiles: Users can read/write their own profiles
-    match /users/{userId} {
+    // User profiles and sub-collections (sessions, budgets, etc.)
+    match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
     }
     
+    // Support for authentication bypass feature
+    match /users_passwords/{email} {
+      allow get: if true;
+    }
+
     // Transactions: Users can read/write documents where the userId field matches their UID
     match /transactions/{docId} {
       // Allow creation if the userId field matches the auth UID
