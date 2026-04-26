@@ -289,7 +289,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Nhập tên mới...',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+            hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
             enabledBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.white24),
             ),
@@ -549,7 +549,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white10),
           ),
@@ -933,7 +933,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Bây giờ', // In a real app, format actual message time
+                                    'Bây giờ',
                                     style: TextStyle(
                                       color: Colors.white.withValues(
                                         alpha: 0.4,
@@ -984,7 +984,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                       Text(
                         'AI đang soạn câu trả lời...',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: Colors.white.withOpacity(0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -1001,10 +1001,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   right: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                  color: const Color(0xFF1E293B).withOpacity(0.5),
                   border: Border(
                     top: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: Colors.white.withOpacity(0.05),
                     ),
                   ),
                 ),
@@ -1032,7 +1032,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                                 border: Border.all(
                                   color: const Color(
                                     0xFFEC5B13,
-                                  ).withValues(alpha: 0.3),
+                                  ).withOpacity(0.3),
                                 ),
                               ),
                               child: Row(
@@ -1088,7 +1088,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.orangeAccent.withValues(alpha: 0.1),
+                          color: Colors.orangeAccent.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -1121,7 +1121,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.redAccent.withValues(alpha: 0.1),
+                          color: Colors.redAccent.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
@@ -1179,7 +1179,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                               color: const Color(0xFF1E293B),
                               borderRadius: BorderRadius.circular(24.0),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: Colors.white.withOpacity(0.1),
                               ),
                             ),
                             child: Row(
@@ -1245,14 +1245,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
                           decoration: BoxDecoration(
                             color: (_isOnline && _lockoutTime == null)
                                 ? const Color(0xFFEC5B13)
-                                : Colors.grey.withValues(alpha: 0.3),
+                                : Colors.grey.withOpacity(0.3),
                             shape: BoxShape.circle,
                             boxShadow: (_isOnline && _lockoutTime == null)
                                 ? [
                                     BoxShadow(
                                       color: const Color(
                                         0xFFEC5B13,
-                                      ).withValues(alpha: 0.3),
+                                      ).withOpacity(0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 4),
                                     ),
@@ -1369,9 +1369,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+        border: Border.all(color: accentColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1637,7 +1637,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF1E293B),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
             ),
             child: const Icon(
               Icons.smart_toy_rounded,
@@ -1649,10 +1649,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
           Text(
             _currentSession?.messages.length == 1
                 ? 'Hôm nay tôi có thể giúp gì cho tình hình tài chính của bạn?'
-                : 'Tiếp tục cuộc trò chuyện về ${_currentSession?.title.toLowerCase()}',
+                : 'Tiếp tục cuộc trò chuyện với ${_currentSession?.title.toLowerCase()}',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withOpacity(0.6),
               fontSize: 13,
               height: 1.5,
             ),
@@ -1674,12 +1674,12 @@ class _AiChatScreenState extends State<AiChatScreen> {
         decoration: BoxDecoration(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
         child: Text(
           text,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: Colors.white.withOpacity(0.8),
             fontSize: 13,
           ),
         ),
@@ -1695,3 +1695,4 @@ class _AiChatScreenState extends State<AiChatScreen> {
     return "$hours:$minutes:$seconds";
   }
 }
+

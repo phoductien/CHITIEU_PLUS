@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class AppLogo extends StatelessWidget {
   final double size;
@@ -12,11 +12,11 @@ class AppLogo extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        shape: BoxShape.circle, // Chuyển sang hình TRÒN theo yêu cầu mới
+        shape: BoxShape.circle, // Chuyển thành hình tròn
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: Colors.black.withOpacity(0.15),
                   blurRadius: size * 0.2,
                   offset: Offset(0, size * 0.08),
                 ),
@@ -41,3 +41,4 @@ class AppLogo extends StatelessWidget {
     );
   }
 }
+

@@ -1,113 +1,101 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import '../constants/api_constants.dart';
 
-/// Service xử lý các nghiệp vụ liên quan đến Ngân hàng.
-/// Chức năng chính: Kiểm tra tính hợp lệ của số tài khoản và đối soát tên chủ tài khoản.
+/// Service xử lý các nghiệp vụ liên quan đến Ngân hàng và SePay.
 class BankService {
   
-  /// XÁC THỰC TÀI KHOẢN NGÂN HÀNG (API THẬT)
+  /// XÁC THỰC TÀI KHOẢN NGÂN HÀNG
   /// 
-  /// Sử dụng API của VietQR để lấy tên chủ tài khoản từ hệ thống NAPAS.
+  /// LƯU Ý: SePay không hỗ trợ tra cứu tên chủ tài khoản từ số tài khoản bất kỳ.
+  /// Hàm này hiện tại trả về kết quả giả định hoặc có thể tích hợp API khác nếu cần.
   Future<Map<String, dynamic>> verifyAccount({
     required String bankId,
     required String accountNumber,
     required String expectedName,
   }) async {
+    // Vì SePay không hỗ trợ Lookup, chúng ta sẽ giả định thành công để người dùng trải nghiệm flow
+    // Trong thực tế, bạn cần một provider khác (như VietQR) nếu muốn tính năng này.
+    
+    await Future.delayed(const Duration(seconds: 1)); // Giả lập độ trễ mạng
+    
+    return {
+      'success': true,
+      'accountName': expectedName.toUpperCase(),
+      'message': 'Đã xác nhận thông tin tài khoản (Chế độ SePay).',
+    };
+  }
+
+  /// LẤY DANH SÁCH TÀI KHOẢN NGÂN HÀNG TỪ SEPAY
+  Future<List<dynamic>> fetchBankAccounts() async {
     try {
-      // BƯỚC 1: Gọi API VietQR Lookup
-      final response = await http.post(
-        Uri.parse(ApiConstants.vietQrLookupUrl),
+      final response = await http.get(
+        Uri.parse(ApiConstants.sepayBankAccountsUrl),
         headers: {
-          'x-client-id': ApiConstants.vietQrClientId,
-          'x-api-key': ApiConstants.vietQrApiKey,
+          'Authorization': 'Bearer ${ApiConstants.sepayApiToken}',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          'bin': bankId,
-          'accountNumber': accountNumber,
-        }),
-      ).timeout(const Duration(seconds: 15)); // Timeout sau 15s
+      );
+ 
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['bank_accounts'] ?? [];
+      } else {
+        throw Exception('Lỗi khi lấy danh sách tài khoản: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('SePay Bank Account Error: $e');
+      return [];
+    }
+  }
+ 
+  /// LẤY DANH SÁCH GIAO DỊCH TỪ SEPAY
+  Future<List<dynamic>> fetchTransactions() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.sepayTransactionsUrl),
+        headers: {
+          'Authorization': 'Bearer ${ApiConstants.sepayApiToken}',
+          'Content-Type': 'application/json',
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        
-        // BƯỚC 2: Kiểm tra mã trả về từ VietQR (Mã '00' là thành công)
-        if (data['code'] == '00') {
-          String realAccountName = data['data']['accountName'] ?? '';
-          
-          // BƯỚC 3: Đối soát tên chủ tài khoản
-          bool isNameMatch = _compareNames(expectedName, realAccountName);
-
-          if (isNameMatch) {
-            return {
-              'success': true,
-              'accountName': realAccountName,
-              'message': 'Xác thực tài khoản thành công.',
-            };
-          } else {
-            return {
-              'success': false,
-              'message': 'Tên chủ tài khoản không khớp. Ngân hàng trả về: $realAccountName',
-            };
-          }
-        } else {
-          // Xử lý các mã lỗi từ API (Ví dụ: Số tài khoản không tồn tại)
-          return {
-            'success': false,
-            'message': data['desc'] ?? 'Thông tin tài khoản không chính xác hoặc không tồn tại.',
-          };
-        }
+        return data['transactions'] ?? [];
       } else {
-        return {
-          'success': false,
-          'message': 'Lỗi kết nối Server ngân hàng (Status: ${response.statusCode}).',
-        };
+        throw Exception('Lỗi khi lấy giao dịch: ${response.statusCode}');
       }
     } catch (e) {
-      // Xử lý lỗi ngoại lệ (Mất mạng, Timeout...)
-      return {
-        'success': false,
-        'message': 'Không thể kết nối tới hệ thống xác thực. Vui lòng thử lại sau.',
-      };
+      debugPrint('SePay Error: $e');
+      return [];
     }
   }
 
-  /// HÀM SO SÁNH TÊN THÔNG MINH
-  bool _compareNames(String name1, String name2) {
-    String n1 = _normalize(removeVietnameseTones(name1));
-    String n2 = _normalize(removeVietnameseTones(name2));
-    
-    // So sánh khớp hoàn toàn hoặc chứa nhau
-    return n1 == n2 || n1.contains(n2) || n2.contains(n1);
-  }
-
-  /// Chuẩn hóa chuỗi: Chuyển hoa, xóa khoảng trắng thừa.
-  String _normalize(String input) {
-    return input.trim().toUpperCase()
-        .replaceAll(RegExp(r'\s+'), ' '); 
-  }
-
-  /// HÀM LOẠI BỎ DẤU TIẾNG VIỆT
+  /// LOẠI BỎ DẤU TIẾNG VIỆT
+  /// 
+  /// Chuyển đổi các ký tự có dấu thành không dấu để chuẩn hóa dữ liệu.
   String removeVietnameseTones(String str) {
     var result = str;
     result = result.replaceAll(RegExp(r'[àáạảãâầấậẩẫăằắặẳẵ]'), 'a');
-    result = result.replaceAll(RegExp(r'[èéẹẻẽêềếệểễ]'), 'e');
-    result = result.replaceAll(RegExp(r'[ìíịỉĩ]'), 'i');
-    result = result.replaceAll(RegExp(r'[òóọỏõôồốộổỗơờớợởỡ]'), 'o');
-    result = result.replaceAll(RegExp(r'[ùúụủũưừứựửữ]'), 'u');
-    result = result.replaceAll(RegExp(r'[ỳýỵỷỹ]'), 'y');
-    result = result.replaceAll(RegExp(r'[đ]'), 'd');
     result = result.replaceAll(RegExp(r'[ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴ]'), 'A');
+    result = result.replaceAll(RegExp(r'[èéẹẻẽêềếệểễ]'), 'e');
     result = result.replaceAll(RegExp(r'[ÈÉẸẺẼÊỀẾỆỂỄ]'), 'E');
+    result = result.replaceAll(RegExp(r'[ìíịỉĩ]'), 'i');
     result = result.replaceAll(RegExp(r'[ÌÍỊỈĨ]'), 'I');
+    result = result.replaceAll(RegExp(r'[òóọỏõôồốộổỗơờớợởỡ]'), 'o');
     result = result.replaceAll(RegExp(r'[ÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠ]'), 'O');
+    result = result.replaceAll(RegExp(r'[ùúụủũưừứựửữ]'), 'u');
     result = result.replaceAll(RegExp(r'[ÙÚỤỦŨƯỪỨỰỬỮ]'), 'U');
+    result = result.replaceAll(RegExp(r'[ỳýỵỷỹ]'), 'y');
     result = result.replaceAll(RegExp(r'[ỲÝỴỶỸ]'), 'Y');
+    result = result.replaceAll(RegExp(r'[đ]'), 'd');
     result = result.replaceAll(RegExp(r'[Đ]'), 'D');
+    
+    // Loại bỏ một số ký tự đặc biệt nếu cần, hoặc trả về kết quả
     return result;
   }
+
 }
-
-

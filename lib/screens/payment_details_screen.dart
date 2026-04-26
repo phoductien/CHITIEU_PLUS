@@ -198,7 +198,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
         border: Border.all(color: themeProvider.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -235,7 +235,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
               Text(
                 'Tổng tiền',
                 style: TextStyle(
-                  color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+                  color: themeProvider.foregroundColor.withOpacity(0.7),
                   fontSize: 16,
                 ),
               ),
@@ -266,7 +266,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
         Text(
           label,
           style: TextStyle(
-            color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+            color: themeProvider.foregroundColor.withOpacity(0.5),
             fontSize: 14,
           ),
         ),
@@ -308,9 +308,9 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
             padding: const EdgeInsets.all(20),
             margin: const EdgeInsets.only(bottom: 15),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withValues(alpha: 0.1),
+              color: Colors.redAccent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+              border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
             ),
             child: Row(
               children: [
@@ -320,7 +320,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
                   child: Text(
                     'Bạn chưa liên kết ngân hàng. Vui lòng liên kết ngân hàng để nạp tiền.',
                     style: TextStyle(
-                      color: themeProvider.foregroundColor.withValues(alpha: 0.8),
+                      color: themeProvider.foregroundColor.withOpacity(0.8),
                       fontSize: 13,
                     ),
                   ),
@@ -359,7 +359,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? color.withValues(alpha: 0.1)
+              ? color.withOpacity(0.1)
               : themeProvider.secondaryColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -372,7 +372,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),
@@ -407,7 +407,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
             else
               Icon(
                 Icons.circle_outlined,
-                color: themeProvider.foregroundColor.withValues(alpha: 0.2),
+                color: themeProvider.foregroundColor.withOpacity(0.2),
               ),
           ],
         ),
@@ -428,7 +428,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
         color: themeProvider.backgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -455,7 +455,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
                 boxShadow: isEnabled
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFEC5B13).withValues(alpha: 0.3),
+                          color: const Color(0xFFEC5B13).withOpacity(0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         ),

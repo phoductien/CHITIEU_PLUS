@@ -18,8 +18,11 @@ import '../screens/terms_and_privacy_screen.dart';
 import '../screens/eye_protection_screen.dart';
 import '../screens/user_profile_screen.dart';
 import '../screens/bank_transfer_screen.dart';
+import '../screens/account_management_screen.dart';
 import 'dart:convert';
 
+/// Thanh điều hướng (Drawer) chính của ứng dụng.
+/// Chứa thông tin người dùng, các liên kết tính năng và cài đặt hệ thống.
 class MainDrawer extends StatefulWidget {
   const MainDrawer({super.key});
 
@@ -53,7 +56,7 @@ class _MainDrawerState extends State<MainDrawer> {
       child: SafeArea(
         child: Column(
           children: [
-            // User Profile Header
+            // Header hiển thị thông tin người dùng
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               decoration: BoxDecoration(
@@ -127,7 +130,7 @@ class _MainDrawerState extends State<MainDrawer> {
               ),
             ),
 
-            // Drawer Items
+            // Danh sách các mục tính năng trong Drawer
             Expanded(
               child: Scrollbar(
                 controller: _scrollController,
@@ -166,6 +169,22 @@ class _MainDrawerState extends State<MainDrawer> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => const DebtListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.manage_accounts_rounded,
+                        title: 'Quản lý tài khoản',
+                        iconColor: const Color(0xFF6366F1),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AccountManagementScreen(),
                             ),
                           );
                         },
@@ -322,7 +341,7 @@ class _MainDrawerState extends State<MainDrawer> {
                         context: context,
                         themeProvider: themeProvider,
                         icon: Icons.account_balance_rounded,
-                        title: 'Chuyển tiền ngân hàng',
+                        title: 'QUẢN LÝ TÀI KHOẢN',
                         onTap: () {
                           if (userProvider.isGuest) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -396,7 +415,7 @@ class _MainDrawerState extends State<MainDrawer> {
                       const SizedBox(height: 30),
                       Center(
                         child: Text(
-                          'Phiên bản : 2.0.4',
+                          'Phiên bản : 2.5.0',
                           style: TextStyle(
                             color: themeProvider.foregroundColor.withValues(
                               alpha: 0.3,
@@ -437,7 +456,7 @@ class _MainDrawerState extends State<MainDrawer> {
               icon,
               color:
                   iconColor ??
-                  themeProvider.foregroundColor.withValues(alpha: 0.7),
+                  themeProvider.foregroundColor.withOpacity(0.7),
               size: 22,
             ),
             const SizedBox(width: 16),
@@ -447,7 +466,7 @@ class _MainDrawerState extends State<MainDrawer> {
                 style: TextStyle(
                   color:
                       titleColor ??
-                      themeProvider.foregroundColor.withValues(alpha: 0.9),
+                      themeProvider.foregroundColor.withOpacity(0.9),
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
@@ -474,7 +493,7 @@ class _MainDrawerState extends State<MainDrawer> {
         children: [
           Icon(
             icon,
-            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+            color: themeProvider.foregroundColor.withOpacity(0.7),
             size: 22,
           ),
           const SizedBox(width: 16),
@@ -482,7 +501,7 @@ class _MainDrawerState extends State<MainDrawer> {
             child: Text(
               title,
               style: TextStyle(
-                color: themeProvider.foregroundColor.withValues(alpha: 0.9),
+                color: themeProvider.foregroundColor.withOpacity(0.9),
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
@@ -492,7 +511,7 @@ class _MainDrawerState extends State<MainDrawer> {
             value: value,
             onChanged: onChanged,
             activeThumbColor: const Color(0xFFEC5B13),
-            activeTrackColor: const Color(0xFFEC5B13).withValues(alpha: 0.5),
+            activeTrackColor: const Color(0xFFEC5B13).withOpacity(0.5),
             inactiveThumbColor: themeProvider.foregroundColor.withValues(
               alpha: 0.4,
             ),
@@ -505,6 +524,7 @@ class _MainDrawerState extends State<MainDrawer> {
     );
   }
 
+  /// Tính toán kích thước bộ nhớ đệm (cache) hiện tại
   Future<void> _calculateCacheSize() async {
     if (kIsWeb) {
       setState(() => _cacheSize = 'N/A');
@@ -551,6 +571,7 @@ class _MainDrawerState extends State<MainDrawer> {
     return '${(bytes / pow(1024, i)).toStringAsFixed(2)} ${suffixes[i]}';
   }
 
+  /// Xử lý dọn dẹp bộ nhớ đệm khi người dùng yêu cầu
   Future<void> _handleClearCache(
     BuildContext context,
     ThemeProvider themeProvider,
@@ -583,7 +604,7 @@ class _MainDrawerState extends State<MainDrawer> {
         content: Text(
           'Hành động này sẽ xóa các tệp tạm thời. Dữ liệu quan trọng của bạn vẫn sẽ được giữ an toàn.',
           style: TextStyle(
-            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+            color: themeProvider.foregroundColor.withOpacity(0.7),
           ),
         ),
         actions: [
@@ -592,7 +613,7 @@ class _MainDrawerState extends State<MainDrawer> {
             child: Text(
               'Hủy',
               style: TextStyle(
-                color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+                color: themeProvider.foregroundColor.withOpacity(0.7),
               ),
             ),
           ),
@@ -650,6 +671,7 @@ class _MainDrawerState extends State<MainDrawer> {
     }
   }
 
+  /// Xóa toàn bộ dữ liệu giao dịch của người dùng (Firestore & RTDB)
   Future<void> _deleteAllData(BuildContext context) async {
     final provider = context.read<TransactionProvider>();
     final themeProvider = context.read<ThemeProvider>();
@@ -664,7 +686,7 @@ class _MainDrawerState extends State<MainDrawer> {
             const Icon(Icons.warning_amber_rounded, color: Colors.red),
             const SizedBox(width: 10),
             Text(
-              'Xóa tất cả dữ liệu?',
+              'Xóa toàn bộ dữ liệu?',
               style: TextStyle(color: themeProvider.foregroundColor),
             ),
           ],
@@ -730,3 +752,4 @@ class _MainDrawerState extends State<MainDrawer> {
     }
   }
 }
+

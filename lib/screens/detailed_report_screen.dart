@@ -19,6 +19,14 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
   ReportPeriod _selectedPeriod = ReportPeriod.thisMonth;
   DateTimeRange? _customDateRange;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TransactionProvider>().syncDataWithFirestore();
+    });
+  }
+
   // Colors from the mockup
   final Color _bgColor = const Color(0xFF141824);
   final Color _cardColor = const Color(0xFF1F2636);
@@ -64,6 +72,30 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
             (categorySpending[tx.category] ?? 0) + tx.amount;
       }
     }
+
+    // New stats
+    int txCount = currentTx.length;
+    
+    // Day count for average
+    final now = DateTime.now();
+    DateTime start;
+    DateTime end;
+    if (_selectedPeriod == ReportPeriod.thisMonth) {
+      start = DateTime(now.year, now.month, 1);
+      end = now;
+    } else if (_selectedPeriod == ReportPeriod.lastMonth) {
+      start = DateTime(now.year, now.month - 1, 1);
+      end = DateTime(now.year, now.month, 0);
+    } else if (_customDateRange != null) {
+      start = _customDateRange!.start;
+      end = _customDateRange!.end;
+    } else {
+      start = DateTime(now.year, now.month, 1);
+      end = now;
+    }
+    int days = end.difference(start).inDays + 1;
+    if (days <= 0) days = 1;
+    double avgDailySpend = currentExpense / days;
 
     return Scaffold(
       backgroundColor: _bgColor,
@@ -133,6 +165,8 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
               currentExpense,
               incomePct,
               expensePct,
+              txCount,
+              avgDailySpend,
             ),
             const SizedBox(height: 24),
             _buildAiAdvice(categorySpending, currentExpense),
@@ -140,6 +174,8 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
             _buildDonutChart(categorySpending, currentExpense),
             const SizedBox(height: 24),
             _buildBarChart(currentTx),
+            const SizedBox(height: 24),
+            _buildBankStatsSection(currentTx),
             const SizedBox(height: 24),
             _buildBudgetLimits(categorySpending),
             const SizedBox(height: 80),
@@ -280,29 +316,89 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     double expense,
     double incomePct,
     double expensePct,
+    int txCount,
+    double avgDailySpend,
   ) {
-    return Row(
+    final currencyFormat = NumberFormat('#,###', 'vi_VN');
+    return Column(
       children: [
-        Expanded(
-          child: _buildSummaryCardItem(
-            'TỔNG THU NHẬP',
-            '+',
-            income,
-            incomePct,
-            _incomeColor,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCardItem(
+                'TỔNG THU NHẬP',
+                '+',
+                income,
+                incomePct,
+                _incomeColor,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildSummaryCardItem(
+                'TỔNG CHI TIÊU',
+                '-',
+                expense,
+                expensePct,
+                _expenseColor,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildSummaryCardItem(
-            'TỔNG CHI TIÊU',
-            '-',
-            expense,
-            expensePct,
-            _expenseColor,
-          ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMiniStatCard(
+                'Số lượng GD',
+                txCount.toString(),
+                Icons.receipt_long_rounded,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildMiniStatCard(
+                'TB chi tiêu/ngày',
+                '${currencyFormat.format(avgDailySpend / 1000)}k',
+                Icons.analytics_rounded,
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildMiniStatCard(String title, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white38, size: 20),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(color: Colors.white38, fontSize: 10),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -631,7 +727,7 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Xu hướng chi tiêu',
+                'Xu hướng thu chi',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -639,15 +735,21 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
                 ),
               ),
               const Text(
-                'Theo tuần',
+                'Theo thứ',
                 style: TextStyle(color: Colors.white54, fontSize: 12),
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildChartLegend('Thu nhập', _incomeColor),
+              const SizedBox(width: 16),
+              _buildChartLegend('Chi tiêu', _expenseColor),
+            ],
+          ),
           const SizedBox(height: 24),
-          if (transactions
-              .where((t) => t.type == TransactionType.expense)
-              .isEmpty)
+          if (transactions.isEmpty)
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(32),
@@ -659,7 +761,7 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
             )
           else
             SizedBox(
-              height: 160,
+              height: 180,
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
@@ -667,12 +769,12 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
                   barTouchData: BarTouchData(
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
-                      tooltipBgColor: const Color(0xFFF57C00),
+                      tooltipBgColor: const Color(0xFF2D3748),
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         return BarTooltipItem(
                           '${rod.toY.toStringAsFixed(0)}k',
-                          const TextStyle(
-                            color: Colors.white,
+                          TextStyle(
+                            color: rod.color,
                             fontWeight: FontWeight.bold,
                           ),
                         );
@@ -720,50 +822,217 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     );
   }
 
+  Widget _buildChartLegend(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 10),
+        ),
+      ],
+    );
+  }
+
   double _getMaxBarValue(List<TransactionModel> txs) {
     final groups = _groupTransactionsForBarChart(txs);
     double maxV = 0;
-    for (var v in groups.values) {
-      if (v > maxV) maxV = v;
+    for (var dayMap in groups.values) {
+      for (var v in dayMap.values) {
+        if (v > maxV) maxV = v;
+      }
     }
     return maxV == 0 ? 100 : maxV;
   }
 
-  Map<int, double> _groupTransactionsForBarChart(List<TransactionModel> txs) {
-    Map<int, double> result = {};
+  Map<int, Map<TransactionType, double>> _groupTransactionsForBarChart(
+    List<TransactionModel> txs,
+  ) {
+    Map<int, Map<TransactionType, double>> result = {};
     for (var tx in txs) {
-      if (tx.type == TransactionType.expense) {
-        int key = tx.date.weekday; // 1 to 7
-        result[key] = (result[key] ?? 0) + (tx.amount / 1000);
-      }
+      int key = tx.date.weekday; // 1 to 7
+      result.putIfAbsent(
+        key,
+        () => {TransactionType.income: 0, TransactionType.expense: 0},
+      );
+      result[key]![tx.type] = (result[key]![tx.type] ?? 0) + (tx.amount / 1000);
     }
     return result;
   }
 
   List<BarChartGroupData> _generateBarGroups(List<TransactionModel> txs) {
-    Map<int, double> groups = _groupTransactionsForBarChart(txs);
-    double maxV = _getMaxBarValue(txs);
+    final groups = _groupTransactionsForBarChart(txs);
     List<BarChartGroupData> data = [];
     for (int i = 1; i <= 7; i++) {
-      double val = groups[i] ?? 0;
-      bool isMax = val == maxV && val > 0;
+      final dayData =
+          groups[i] ?? {TransactionType.income: 0, TransactionType.expense: 0};
       data.add(
         BarChartGroupData(
           x: i,
           barRods: [
             BarChartRodData(
-              toY: val,
-              color: isMax ? const Color(0xFFFFB74D) : Colors.white12,
-              width: 32,
-              borderRadius: BorderRadius.circular(4),
-              backDrawRodData: BackgroundBarChartRodData(show: false),
+              toY: dayData[TransactionType.income] ?? 0,
+              color: _incomeColor,
+              width: 10,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(4),
+              ),
+            ),
+            BarChartRodData(
+              toY: dayData[TransactionType.expense] ?? 0,
+              color: _expenseColor,
+              width: 10,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(4),
+              ),
             ),
           ],
-          showingTooltipIndicators: isMax ? [0] : [],
         ),
       );
     }
     return data;
+  }
+
+  Widget _buildBankStatsSection(List<TransactionModel> transactions) {
+    Map<String, Map<TransactionType, double>> bankStats = {};
+    for (var tx in transactions) {
+      String bankName = tx.bankBrandName;
+      String accNum = tx.accountNumber;
+
+      // Fallback cho dữ liệu cũ: parse từ note
+      if (bankName == 'Khác' && tx.note != null && tx.note!.startsWith('Từ: ')) {
+        try {
+          final parts = tx.note!.substring(4).split(' (');
+          bankName = parts[0];
+          if (parts.length > 1) {
+            accNum = parts[1].replaceAll(')', '');
+          }
+        } catch (_) {}
+      }
+
+      if (bankName == 'Khác' && accNum.isEmpty) continue; // Bỏ qua nếu không phải GD ngân hàng
+
+      String key = accNum.isEmpty ? bankName : '$bankName - $accNum';
+      bankStats.putIfAbsent(
+        key,
+        () => {TransactionType.income: 0, TransactionType.expense: 0},
+      );
+      bankStats[key]![tx.type] = (bankStats[key]![tx.type] ?? 0) + tx.amount;
+    }
+
+    final currencyFormat = NumberFormat('#,###', 'vi_VN');
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Thống kê theo tài khoản',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (bankStats.isEmpty)
+            const Text(
+              'Chưa có dữ liệu ngân hàng',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            )
+          else
+            ...bankStats.entries.map((entry) {
+              final income = entry.value[TransactionType.income] ?? 0;
+              final expense = entry.value[TransactionType.expense] ?? 0;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.key,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildBankStatBar(
+                          'Thu',
+                          income,
+                          _incomeColor,
+                          currencyFormat,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildBankStatBar(
+                          'Chi',
+                          expense,
+                          _expenseColor,
+                          currencyFormat,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBankStatBar(
+    String label,
+    double amount,
+    Color color,
+    NumberFormat format,
+  ) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(color: color, fontSize: 10),
+            ),
+            Text(
+              '${format.format(amount)}đ',
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String _getBarXLabel(int index) {

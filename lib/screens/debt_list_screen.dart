@@ -37,7 +37,7 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        title: const Text('Quản lý Nợ & Cho vay'),
+        title: const Text('Quản lý NỢ & Cho vay'),
         backgroundColor: Colors.transparent,
         foregroundColor: themeProvider.foregroundColor,
         elevation: 0,
@@ -59,7 +59,7 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
             controller: _tabController,
             indicatorColor: const Color(0xFFF05D15),
             labelColor: const Color(0xFFF05D15),
-            unselectedLabelColor: themeProvider.foregroundColor.withValues(alpha: 0.5),
+            unselectedLabelColor: themeProvider.foregroundColor.withOpacity(0.5),
             tabs: const [
               Tab(text: 'CHƯA TRẢ'),
               Tab(text: 'ĐÃ TRẢ'),
@@ -106,7 +106,7 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
           Expanded(
             child: FadeInRight(
               child: _buildStatItem(
-                'Nợ bạn',
+                'NỢ bạn',
                 provider.totalDebt,
                 const Color(0xFFEF4444),
                 Icons.arrow_upward_rounded,
@@ -122,9 +122,9 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,7 +134,7 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withOpacity(0.6),
               fontSize: 12,
             ),
           ),
@@ -161,7 +161,7 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
       return Center(
         child: Text(
           'Không có dữ liệu',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+          style: TextStyle(color: Colors.white.withOpacity(0.5)),
         ),
       );
     }
@@ -184,3 +184,4 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
     );
   }
 }
+

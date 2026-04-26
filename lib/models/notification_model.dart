@@ -52,7 +52,7 @@ class NotificationModel {
   String get typeString {
     switch (type) {
       case NotificationType.transaction:
-        return 'Biến động';
+        return 'Giao dịch';
       case NotificationType.fluctuation:
         return 'Biến động';
       case NotificationType.aiReminder:

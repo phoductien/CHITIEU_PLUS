@@ -108,7 +108,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             child: filteredNotifications.isEmpty
                 ? const Center(
                     child: Text(
-                      'Không có dữ liệu',
+                      'Không có thông báo nào.',
                       style: TextStyle(color: Colors.white54),
                     ),
                   )
@@ -120,7 +120,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Widget _buildFilterBar() {
-    final filters = ['Tất cả', 'Quan trọng', 'Biến động', 'Tin khác'];
+    final filters = ['Tất cả', 'Giao dịch', 'Biến động', 'Quan trọng', 'Tin khác'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -199,7 +199,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       behavior: HitTestBehavior.opaque,
       onTap: () {
         if (item.type == NotificationType.transaction || item.type == NotificationType.fluctuation) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Xem và chỉnh sửa hóa đơn tại mục Giao Dịch dưới thanh Bottom Bar')));
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Xem và chỉnh sửa hóa đơn tại mục Giao dịch trên thanh điều hướng')));
            return;
         }
         if (_isSelectionMode) {
@@ -219,8 +219,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFF6D00).withValues(alpha: 0.1)
-              : const Color(0xFF1E293B).withValues(alpha: 0.5),
+              ? const Color(0xFFFF6D00).withOpacity(0.1)
+              : const Color(0xFF1E293B).withOpacity(0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? const Color(0xFFFF6D00) : Colors.white10,
@@ -233,7 +233,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: item.color.withValues(alpha: 0.1),
+                color: item.color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Icon(item.icon, color: item.color),
@@ -303,3 +303,4 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 }
+

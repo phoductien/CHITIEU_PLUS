@@ -111,19 +111,25 @@ module.exports = async (req, res) => {
     await transactionDoc.set(firestoreData);
 
     // --- GHI DỮ LIỆU VÀO REALTIME DATABASE ---
+    // RTDB cần format date là string để App Flutter parse được
     const rtdbData = {
       ...firestoreData,
       id: transactionId,
-      date: date.toISOString()
+      date: date.toISOString(),
+      updatedAt: new Date().toISOString()
     };
-    await rtdb.ref(`${userPath}/${userId}/transactions/${transactionId}`).set(rtdbData);
+    
+    // Ghi vào RTDB để App nhận được thông báo ngay lập tức
+    const rtdbPath = `${userPath}/${userId}/transactions/${transactionId}`;
+    await rtdb.ref(rtdbPath).set(rtdbData);
 
-    console.log(`Đã xử lý thành công giao dịch ${transactionId} cho người dùng ${userId} (${amount}đ)`);
+    console.log(`Đã ghi vào Firestore và RTDB thành công: ${rtdbPath} (${amount}đ)`);
     return res.status(200).json({ 
       success: true, 
+      message: 'Giao dịch đã được ghi nhận',
       transactionId,
-      type,
-      amount
+      amount,
+      path: rtdbPath
     });
 
   } catch (error) {

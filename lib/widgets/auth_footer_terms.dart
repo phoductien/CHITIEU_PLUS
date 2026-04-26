@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:chitieu_plus/screens/terms_and_privacy_screen.dart';
 
@@ -13,12 +13,12 @@ class AuthFooterTerms extends StatelessWidget {
         textAlign: TextAlign.center,
         text: TextSpan(
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: Colors.white.withOpacity(0.6),
             fontSize: 12,
             height: 1.5,
           ),
           children: [
-            const TextSpan(text: 'Bằng việc tiếp tục bạn chấp thuận với '),
+            const TextSpan(text: 'Bằng việc tiếp tục, bạn chấp thuận với '),
             TextSpan(
               text: 'chính sách điều khoản',
               style: const TextStyle(

@@ -19,6 +19,7 @@ import 'package:chitieu_plus/screens/tabs/home_tab.dart';
 import 'package:chitieu_plus/screens/tabs/transaction_tab.dart';
 import 'package:chitieu_plus/screens/tabs/budget_tab.dart';
 import 'package:chitieu_plus/screens/tabs/report_tab.dart';
+import 'package:chitieu_plus/screens/tabs/news_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? welcomeMessage;
@@ -41,8 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return 'Giao dịch hôm nay thế nào?\nĐể tôi tóm tắt giúp nhé!';
       case 2:
-        return 'Lên kế hoạch thông minh?\nĐể tôi hỗ trợ bạn!';
+        return 'Cập nhật tin tức tài chính?\nHãy đọc những bản tin mới nhất!';
       case 3:
+        return 'Lên kế hoạch thông minh?\nĐể tôi hỗ trợ bạn!';
+      case 4:
         return 'Phân tích chi tiêu của bạn?\nTôi luôn sẵn sàng hỗ trợ!';
       default:
         return 'Chào bạn! Tôi có thể giúp gì cho bạn?';
@@ -86,11 +89,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: notification.color.withValues(alpha: 0.5),
+                    color: notification.color.withOpacity(0.5),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: Colors.black.withOpacity(0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -101,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: notification.color.withValues(alpha: 0.1),
+                        color: notification.color.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -201,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF6D00).withValues(alpha: 0.1),
+                    color: const Color(0xFFFF6D00).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -224,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
             content: Text(
               'Bạn có chắc chắn muốn đóng ứng dụng ChiTieuPlus và kết thúc phiên làm việc không?',
               style: TextStyle(
-                color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+                color: themeProvider.foregroundColor.withOpacity(0.7),
                 fontSize: 15,
                 height: 1.5,
               ),
@@ -245,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   'Hủy',
                   style: TextStyle(
-                    color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                    color: themeProvider.foregroundColor.withOpacity(0.5),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -320,6 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                   const TransactionTab(),
+                  const NewsTab(),
                   const BudgetTab(),
                   const ReportTab(),
                 ],
@@ -353,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 BoxShadow(
                                   color: const Color(
                                     0xFFEC5B13,
-                                  ).withValues(alpha: 0.4),
+                                  ).withOpacity(0.4),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
@@ -396,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.2),
+                                      color: Colors.black.withOpacity(0.2),
                                       blurRadius: 8,
                                       offset: const Offset(0, 4),
                                     ),
@@ -461,12 +465,12 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             height: 70,
             decoration: BoxDecoration(
-              color: themeProvider.secondaryColor.withValues(alpha: 0.8),
+              color: themeProvider.secondaryColor.withOpacity(0.8),
               borderRadius: BorderRadius.circular(35),
               border: Border.all(color: themeProvider.borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: Colors.black.withOpacity(0.2),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -487,15 +491,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   languageProvider.translate('tab_transactions'),
                   themeProvider,
                 ),
-                const SizedBox(width: 60), // Space for AI Scan button
                 _buildNavItem(
                   2,
+                  Icons.newspaper_rounded,
+                  languageProvider.translate('tab_news'),
+                  themeProvider,
+                ),
+                const SizedBox(width: 60), // Space for AI Scan button
+                _buildNavItem(
+                  3,
                   Icons.account_balance_wallet_rounded,
                   languageProvider.translate('tab_budget'),
                   themeProvider,
                 ),
                 _buildNavItem(
-                  3,
+                  4,
                   Icons.analytics_rounded,
                   languageProvider.translate('tab_report'),
                   themeProvider,
@@ -542,7 +552,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFEC5B13).withValues(alpha: 0.4),
+                          color: const Color(0xFFEC5B13).withOpacity(0.4),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -598,7 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? const Color(0xFFEC5B13).withValues(alpha: 0.1)
+                  ? const Color(0xFFEC5B13).withOpacity(0.1)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -606,7 +616,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon,
               color: isSelected
                   ? const Color(0xFFEC5B13)
-                  : themeProvider.foregroundColor.withValues(alpha: 0.4),
+                  : themeProvider.foregroundColor.withOpacity(0.4),
               size: 24,
             ),
           ),
@@ -616,7 +626,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(
               color: isSelected
                   ? const Color(0xFFEC5B13)
-                  : themeProvider.foregroundColor.withValues(alpha: 0.4),
+                  : themeProvider.foregroundColor.withOpacity(0.4),
               fontSize: 9,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             ),
@@ -628,3 +638,4 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // --- TAB 1: TRANG CHỦ ---
+

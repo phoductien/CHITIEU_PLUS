@@ -148,7 +148,7 @@ class _DepositScreenState extends State<DepositScreen> {
           Text(
             'NHẬP SỐ TIỀN CẦN NẠP',
             style: TextStyle(
-              color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+              color: themeProvider.foregroundColor.withOpacity(0.5),
               fontSize: 12,
               letterSpacing: 1.5,
               fontWeight: FontWeight.w600,
@@ -189,7 +189,7 @@ class _DepositScreenState extends State<DepositScreen> {
                 border: InputBorder.none,
                 hintText: '0',
                 hintStyle: TextStyle(color: Colors.white12),
-                suffixText: 'VNĐ',
+                suffixText: 'VNĐ ',
                 suffixStyle: TextStyle(
                   color: Colors.white70,
                   fontSize: 24,
@@ -206,7 +206,7 @@ class _DepositScreenState extends State<DepositScreen> {
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  const Color(0xFFEC5B13).withValues(alpha: 0.5),
+                  const Color(0xFFEC5B13).withOpacity(0.5),
                   Colors.transparent,
                 ],
               ),
@@ -236,8 +236,8 @@ class _DepositScreenState extends State<DepositScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFFEC5B13).withValues(alpha: 0.8)
-                    : themeProvider.secondaryColor.withValues(alpha: 0.3),
+                    ? const Color(0xFFEC5B13).withOpacity(0.8)
+                    : themeProvider.secondaryColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
@@ -250,7 +250,7 @@ class _DepositScreenState extends State<DepositScreen> {
                 style: TextStyle(
                   color: isSelected
                       ? Colors.white
-                      : themeProvider.foregroundColor.withValues(alpha: 0.6),
+                      : themeProvider.foregroundColor.withOpacity(0.6),
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -292,7 +292,7 @@ class _DepositScreenState extends State<DepositScreen> {
                 boxShadow: isEnabled
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFEC5B13).withValues(alpha: 0.3),
+                          color: const Color(0xFFEC5B13).withOpacity(0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         ),
@@ -345,7 +345,7 @@ class _DepositScreenState extends State<DepositScreen> {
                   Text(
                     'Vui lòng liên kết ngân hàng để nạp tiền',
                     style: TextStyle(
-                      color: Colors.orangeAccent.withValues(alpha: 0.8),
+                      color: Colors.orangeAccent.withOpacity(0.8),
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -372,7 +372,7 @@ class _DepositScreenState extends State<DepositScreen> {
           Container(
             height: 70,
             decoration: BoxDecoration(
-              color: themeProvider.secondaryColor.withValues(alpha: 0.9),
+              color: themeProvider.secondaryColor.withOpacity(0.9),
               borderRadius: BorderRadius.circular(35),
               border: Border.all(color: themeProvider.borderColor),
             ),
@@ -436,3 +436,4 @@ class _DepositScreenState extends State<DepositScreen> {
     );
   }
 }
+

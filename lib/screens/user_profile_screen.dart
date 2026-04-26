@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
@@ -7,6 +7,7 @@ import 'dart:io';
 import '../providers/theme_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/transaction_provider.dart';
+import 'security_management_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -196,7 +197,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: themeProvider.foregroundColor.withValues(alpha: 0.2),
+                  color: themeProvider.foregroundColor.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -424,7 +425,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                 ? 'Tài khoản Khách'
                                 : 'Thành viên Bạc',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
+                              color: Colors.white.withOpacity(0.8),
                               fontSize: 14,
                             ),
                           ),
@@ -520,7 +521,26 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // 3. Data Management Section
+                    // 3. Security & Account Section
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    _buildMenuItem(
+                      theme: themeProvider,
+                      icon: Icons.shield_rounded,
+                      title: 'Bảo mật & Thiết bị',
+                      subtitle: 'Quản lý tài khoản ngân hàng và thiết bị đăng nhập',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SecurityManagementScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // 4. Data Management Section
                     const Divider(),
                     const SizedBox(height: 16),
                     Align(
@@ -617,7 +637,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         color: theme.secondaryColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.foregroundColor.withValues(alpha: 0.05),
+          color: theme.foregroundColor.withOpacity(0.05),
         ),
       ),
       child: Column(
@@ -635,7 +655,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             children: [
               Icon(
                 icon,
-                color: theme.foregroundColor.withValues(alpha: 0.5),
+                color: theme.foregroundColor.withOpacity(0.5),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -674,7 +694,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         color: theme.secondaryColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.foregroundColor.withValues(alpha: 0.05),
+          color: theme.foregroundColor.withOpacity(0.05),
         ),
       ),
       child: Column(
@@ -693,7 +713,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             children: [
               Icon(
                 icon,
-                color: theme.foregroundColor.withValues(alpha: 0.5),
+                color: theme.foregroundColor.withOpacity(0.5),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -730,7 +750,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         color: theme.secondaryColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.foregroundColor.withValues(alpha: 0.05),
+          color: theme.foregroundColor.withOpacity(0.05),
         ),
       ),
       child: Column(
@@ -748,7 +768,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             children: [
               Icon(
                 icon,
-                color: theme.foregroundColor.withValues(alpha: 0.5),
+                color: theme.foregroundColor.withOpacity(0.5),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -760,7 +780,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     isDense: true,
                     icon: Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: theme.foregroundColor.withValues(alpha: 0.5),
+                      color: theme.foregroundColor.withOpacity(0.5),
                     ),
                     dropdownColor: theme.secondaryColor,
                     style: TextStyle(
@@ -782,6 +802,68 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           ),
           const SizedBox(height: 8), // slightly balance padding
         ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required ThemeProvider theme,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.secondaryColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.foregroundColor.withOpacity(0.05),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.blue, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: theme.foregroundColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: theme.foregroundColor.withOpacity(0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: theme.foregroundColor.withOpacity(0.3),
+            ),
+          ],
+        ),
       ),
     );
   }

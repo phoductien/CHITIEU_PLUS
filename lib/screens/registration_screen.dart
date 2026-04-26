@@ -87,7 +87,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         'Quản lý tài chính thông minh',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: Colors.white.withOpacity(0.7),
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -157,7 +157,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             // Password Input
                             _buildInputField(
                               controller: _passwordController,
-                              hintText: '••••••••',
+                              hintText: '********',
                               icon: Icons.lock,
                               isPassword: true,
                               obscureText: _obscurePassword,
@@ -183,7 +183,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             // Confirm Password Input
                             _buildInputField(
                               controller: _confirmPasswordController,
-                              hintText: '••••••••',
+                              hintText: '********',
                               icon: Icons.restore,
                               isPassword: true,
                               obscureText: _obscureConfirmPassword,
@@ -203,7 +203,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 backgroundColor: const Color(0xFFF05D15),
                                 disabledBackgroundColor: const Color(
                                   0xFFF05D15,
-                                ).withValues(alpha: 0.5),
+                                ).withOpacity(0.5),
                                 minimumSize: const Size(double.infinity, 56),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -231,7 +231,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               children: [
                                 Expanded(
                                   child: Divider(
-                                    color: Colors.white.withValues(alpha: 0.2),
+                                    color: Colors.white.withOpacity(0.2),
                                   ),
                                 ),
                                 Padding(
@@ -251,7 +251,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 ),
                                 Expanded(
                                   child: Divider(
-                                    color: Colors.white.withValues(alpha: 0.2),
+                                    color: Colors.white.withOpacity(0.2),
                                   ),
                                 ),
                               ],
@@ -265,12 +265,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 backgroundColor: const Color(0xFF031A33),
                                 disabledBackgroundColor: const Color(
                                   0xFF031A33,
-                                ).withValues(alpha: 0.5),
+                                ).withOpacity(0.5),
                                 minimumSize: const Size(double.infinity, 56),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   side: BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.1),
+                                    color: Colors.white.withOpacity(0.1),
                                   ),
                                 ),
                                 elevation: 0,
@@ -311,7 +311,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 Text(
                                   'Đã có tài khoản? ',
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: Colors.white.withOpacity(0.7),
                                     fontSize: 13,
                                   ),
                                 ),
@@ -350,11 +350,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Positioned.fill(
               child: BackdropFilter(
                 filter: ColorFilter.mode(
-                  Colors.black.withValues(alpha: 0.6),
+                  Colors.black.withOpacity(0.6),
                   BlendMode.darken,
                 ),
                 child: Container(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: Colors.black.withOpacity(0.3),
                   child: const Center(
                     child: AppLoadingIndicator(size: 48, color: Colors.white),
                   ),
@@ -378,7 +378,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF0D3B66),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: TextField(
         controller: controller,
@@ -387,19 +387,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
+            color: Colors.white.withOpacity(0.4),
             fontSize: 14,
           ),
           prefixIcon: Icon(
             icon,
-            color: Colors.white.withValues(alpha: 0.6),
+            color: Colors.white.withOpacity(0.6),
             size: 20,
           ),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
                     obscureText ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: Colors.white.withOpacity(0.6),
                     size: 20,
                   ),
                   onPressed: onToggleVisibility,

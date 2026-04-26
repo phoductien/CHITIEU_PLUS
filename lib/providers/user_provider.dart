@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
+import 'dart:io'; // Added for Platform check
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_core/firebase_core.dart'; // Added for Firebase.app()
+import 'package:firebase_core/firebase_core.dart';
+import 'package:device_info_plus/device_info_plus.dart'; // Added for device info
 import 'dart:async';
+import '../models/device_session_model.dart'; // Added model
 
+/// UserProvider: Quản lý toàn bộ thông tin người dùng, ngân hàng, thiết bị và ngân sách.
+/// Tích hợp đồng bộ hóa thời gian thực với Firebase (Firestore & RTDB).
 class UserProvider with ChangeNotifier {
   String _name = '';
   String _email = '';
@@ -23,7 +29,11 @@ class UserProvider with ChangeNotifier {
   double _totalBudget = 5000000;
   Map<String, double> _categoryBudgets = {};
   List<String> _bankAccounts = [];
+  List<DeviceSessionModel> _deviceSessions = [];
+  String? _currentDeviceId;
+
   StreamSubscription<DocumentSnapshot>? _userDocSubscription;
+  StreamSubscription<QuerySnapshot>? _sessionsSubscription;
 
   String get name => _name;
   String get email => _email;
@@ -35,12 +45,15 @@ class UserProvider with ChangeNotifier {
   String get googleAccessToken => _googleAccessToken;
   String get googleServerAuthCode => _googleServerAuthCode;
   bool get isGuest => _isGuest;
+  String get uid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   double get totalBudget => _totalBudget;
   Map<String, double> get categoryBudgets => _categoryBudgets;
   List<String> get bankAccounts => _bankAccounts;
+  List<DeviceSessionModel> get deviceSessions => _deviceSessions;
+  String? get currentDeviceId => _currentDeviceId;
 
-  /// 1. Tải dữ liệu từ Local Storage (SharedPreferences) lúc khởi động App
+  /// Tải dữ liệu từ bộ nhớ cục bộ (SharedPreferences) khi khởi động ứng dụng
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     _name = prefs.getString('user_name') ?? '';
@@ -56,6 +69,8 @@ class UserProvider with ChangeNotifier {
 
     _totalBudget = prefs.getDouble('user_total_budget') ?? 5000000;
     _bankAccounts = prefs.getStringList('user_bank_accounts') ?? [];
+    _currentDeviceId = prefs.getString('device_session_id');
+
     final catBudgetsJson = prefs.getString('user_category_budgets');
     if (catBudgetsJson != null) {
       try {
@@ -76,7 +91,7 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// 2. Đặt trạng thái Khách
+  /// Thiết lập trạng thái tài khoản Khách (Guest mode)
   Future<void> setGuestStatus(bool status) async {
     _isGuest = status;
     if (status) {
@@ -164,7 +179,7 @@ class UserProvider with ChangeNotifier {
     await prefs.setString('google_server_auth_code', _googleServerAuthCode);
   }
 
-  /// 5. Tải dữ liệu từ Firebase Firestore (Khi người dùng đăng nhập)
+  /// Tải thông tin người dùng từ Firebase Firestore (Khi đã đăng nhập)
   Future<void> fetchFromFirebase() async {
     final user = FirebaseAuth.instance.currentUser;
     String targetEmail = '';
@@ -194,6 +209,9 @@ class UserProvider with ChangeNotifier {
 
     if (docId.isNotEmpty) {
       _startUserDocumentListener(docId);
+      await updateCurrentDeviceSession(docId); // Ensure session is registered first
+      _startSessionsListener(docId); // Then start monitoring
+
       if (!_isGuest) {
         _email = targetEmail;
       }
@@ -204,8 +222,6 @@ class UserProvider with ChangeNotifier {
       if (doc.exists) {
         final data = doc.data()!;
         _name = data['name'] ?? _name;
-        // Chỉ ghi đè photoUrl nếu local đang trống hoặc data từ Firestore mới hơn (nếu có logic versioning)
-        // Tuy nhiên, tốt nhất là ưu tiên ảnh từ Google Auth nếu vừa đăng nhập
         if (_photoUrl.isEmpty) {
           _photoUrl = data['photoUrl'] ?? '';
         }
@@ -240,6 +256,7 @@ class UserProvider with ChangeNotifier {
         await prefs.setString('user_category_budgets', jsonEncode(_categoryBudgets));
 
         notifyListeners();
+      } else {
         debugPrint(
           '[UserProvider] User document DOES NOT exist in Firestore (initial fetch). Auto-creating profile...',
         );
@@ -248,7 +265,7 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  /// 6. Lưu Toàn bộ dữ liệu lên Firebase Database (Sau khi có tài khoản Auth)
+  /// Đồng bộ hóa toàn bộ dữ liệu Provider lên Firebase (Firestore và Realtime Database)
   Future<void> syncToFirebase() async {
     final user = FirebaseAuth.instance.currentUser;
     String targetEmail = '';
@@ -259,7 +276,6 @@ class UserProvider with ChangeNotifier {
       docId = user.uid;
       _isGuest = user.isAnonymous;
 
-      // Always update local state if Firebase Auth user has newer info
       bool changed = false;
       if (user.photoURL != null && user.photoURL != _photoUrl) {
         _photoUrl = user.photoURL!;
@@ -296,6 +312,8 @@ class UserProvider with ChangeNotifier {
 
     if (docId.isNotEmpty) {
       _startUserDocumentListener(docId);
+      _startSessionsListener(docId);
+      
       final data = {
         'name': _name,
         'email': _isGuest ? 'guest@chitieuplus.internal' : targetEmail,
@@ -310,7 +328,6 @@ class UserProvider with ChangeNotifier {
         'bankAccounts': _bankAccounts,
       };
 
-      // 1. Đẩy thông tin của người dùng này lên Firestore
       try {
         final firestoreData = Map<String, dynamic>.from(data)
           ..addAll({
@@ -325,7 +342,6 @@ class UserProvider with ChangeNotifier {
         debugPrint('[UserProvider] Error saving to Firestore: $e');
       }
 
-      // 2. Đẩy thông tin lên Realtime Database luôn để đảm bảo đồng bộ
       try {
         final rtdbData = Map<String, dynamic>.from(data)
           ..addAll({
@@ -378,9 +394,123 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  // --- Quản lý Phiên Đăng nhập & Thiết bị ---
+
+  /// Cập nhật thông tin phiên làm việc hiện tại của thiết bị lên Firestore
+  Future<void> updateCurrentDeviceSession(String uid) async {
+    final prefs = await SharedPreferences.getInstance();
+    String? sessionId = prefs.getString('device_session_id');
+    
+    // Generate a simple unique ID if not exists
+    if (sessionId == null) {
+      sessionId = DateTime.now().millisecondsSinceEpoch.toString() + '_' + 
+                 (1000 + (DateTime.now().microsecond % 9000)).toString();
+      await prefs.setString('device_session_id', sessionId);
+    }
+    _currentDeviceId = sessionId;
+
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    String deviceName = 'Thiết bị không xác định';
+    String deviceType = 'Unknown';
+    String osVersion = '';
+
+    if (kIsWeb) {
+      final webInfo = await deviceInfo.webBrowserInfo;
+      final browserName = webInfo.browserName.toString().split('.').last.toUpperCase();
+      deviceName = 'Trình duyệt $browserName';
+      deviceType = 'Web';
+      osVersion = webInfo.platform ?? 'Web';
+    } else if (Platform.isAndroid) {
+      final androidInfo = await deviceInfo.androidInfo;
+      deviceName = '${androidInfo.manufacturer} ${androidInfo.model}';
+      deviceType = 'Android';
+      osVersion = androidInfo.version.release;
+    } else if (Platform.isIOS) {
+      final iosInfo = await deviceInfo.iosInfo;
+      deviceName = iosInfo.name;
+      deviceType = 'iOS';
+      osVersion = iosInfo.systemVersion;
+    } else if (Platform.isWindows) {
+      final winInfo = await deviceInfo.windowsInfo;
+      deviceName = winInfo.computerName;
+      deviceType = 'Windows';
+      osVersion = winInfo.releaseId;
+    }
+
+    final session = DeviceSessionModel(
+      id: sessionId,
+      deviceName: deviceName,
+      deviceType: deviceType,
+      osVersion: osVersion,
+      lastActive: DateTime.now(),
+    );
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('sessions')
+          .doc(sessionId)
+          .set(session.toMap());
+    } catch (e) {
+      debugPrint('[UserProvider] Error updating device session: $e');
+    }
+  }
+
+  /// Bắt đầu lắng nghe thay đổi danh sách thiết bị từ Firestore (Hỗ trợ logout từ xa)
+  void _startSessionsListener(String uid) {
+    _sessionsSubscription?.cancel();
+    _sessionsSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('sessions')
+        .orderBy('lastActive', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      _deviceSessions = snapshot.docs.map((doc) {
+        return DeviceSessionModel.fromMap(
+          doc.data() as Map<String, dynamic>,
+          doc.id,
+          currentDeviceId: _currentDeviceId,
+        );
+      }).toList();
+      notifyListeners();
+
+      // Logic: If current session is missing from Firestore, it means it was revoked
+      // Only sign out if we have some sessions and the current one is not among them
+      if (_currentDeviceId != null &&
+          _deviceSessions.isNotEmpty &&
+          !isCleaningUpGuest && // Avoid race conditions during explicit logout
+          !_deviceSessions.any((s) => s.id == _currentDeviceId)) {
+        debugPrint('[UserProvider] Current session revoked. Logging out...');
+        FirebaseAuth.instance.signOut();
+      }
+    }, onError: (error) {
+      debugPrint('[UserProvider] Error in sessions listener: $error');
+    });
+  }
+
   static bool isCleaningUpGuest = false;
 
-  /// 7. Gọi hàm này khi khởi động app hoặc khi đăng xuất để xóa sạch dữ liệu Khách (xóa User Auth + Data Firebase)
+  /// Dọn dẹp tài khoản Khách: xóa dữ liệu trên Firebase và xóa User Auth nếu là khách
+
+  Future<void> removeDeviceSession(String sessionId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('sessions')
+          .doc(sessionId)
+          .delete();
+      debugPrint('[UserProvider] Successfully removed session: $sessionId');
+    } catch (e) {
+      debugPrint('[UserProvider] Error removing session: $e');
+    }
+  }
+
   static Future<void> cleanupGuestIfAny([User? currentUser]) async {
     isCleaningUpGuest = true;
     try {
@@ -440,9 +570,10 @@ class UserProvider with ChangeNotifier {
             debugPrint(
               '[UserProvider] User document DOES NOT exist or was DELETED from Firestore. Ensuring it exists...',
             );
-            // Thay vì đăng xuất, ta tự động tạo lại/đồng bộ lại thông tin từ Auth
             syncToFirebase();
           }
+        }, onError: (error) {
+          debugPrint('[UserProvider] Error in user document listener: $error');
         });
   }
 
@@ -450,6 +581,7 @@ class UserProvider with ChangeNotifier {
   @override
   void dispose() {
     _userDocSubscription?.cancel();
+    _sessionsSubscription?.cancel();
     super.dispose();
   }
 }

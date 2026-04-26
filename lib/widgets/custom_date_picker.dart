@@ -1,3 +1,5 @@
+﻿// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -126,7 +128,7 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
                   child: Text(
                     'Hủy',
                     style: TextStyle(
-                      color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+                      color: themeProvider.foregroundColor.withOpacity(0.6),
                     ),
                   ),
                 ),
@@ -172,7 +174,7 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
         Text(
           title,
           style: TextStyle(
-            color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+            color: themeProvider.foregroundColor.withOpacity(0.6),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -200,7 +202,7 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
                 ),
                   Icon(
                     Icons.calendar_today_rounded,
-                    color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                    color: themeProvider.foregroundColor.withOpacity(0.5),
                     size: 16,
                   ),
               ],

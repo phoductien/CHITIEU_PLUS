@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
+import '../providers/user_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/bank_service.dart'; // Import service ngân hàng mới
 import 'ocr_scan_screen.dart';
@@ -28,7 +29,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   final BankService _bankService = BankService(); // Khởi tạo service ngân hàng
 
   // Danh sách các ngân hàng phổ biến được hiển thị ưu tiên.
-  // Logo sử dụng assets địa phương nếu có, ngược lại dùng fallback từ VietQR.
+  // Logo sử dụng assets địa phương nếu có, ngược lại dùng fallback mặc định.
   final List<Map<String, dynamic>> _popularBanks = [
     {
       'name': 'Vietcombank',
@@ -340,7 +341,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đã dán từ clipboard'),
+            content: Text('Đã dán từ clipboard'),
             duration: Duration(seconds: 1),
           ),
         );
@@ -428,6 +429,47 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
     }
   }
 
+  Future<void> _handleCccdOcr() async {
+    const customPrompt = '''
+      Hãy đóng vai một chuyên gia định danh. Tôi sẽ gửi cho bạn ảnh chụp mặt trước của thẻ Căn cước công dân (CCCD).
+      Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
+      - idNumber: Số căn cước công dân (12 chữ số).
+      - fullName: Họ và tên (viết hoa, có dấu).
+      - birthDate: Ngày tháng năm sinh.
+
+      Chỉ trả về JSON, không giải thích gì thêm.
+      ''';
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const OcrScanScreen(customPrompt: customPrompt),
+      ),
+    );
+
+    if (result != null && result is String) {
+      try {
+        final Map<String, dynamic> data = jsonDecode(result);
+        setState(() {
+          if (data['idNumber'] != null) {
+            _idCardController.text = data['idNumber'].toString();
+          }
+          if (data['fullName'] != null) {
+            // Chuẩn hóa tên cho ngân hàng (viết hoa không dấu)
+            _accountHolderController.text = _bankService.removeVietnameseTones(data['fullName'].toString()).toUpperCase();
+          }
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã nhận diện thông tin CCCD')),
+          );
+        }
+      } catch (e) {
+        debugPrint('CCCD OCR Parse error: $e');
+      }
+    }
+  }
+
   void _handleContinue() {
     setState(() {
       _isFormMode = true;
@@ -450,7 +492,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
       return;
     }
 
-    // BƯỚC 2: Bật trạng thái Loading để người dùng chờ
+    // BƯỚC 2: Bật trạng thái Loading để người dùng chờ 
     setState(() {
       _isVerifying = true;
     });
@@ -472,8 +514,17 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
 
         if (result['success']) {
           // BƯỚC 5A: XÁC THỰC THÀNH CÔNG
-          // Hiển thị Dialog thông báo và tên chủ tài khoản đã được chuẩn hóa từ Ngân hàng.
-          _showSuccessDialog(result['accountName']);
+          
+          // Cập nhật thông tin vào UserProvider để hiển thị lên ví chính
+          final bankName = _selectedBank!['shortName'] ?? _selectedBank!['name'];
+          final displayInfo = '$bankName - ${_accountNumberController.text}';
+          
+          if (mounted) {
+            await context.read<UserProvider>().addBankAccount(displayInfo);
+            
+            // Hiển thị Dialog thông báo và tên chủ tài khoản đã được chuẩn hóa từ Ngân hàng.
+            _showSuccessDialog(result['accountName'], displayInfo);
+          }
         } else {
           // BƯỚC 5B: XÁC THỰC THẤT BẠI
           // Hiển thị lỗi từ Ngân hàng trả về (ví dụ: Sai số TK, Sai tên chủ TK...)
@@ -500,7 +551,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   }
 
 
-  void _showSuccessDialog(String accountName) {
+  void _showSuccessDialog(String accountName, String bankInfo) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -513,9 +564,35 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
             Text('Thành công', style: TextStyle(color: Colors.white)),
           ],
         ),
-        content: Text(
-          'Đã xác thực tài khoản: $accountName\nLiên kết ngân hàng thành công!',
-          style: const TextStyle(color: Colors.white70),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Đã xác thực tài khoản:',
+              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              accountName,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Thông tin ngân hàng:',
+              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              bankInfo,
+              style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Liên kết ngân hàng thành công! Tài khoản này đã được đặt làm ví chính của bạn.',
+              style: TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -523,7 +600,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
               Navigator.pop(context); // Đóng dialog
               Navigator.pop(context); // Quay lại màn hình chính
             },
-            child: const Text('Đóng', style: TextStyle(color: Color(0xFFFF6D00))),
+            child: const Text('Tuyệt vời', style: TextStyle(color: Color(0xFFFF6D00), fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -625,7 +702,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                       border: Border.all(color: Colors.white10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withOpacity(0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -664,7 +741,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                         BoxShadow(
                           color: const Color(
                             0xFF2DD4BF,
-                          ).withValues(alpha: 0.3),
+                          ).withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -810,7 +887,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                 Text(
                   'Ngân hàng liên kết tài khoản',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: Colors.white.withOpacity(0.5),
                     fontSize: 14,
                   ),
                 ),
@@ -826,9 +903,9 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: themeProvider.secondaryColor.withValues(alpha: 0.3),
+                color: themeProvider.secondaryColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -846,7 +923,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                     'Số điện thoại đăng ký ví phải trùng với số điện thoại đăng ký tại ngân hàng.',
                   ),
                   _buildConditionItem(
-                    'Thông tin họ tên, CCCD phải trùng với thông tin đăng ký tại ngân hàng.',
+                    'Thông tin Họ tên, CCCD phải trùng với thông tin đăng ký tại ngân hàng.',
                   ),
                   _buildConditionItem(
                     'Tài khoản này không liên kết với ví ChiTieuPlus khác.',
@@ -856,7 +933,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent.withValues(alpha: 0.1),
+                      color: Colors.blueAccent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -871,7 +948,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                           child: Text(
                             'Gợi ý: Nếu không nhớ số tài khoản, có thể tra cứu bằng tin nhắn SMS của ngân hàng gửi về số điện thoại của mình.',
                             style: TextStyle(
-                              color: Colors.blueAccent.withValues(alpha: 0.8),
+                              color: Colors.blueAccent.withOpacity(0.8),
                               fontSize: 12,
                               height: 1.4,
                             ),
@@ -902,7 +979,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 8,
-                  shadowColor: const Color(0xFFFF6D00).withValues(alpha: 0.4),
+                  shadowColor: const Color(0xFFFF6D00).withOpacity(0.4),
                 ),
                 child: const Text(
                   'Tiếp tục',
@@ -932,9 +1009,9 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: themeProvider.secondaryColor.withValues(alpha: 0.3),
+                color: themeProvider.secondaryColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -974,16 +1051,21 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                     'SỐ CCCD',
                     'Nhập 12 số CCCD',
                     _idCardController,
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF2DD4BF)),
+                      onPressed: _handleCccdOcr,
+                      tooltip: 'Quét CCCD',
+                    ),
                   ),
                   const SizedBox(height: 30),
                   // Note Box
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF6D00).withValues(alpha: 0.1),
+                      color: const Color(0xFFFF6D00).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFFFF6D00).withValues(alpha: 0.2),
+                        color: const Color(0xFFFF6D00).withOpacity(0.2),
                       ),
                     ),
                     child: const Row(
@@ -1065,7 +1147,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: const Row(
@@ -1107,7 +1189,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF6D00).withValues(alpha: 0.3),
+                    color: const Color(0xFFFF6D00).withOpacity(0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -1151,8 +1233,9 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   Widget _buildFormInput(
     String label,
     String hint,
-    TextEditingController controller,
-  ) {
+    TextEditingController controller, {
+    Widget? suffixIcon,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1168,9 +1251,9 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
           ),
           child: TextField(
             controller: controller,
@@ -1183,6 +1266,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                 vertical: 18,
               ),
               border: InputBorder.none,
+              suffixIcon: suffixIcon,
             ),
           ),
         ),
@@ -1199,7 +1283,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF2DD4BF).withValues(alpha: 0.1),
+              color: const Color(0xFF2DD4BF).withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
@@ -1318,13 +1402,13 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
     return Container(
       decoration: BoxDecoration(
         color: isSelected
-            ? const Color(0xFFFF6D00).withValues(alpha: 0.15)
-            : themeProvider.secondaryColor.withValues(alpha: 0.3),
+            ? const Color(0xFFFF6D00).withOpacity(0.15)
+            : themeProvider.secondaryColor.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
-              ? const Color(0xFFFF6D00).withValues(alpha: 0.5)
-              : Colors.white.withValues(alpha: 0.05),
+              ? const Color(0xFFFF6D00).withOpacity(0.5)
+              : Colors.white.withOpacity(0.05),
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -1337,7 +1421,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
             });
           },
           splashColor: Colors.transparent,
-          highlightColor: Colors.white.withValues(alpha: 0.05),
+          highlightColor: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -1356,7 +1440,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                         : BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: bank['color'].withValues(alpha: 0.15),
+                        color: bank['color'].withOpacity(0.15),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
@@ -1417,8 +1501,8 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            themeProvider.secondaryColor.withValues(alpha: 0.3),
-            themeProvider.secondaryColor.withValues(alpha: 0.1),
+            themeProvider.secondaryColor.withOpacity(0.3),
+            themeProvider.secondaryColor.withOpacity(0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -1429,7 +1513,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
         child: InkWell(
           onTap: _showAllBanks,
           splashColor: Colors.transparent,
-          highlightColor: Colors.cyanAccent.withValues(alpha: 0.1),
+          highlightColor: Colors.cyanAccent.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1483,9 +1567,9 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: themeProvider.secondaryColor.withValues(alpha: 0.3),
+            color: themeProvider.secondaryColor.withOpacity(0.3),
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
@@ -1493,7 +1577,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
               vertical: 4,
             ),
             leading: CircleAvatar(
-              backgroundColor: const Color(0xFFFF6D00).withValues(alpha: 0.1),
+              backgroundColor: const Color(0xFFFF6D00).withOpacity(0.1),
               child: Text(
                 recipient['name']![0],
                 style: const TextStyle(
@@ -1574,7 +1658,7 @@ class _AllBanksBottomSheetState extends State<_AllBanksBottomSheet> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: 20,
             spreadRadius: 5,
           ),
@@ -1618,7 +1702,7 @@ class _AllBanksBottomSheetState extends State<_AllBanksBottomSheet> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: TextField(
@@ -1644,10 +1728,10 @@ class _AllBanksBottomSheetState extends State<_AllBanksBottomSheet> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.03),
+                    color: Colors.white.withOpacity(0.03),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: Colors.white.withOpacity(0.05),
                     ),
                   ),
                   child: ListTile(
@@ -1708,7 +1792,7 @@ class _AllBanksBottomSheetState extends State<_AllBanksBottomSheet> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: themeProvider.secondaryColor.withValues(alpha: 0.1),
+              color: themeProvider.secondaryColor.withOpacity(0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: const Row(
@@ -1740,3 +1824,4 @@ class _AllBanksBottomSheetState extends State<_AllBanksBottomSheet> {
     );
   }
 }
+

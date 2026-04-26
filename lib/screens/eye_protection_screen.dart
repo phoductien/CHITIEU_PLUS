@@ -181,7 +181,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
                                   'Tất cả màu',
                                   style: TextStyle(
                                     color: themeProvider.foregroundColor
-                                        .withValues(alpha: 0.5),
+                                        .withOpacity(0.5),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -230,7 +230,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
       child: Text(
         title,
         style: TextStyle(
-          color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+          color: themeProvider.foregroundColor.withOpacity(0.6),
           fontSize: 14,
         ),
       ),
@@ -243,7 +243,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+        color: themeProvider.secondaryColor.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: child,
@@ -275,7 +275,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
             activeThumbColor: const Color(
               0xFF8C9EFF,
             ), // Soft blue for active switch matching screenshot
-            activeTrackColor: const Color(0xFF8C9EFF).withValues(alpha: 0.3),
+            activeTrackColor: const Color(0xFF8C9EFF).withOpacity(0.3),
             inactiveThumbColor: themeProvider.foregroundColor.withValues(
               alpha: 0.4,
             ),
@@ -316,7 +316,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                    color: themeProvider.foregroundColor.withOpacity(0.5),
                     fontSize: 13,
                   ),
                 ),
@@ -329,7 +329,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
             activeThumbColor: const Color(
               0xFFE6B48F,
             ), // Peach/orange-ish thumb matching screenshot
-            activeTrackColor: const Color(0xFFE6B48F).withValues(alpha: 0.3),
+            activeTrackColor: const Color(0xFFE6B48F).withOpacity(0.3),
             inactiveThumbColor: themeProvider.foregroundColor.withValues(
               alpha: 0.4,
             ),
@@ -360,7 +360,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
               icon,
               color: isSelected
                   ? const Color(0xFF8C9EFF)
-                  : themeProvider.foregroundColor.withValues(alpha: 0.5),
+                  : themeProvider.foregroundColor.withOpacity(0.5),
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -420,7 +420,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
             children: [
               Icon(
                 icon,
-                color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                color: themeProvider.foregroundColor.withOpacity(0.5),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -455,7 +455,7 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
                   enabledThumbRadius: 14,
                   elevation: 2,
                 ),
-                overlayColor: Colors.white.withValues(alpha: 0.2),
+                overlayColor: Colors.white.withOpacity(0.2),
               ),
               child: Slider(value: value, onChanged: onChanged),
             ),
@@ -465,3 +465,4 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
     );
   }
 }
+

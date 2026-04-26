@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:chitieu_plus/firebase_options.dart';
@@ -133,12 +133,12 @@ class _MyAppState extends State<MyApp> {
             // Skip deletion, let the user continue to HomeScreen.
           } else {
             debugPrint(
-              '[DEBUG] main.dart: Ký tự khách cũ còn sót lại từ phiên trước. Tiến hành xóa...',
+              '[DEBUG] main.dart: Ký tự khách còn sót lại từ phiên trước. Tiến hành xóa...',
             );
             UserProvider.cleanupGuestIfAny();
             // cleanupGuestIfAny sẽ gọi account.delete() hoặc signOut(),
             // từ đó kích hoạt một sự kiện authStateChanges(null) mới.
-            // Ta không điều hướng vòng HomeScreen cho khách ma này.
+            // Ta không điều hướng vòng HomeScreen cho khách hàng này.
             _isInitialCheck = false;
             return;
           }
@@ -290,3 +290,4 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+

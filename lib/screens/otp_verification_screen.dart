@@ -92,7 +92,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Đã gửi lại mã OTP mới')));
+      ).showSnackBar(const SnackBar(content: Text('Đã gửi lại mã OTP mới')));
     }
   }
 
@@ -103,7 +103,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
 
     if (value.length > 1) {
-      // Xử lý paste
+      // XỬ lý paste
       String pastedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
       if (pastedValue.isNotEmpty) {
         for (int i = 0; i < 6; i++) {
@@ -255,7 +255,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -280,7 +280,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -307,7 +307,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   Text(
                     'Bạn chưa nhận được mã?',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: Colors.white.withOpacity(0.5),
                       fontSize: 14,
                     ),
                   ),
@@ -319,7 +319,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                       style: TextStyle(
                         color: _canResend
                             ? const Color(0xFFF05D15)
-                            : const Color(0xFFF05D15).withValues(alpha: 0.5),
+                            : const Color(0xFFF05D15).withOpacity(0.5),
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         decoration: TextDecoration.underline,
@@ -335,7 +335,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                       backgroundColor: const Color(0xFFF05D15),
                       disabledBackgroundColor: const Color(
                         0xFFF05D15,
-                      ).withValues(alpha: 0.5),
+                      ).withOpacity(0.5),
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -372,14 +372,14 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       width: 45,
       height: 56,
       decoration: BoxDecoration(
-        color: const Color(0xFF0D3B66).withValues(alpha: 0.5),
+        color: const Color(0xFF0D3B66).withOpacity(0.5),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: _isError
               ? Colors.redAccent
               : (_focusNodes[index].hasFocus
                     ? const Color(0xFFF05D15)
-                    : Colors.white.withValues(alpha: 0.2)),
+                    : Colors.white.withOpacity(0.2)),
           width: 2,
         ),
       ),
@@ -406,3 +406,4 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     );
   }
 }
+

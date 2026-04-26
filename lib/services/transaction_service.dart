@@ -7,7 +7,10 @@ import '../models/transaction_model.dart';
 import 'local_storage_service.dart';
 import 'realtime_db_service.dart';
 
+import 'bank_service.dart';
+
 class TransactionService {
+  final BankService _bankService = BankService();
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final LocalStorageService _local = LocalStorageService();
@@ -15,7 +18,10 @@ class TransactionService {
 
   String? get _userId => _auth.currentUser?.uid;
 
-  CollectionReference get _transactionsRef => _db.collection('transactions');
+  CollectionReference get _transactionsRef {
+    if (_userId == null) return _db.collection('transactions');
+    return _db.collection('users').doc(_userId).collection('transactions');
+  }
 
   Future<void> addTransaction(TransactionModel transaction) async {
     if (_userId == null) return;
@@ -46,7 +52,6 @@ class TransactionService {
 
     // UI will listen to Firestore for real-time updates without reload
     return _transactionsRef
-        .where('userId', isEqualTo: _userId)
         .orderBy('isPinned', descending: true)
         .orderBy('date', descending: true)
         .snapshots()
@@ -120,9 +125,7 @@ class TransactionService {
     if (_userId == null) throw Exception('Vui lòng đăng nhập để xuất dữ liệu.');
 
     // 1. Fetch all from Firestore
-    final snapshot = await _transactionsRef
-        .where('userId', isEqualTo: _userId)
-        .get();
+    final snapshot = await _transactionsRef.get();
 
     final transactions = snapshot.docs.map((doc) {
       return TransactionModel.fromMap(
@@ -145,7 +148,7 @@ class TransactionService {
             String category = t.category.replaceAll('"', '""');
             String dateStr = t.date.toIso8601String();
             String typeStr = t.type == TransactionType.income
-                ? 'Thu thập'
+                ? 'Thu nhập'
                 : 'Chi tiêu';
             buffer.writeln(
               '"${t.id}","$title",${t.amount},"$typeStr","$category","$dateStr","${t.wallet}","$note"',
@@ -187,9 +190,7 @@ class TransactionService {
     if (_userId == null) return;
 
     // 1. Get all transaction IDs from Firestore
-    final snapshot = await _transactionsRef
-        .where('userId', isEqualTo: _userId)
-        .get();
+    final snapshot = await _transactionsRef.get();
 
     if (snapshot.docs.isEmpty) return;
 
@@ -213,9 +214,7 @@ class TransactionService {
     if (_userId == null) return;
 
     // 1. Fetch ALL transactions from Firestore for this user
-    final snapshot = await _transactionsRef
-        .where('userId', isEqualTo: _userId)
-        .get();
+    final snapshot = await _transactionsRef.get();
 
     final firestoreTransactions = snapshot.docs.map((doc) {
       return TransactionModel.fromMap(
@@ -229,6 +228,59 @@ class TransactionService {
     debugPrint(
       '[TransactionService] Re-sync from Firestore completed. Count: ${firestoreTransactions.length}',
     );
+  }
+
+  /// Fetches transactions from SePay and saves new ones to Firestore
+  Future<void> syncWithSePay() async {
+    if (_userId == null) return;
+
+    try {
+      final sepayTransactions = await _bankService.fetchTransactions();
+      if (sepayTransactions.isEmpty) return;
+
+      for (var st in sepayTransactions) {
+        // SePay transaction ID as unique identifier
+        final String sepayId = 'sepay_${st['id']}';
+        
+        // Check if transaction already exists in Firestore
+        final doc = await _transactionsRef.doc(sepayId).get();
+        if (doc.exists) continue;
+
+        // Safe parsing for amountIn and amountOut (SePay might return strings)
+        double parseAmount(dynamic value) {
+          if (value == null) return 0.0;
+          if (value is num) return value.toDouble();
+          return double.tryParse(value.toString()) ?? 0.0;
+        }
+
+        final double amountIn = parseAmount(st['amount_in']);
+        final double amountOut = parseAmount(st['amount_out']);
+        final double amount = amountIn > 0 ? amountIn : amountOut;
+        final TransactionType type = amountIn > 0 ? TransactionType.income : TransactionType.expense;
+
+        final tx = TransactionModel(
+          id: sepayId,
+          userId: _userId!,
+          title: st['transaction_content'] ?? 'Giao dịch ngân hàng',
+          amount: amount,
+          category: 'Ngân hàng',
+          date: DateTime.tryParse(st['transaction_date'] ?? '') ?? DateTime.now(),
+          type: type,
+          note: 'Từ: ${st['bank_brand_name']} (${st['account_number']})',
+          wallet: 'main',
+          aiMetadata: {
+            'bank_brand_name': st['bank_brand_name'],
+            'account_number': st['account_number'],
+          },
+        );
+
+        // Save to Firestore
+        await _transactionsRef.doc(sepayId).set(tx.toMap());
+      }
+    } catch (e) {
+      debugPrint('[TransactionService] SePay Sync Error: $e');
+      rethrow;
+    }
   }
 
   Future<String> exportAllToSqlite() async {

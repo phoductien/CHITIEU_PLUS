@@ -19,6 +19,8 @@ import 'package:chitieu_plus/screens/add_transaction_screen.dart';
 import 'package:chitieu_plus/providers/saving_goal_provider.dart';
 import 'package:chitieu_plus/widgets/saving_goal_card.dart';
 import 'package:chitieu_plus/screens/saving_goals_list_screen.dart';
+import 'package:chitieu_plus/screens/balance_adjustment_screen.dart';
+
 
 class HomeTab extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -210,7 +212,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                               decoration: BoxDecoration(
                                 color: const Color(
                                   0xFFEC5B13,
-                                ).withValues(alpha: 0.1),
+                                ).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -326,11 +328,11 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                     ),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withOpacity(0.1),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.4),
+                        color: Colors.black.withOpacity(0.4),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -349,7 +351,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                const Color(0xFFEC5B13).withValues(alpha: 0.2),
+                                const Color(0xFFEC5B13).withOpacity(0.2),
                                 Colors.transparent,
                               ],
                             ),
@@ -364,24 +366,54 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                             children: [
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.account_balance_wallet_rounded,
-                                    color: const Color(0xFFEC5B13),
-                                    size: 20,
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: userProvider.bankAccounts.isNotEmpty 
+                                        ? Colors.green.withOpacity(0.1)
+                                        : const Color(0xFFEC5B13).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Icon(
+                                      userProvider.bankAccounts.isNotEmpty 
+                                        ? Icons.account_balance_rounded
+                                        : Icons.account_balance_wallet_rounded,
+                                      color: userProvider.bankAccounts.isNotEmpty 
+                                        ? Colors.greenAccent
+                                        : const Color(0xFFEC5B13),
+                                      size: 16,
+                                    ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    userProvider.bankAccounts.isNotEmpty
-                                        ? userProvider.bankAccounts.first
-                                        : (userProvider.isGuest
-                                            ? languageProvider.translate('wallet_demo')
-                                            : languageProvider.translate('wallet_main')),
-                                    style: TextStyle(
-                                      color: themeProvider.foregroundColor
-                                          .withValues(alpha: 0.7),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        userProvider.bankAccounts.isNotEmpty
+                                            ? 'TÀI KHOẢN LIÊN KẾT'
+                                            : (userProvider.isGuest
+                                                ? languageProvider.translate('wallet_demo')
+                                                : languageProvider.translate('wallet_main')),
+                                        style: TextStyle(
+                                          color: themeProvider.foregroundColor
+                                              .withOpacity(0.4),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      Text(
+                                        userProvider.bankAccounts.isNotEmpty
+                                            ? userProvider.bankAccounts.first
+                                            : 'Ví chính',
+                                        style: TextStyle(
+                                          color: themeProvider.foregroundColor
+                                              .withOpacity(0.9),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -430,7 +462,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                           ),
                                           style: TextStyle(
                                             color: themeProvider.foregroundColor
-                                                .withValues(alpha: 0.35),
+                                                .withOpacity(0.35),
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -441,7 +473,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                           child: Icon(
                                             Icons.sync_rounded,
                                             color: themeProvider.foregroundColor
-                                                .withValues(alpha: 0.5),
+                                                .withOpacity(0.5),
                                             size: 20,
                                           ),
                                         ),
@@ -459,7 +491,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                           ? Icons.visibility_outlined
                                           : Icons.visibility_off_outlined,
                                       color: themeProvider.foregroundColor
-                                          .withValues(alpha: 0.5),
+                                          .withOpacity(0.5),
                                       size: 20,
                                     ),
                                   ),
@@ -467,7 +499,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                   Icon(
                                     Icons.more_horiz_rounded,
                                     color: themeProvider.foregroundColor
-                                        .withValues(alpha: 0.5),
+                                        .withOpacity(0.5),
                                   ),
                                 ],
                               ),
@@ -524,50 +556,26 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                 child: _buildActionChip(
                                   icon: Icons.history_rounded,
                                   label: 'Lịch sử',
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: Colors.white.withOpacity(0.2),
                                 ),
                               ),
-                              if (userProvider.bankAccounts.isEmpty) ...[
-                                const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: () async {
-                                    final navigator = Navigator.of(context);
-                                    final messenger = ScaffoldMessenger.of(context);
-                                    final txProvider = context.read<TransactionProvider>();
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        backgroundColor: themeProvider.secondaryColor,
-                                        title: Text('Xóa số dư?', style: TextStyle(color: themeProvider.foregroundColor)),
-                                        content: Text(
-                                          'Toàn bộ giao dịch giả lập và tiền nạp dùng thử sẽ bị xóa sạch để làm lại từ đầu.',
-                                          style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7)),
-                                        ),
-                                        actions: [
-                                          TextButton(onPressed: () => navigator.pop(false), child: const Text('Hủy')),
-                                          TextButton(onPressed: () => navigator.pop(true), child: const Text('Xóa', style: TextStyle(color: Colors.redAccent))),
-                                        ],
-                                      ),
-                                    );
-                                    if (confirm == true && mounted) {
-                                      final demoIds = txProvider.transactions.where((tx) => tx.note == 'Nạp qua Ví dùng thử' || tx.wallet == 'demo').map((tx) => tx.id).toList();
-                                      if (demoIds.isNotEmpty) {
-                                        await txProvider.deleteTransactions(demoIds);
-                                        if (mounted) {
-                                          messenger.showSnackBar(const SnackBar(content: Text('Đã xóa số dư ví dùng thử')));
-                                        }
-                                      }
-                                    }
-                                  },
-                                  child: _buildActionChip(
-                                    icon: Icons.delete_sweep_rounded,
-                                    label: 'Xóa số dư',
-                                    color: Colors.redAccent.withValues(alpha: 0.8),
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const BalanceAdjustmentScreen(),
                                   ),
                                 ),
-                              ],
+                                child: _buildActionChip(
+                                  icon: Icons.edit_note_rounded,
+                                  label: 'Cập nhật',
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                              ),
                             ],
                           ),
+
                         ],
                       ),
                     ],
@@ -629,7 +637,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+                color: themeProvider.secondaryColor.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -670,7 +678,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
           height: 48,
           width: 48,
           decoration: BoxDecoration(
-            color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+            color: themeProvider.secondaryColor.withOpacity(0.5),
             shape: BoxShape.circle,
             border: Border.all(color: themeProvider.borderColor),
           ),
@@ -767,17 +775,17 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   decoration: BoxDecoration(
-                    color: themeProvider.secondaryColor.withValues(alpha: 0.3),
+                    color: themeProvider.secondaryColor.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: themeProvider.borderColor, style: BorderStyle.solid),
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.add_task_rounded, color: themeProvider.foregroundColor.withValues(alpha: 0.3), size: 32),
+                      Icon(Icons.add_task_rounded, color: themeProvider.foregroundColor.withOpacity(0.3), size: 32),
                       const SizedBox(height: 12),
                       Text(
                         'Chưa có mục tiêu. Nhấn để tạo mới!',
-                        style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.5), fontSize: 13),
+                        style: TextStyle(color: themeProvider.foregroundColor.withOpacity(0.5), fontSize: 13),
                       ),
                     ],
                   ),
@@ -827,7 +835,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: themeProvider.secondaryColor.withValues(alpha: 0.3),
+        color: themeProvider.secondaryColor.withOpacity(0.3),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: themeProvider.borderColor),
       ),
@@ -853,7 +861,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEC5B13).withValues(alpha: 0.1),
+                    color: const Color(0xFFEC5B13).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -922,7 +930,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                               showTitle: false,
                             ),
                             PieChartSectionData(
-                              color: Colors.green.withValues(alpha: 0.2),
+                              color: Colors.green.withOpacity(0.2),
                               value: (1 - expensePercent) * 100,
                               radius: 8,
                               showTitle: false,
@@ -983,7 +991,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
             Text(
               label,
               style: TextStyle(
-                color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+                color: themeProvider.foregroundColor.withOpacity(0.6),
                 fontSize: 12,
               ),
             ),
@@ -1013,7 +1021,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 40),
           decoration: BoxDecoration(
-            color: themeProvider.secondaryColor.withValues(alpha: 0.4),
+            color: themeProvider.secondaryColor.withOpacity(0.4),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: themeProvider.borderColor),
           ),
@@ -1022,13 +1030,13 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
               Icon(
                 Icons.inbox_rounded,
                 size: 48,
-                color: themeProvider.foregroundColor.withValues(alpha: 0.2),
+                color: themeProvider.foregroundColor.withOpacity(0.2),
               ),
               const SizedBox(height: 16),
               Text(
                 'Không có dữ liệu',
                 style: TextStyle(
-                  color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                  color: themeProvider.foregroundColor.withOpacity(0.5),
                   fontSize: 14,
                 ),
               ),
@@ -1052,10 +1060,10 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: themeProvider.secondaryColor.withValues(alpha: 0.2),
+              color: themeProvider.secondaryColor.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: themeProvider.borderColor.withValues(alpha: 0.5),
+                color: themeProvider.borderColor.withOpacity(0.5),
               ),
             ),
             child: Row(
@@ -1064,7 +1072,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: (isIncome ? Colors.green : const Color(0xFFEC5B13))
-                        .withValues(alpha: 0.1),
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
@@ -1138,3 +1146,4 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 }
 
 // --- TAB 2: GIAO DỊCH ---
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/saving_goal_model.dart';
 
@@ -25,10 +25,10 @@ class SavingGoalCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: color.withValues(alpha: 0.2),
+            color: color.withOpacity(0.2),
             width: 1.5,
           ),
         ),
@@ -102,7 +102,7 @@ class SavingGoalCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: goal.progress,
                 minHeight: 8,
-                backgroundColor: color.withValues(alpha: 0.1),
+                backgroundColor: color.withOpacity(0.1),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),

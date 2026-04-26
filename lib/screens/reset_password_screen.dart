@@ -166,7 +166,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF05D15).withValues(alpha: 0.15),
+                      color: const Color(0xFFF05D15).withOpacity(0.15),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: const Icon(
@@ -191,7 +191,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -203,11 +203,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       vertical: 32,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF031A33).withValues(alpha: 0.6),
+                      color: const Color(0xFF031A33).withOpacity(0.6),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
-                      ),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +261,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       backgroundColor: const Color(0xFFF05D15),
                       disabledBackgroundColor: const Color(
                         0xFFF05D15,
-                      ).withValues(alpha: 0.5),
+                      ).withOpacity(0.5),
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -294,7 +292,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     child: Text(
                       '← Quay lại đăng nhập',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: Colors.white.withOpacity(0.5),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -331,9 +329,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0D3B66).withValues(alpha: 0.5),
+        color: const Color(0xFF0D3B66).withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: TextField(
         controller: controller,
@@ -341,16 +339,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2)),
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
           prefixIcon: Icon(
             icon,
-            color: Colors.white.withValues(alpha: 0.4),
+            color: Colors.white.withOpacity(0.4),
             size: 18,
           ),
           suffixIcon: IconButton(
             icon: Icon(
               toggleIcon,
-              color: Colors.white.withValues(alpha: 0.4),
+              color: Colors.white.withOpacity(0.4),
               size: 18,
             ),
             onPressed: onToggle,
@@ -367,14 +365,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       children: [
         Icon(
           isValid ? Icons.check_circle : Icons.circle_outlined,
-          color: isValid ? Colors.green : Colors.white.withValues(alpha: 0.2),
+          color: isValid ? Colors.green : Colors.white.withOpacity(0.2),
           size: 16,
         ),
         const SizedBox(width: 12),
         Text(
           text,
           style: TextStyle(
-            color: isValid ? Colors.white : Colors.white.withValues(alpha: 0.4),
+            color: isValid ? Colors.white : Colors.white.withOpacity(0.4),
             fontSize: 13,
             fontWeight: isValid ? FontWeight.w500 : FontWeight.normal,
           ),

@@ -34,7 +34,7 @@ class ResetSuccessScreen extends StatelessWidget {
                       width: 140,
                       height: 140,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: Colors.white.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -42,7 +42,7 @@ class ResetSuccessScreen extends StatelessWidget {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.2),
+                        color: Colors.green.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -103,7 +103,7 @@ class ResetSuccessScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Colors.white.withOpacity(0.7),
                     height: 1.5,
                   ),
                 ),
@@ -151,3 +151,4 @@ class ResetSuccessScreen extends StatelessWidget {
     );
   }
 }
+

@@ -646,9 +646,9 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+              color: const Color(0xFF1E293B).withOpacity(0.5),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -732,7 +732,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                           decoration: BoxDecoration(
                             color: const Color(
                               0xFF334155,
-                            ).withValues(alpha: 0.3),
+                            ).withOpacity(0.3),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -773,7 +773,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                           decoration: BoxDecoration(
                             color: const Color(
                               0xFF334155,
-                            ).withValues(alpha: 0.3),
+                            ).withOpacity(0.3),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -813,7 +813,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF334155).withValues(alpha: 0.3),
+                    color: const Color(0xFF334155).withOpacity(0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -905,7 +905,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC5B13).withValues(alpha: 0.1),
+                      color: const Color(0xFFEC5B13).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -926,7 +926,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                      color: const Color(0xFF3B82F6).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -999,7 +999,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 8,
-          shadowColor: const Color(0xFFEC5B13).withValues(alpha: 0.5),
+          shadowColor: const Color(0xFFEC5B13).withOpacity(0.5),
         ),
         child: const Text(
           'Lưu giao dịch',
@@ -1009,3 +1009,4 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
     );
   }
 }
+

@@ -136,7 +136,7 @@ class _BudgetTabState extends State<BudgetTab> {
                                 'Đã tiêu',
                                 style: TextStyle(
                                   color: themeProvider.foregroundColor
-                                      .withValues(alpha: 0.6),
+                                      .withOpacity(0.6),
                                   fontSize: 14,
                                 ),
                               ),
@@ -181,7 +181,7 @@ class _BudgetTabState extends State<BudgetTab> {
                             child: LinearProgressIndicator(
                               value: percent,
                               backgroundColor: themeProvider.foregroundColor
-                                  .withValues(alpha: 0.1),
+                                  .withOpacity(0.1),
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 isOver
                                     ? Colors.redAccent
@@ -198,7 +198,7 @@ class _BudgetTabState extends State<BudgetTab> {
                                 'Ngân sách: đ ${NumberFormat('#,###').format(budgetLimit)}',
                                 style: TextStyle(
                                   color: themeProvider.foregroundColor
-                                      .withValues(alpha: 0.5),
+                                      .withOpacity(0.5),
                                   fontSize: 12,
                                 ),
                               ),
@@ -277,7 +277,7 @@ class _BudgetTabState extends State<BudgetTab> {
                                           : 0,
                                       backgroundColor: themeProvider
                                           .foregroundColor
-                                          .withValues(alpha: 0.1),
+                                          .withOpacity(0.1),
                                       valueColor:
                                           AlwaysStoppedAnimation<Color>(
                                             catSpent[cat]! > (userProvider.categoryBudgets[cat] ?? budgetLimit)
@@ -293,7 +293,7 @@ class _BudgetTabState extends State<BudgetTab> {
                                       child: Text(
                                         'Hạn mức: đ ${NumberFormat('#,###').format(userProvider.categoryBudgets[cat])}',
                                         style: TextStyle(
-                                          color: themeProvider.foregroundColor.withValues(alpha: 0.4),
+                                          color: themeProvider.foregroundColor.withOpacity(0.4),
                                           fontSize: 10,
                                         ),
                                       ),
@@ -343,4 +343,5 @@ class _BudgetTabState extends State<BudgetTab> {
   }
 }
 
-// --- TAB 4: BÁO CÁO ---
+// --- TAB 4: BÃO CÃO ---
+

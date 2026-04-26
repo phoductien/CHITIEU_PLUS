@@ -11,6 +11,8 @@ import 'package:chitieu_plus/screens/ai_chat_screen.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:chitieu_plus/screens/terms_and_privacy_screen.dart';
+import 'package:chitieu_plus/models/device_session_model.dart';
+import 'package:intl/intl.dart';
 
 class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
@@ -105,7 +107,7 @@ class _SettingsTabState extends State<SettingsTab> {
                                       : 'van.a@example.com',
                                   style: TextStyle(
                                     color: themeProvider.foregroundColor
-                                        .withValues(alpha: 0.6),
+                                        .withOpacity(0.6),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -136,7 +138,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         iconColor: const Color(0xFFEC5B13),
                         iconBgColor: const Color(
                           0xFFEC5B13,
-                        ).withValues(alpha: 0.2),
+                        ).withOpacity(0.2),
                         title: 'Chat với trợ lý ảo',
                         onTap: () {
                           Navigator.push(
@@ -152,7 +154,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.open_in_browser_rounded,
                         iconColor: themeProvider.foregroundColor,
-                        iconBgColor: Colors.blueAccent.withValues(alpha: 0.2),
+                        iconBgColor: Colors.blueAccent.withOpacity(0.2),
                         title: 'Mở trong trình duyệt',
                         onTap: () async {
                           final url = Uri.parse(
@@ -245,6 +247,9 @@ class _SettingsTabState extends State<SettingsTab> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  _buildSectionHeader('Quản lý thiết bị', themeProvider),
+                  _buildDeviceManagementSection(userProvider, themeProvider),
+                  const SizedBox(height: 24),
                   _buildSectionHeader('Liên hệ & Pháp lý', themeProvider),
                   _buildCard(
                     themeProvider: themeProvider,
@@ -294,7 +299,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.delete_forever_rounded,
                         iconColor: Colors.redAccent,
-                        iconBgColor: Colors.redAccent.withValues(alpha: 0.1),
+                        iconBgColor: Colors.redAccent.withOpacity(0.1),
                         title: 'Xóa tất cả dữ liệu (Firestore & RTDB)',
                         onTap: () => _deleteAllData(context),
                       ),
@@ -303,7 +308,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.logout_rounded,
                         iconColor: Colors.redAccent,
-                        iconBgColor: Colors.redAccent.withValues(alpha: 0.1),
+                        iconBgColor: Colors.redAccent.withOpacity(0.1),
                         title: 'Đăng xuất',
                         showArrow: false,
                         onTap: () async {
@@ -357,7 +362,7 @@ class _SettingsTabState extends State<SettingsTab> {
         content: Text(
           'Hành động này sẽ xóa vĩnh viễn toàn bộ giao dịch của bạn trên cả Firestore và Realtime Database. Bạn chắc chắn chứ?',
           style: TextStyle(
-            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+            color: themeProvider.foregroundColor.withOpacity(0.7),
             fontSize: 16,
           ),
         ),
@@ -367,7 +372,7 @@ class _SettingsTabState extends State<SettingsTab> {
             child: Text(
               'Hủy',
               style: TextStyle(
-                color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+                color: themeProvider.foregroundColor.withOpacity(0.7),
               ),
             ),
           ),
@@ -421,7 +426,7 @@ class _SettingsTabState extends State<SettingsTab> {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+          color: themeProvider.foregroundColor.withOpacity(0.6),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -436,7 +441,7 @@ class _SettingsTabState extends State<SettingsTab> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: themeProvider.secondaryColor.withValues(alpha: 0.4),
+        color: themeProvider.secondaryColor.withOpacity(0.4),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: themeProvider.borderColor),
       ),
@@ -495,7 +500,7 @@ class _SettingsTabState extends State<SettingsTab> {
             if (showArrow)
               Icon(
                 Icons.chevron_right_rounded,
-                color: themeProvider.foregroundColor.withValues(alpha: 0.4),
+                color: themeProvider.foregroundColor.withOpacity(0.4),
                 size: 24,
               ),
           ],
@@ -541,7 +546,7 @@ class _SettingsTabState extends State<SettingsTab> {
             value: value,
             onChanged: onChanged,
             activeThumbColor: const Color(0xFFEC5B13),
-            activeTrackColor: const Color(0xFFEC5B13).withValues(alpha: 0.5),
+            activeTrackColor: const Color(0xFFEC5B13).withOpacity(0.5),
             inactiveThumbColor: themeProvider.foregroundColor.withValues(
               alpha: 0.4,
             ),
@@ -553,4 +558,180 @@ class _SettingsTabState extends State<SettingsTab> {
       ),
     );
   }
+  Widget _buildDeviceManagementSection(
+      UserProvider userProvider, ThemeProvider themeProvider) {
+    final sessions = userProvider.deviceSessions;
+
+    if (sessions.isEmpty) {
+      return _buildCard(
+        themeProvider: themeProvider,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Center(
+              child: Text(
+                'Đang tải danh sách thiết bị...',
+                style: TextStyle(
+                  color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _buildCard(
+      themeProvider: themeProvider,
+      children: sessions.asMap().entries.map((entry) {
+        final index = entry.key;
+        final session = entry.value;
+        final isLast = index == sessions.length - 1;
+
+        return Column(
+          children: [
+            _buildDeviceItem(userProvider, themeProvider, session),
+            if (!isLast) _buildDivider(themeProvider),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDeviceItem(UserProvider userProvider,
+      ThemeProvider themeProvider, DeviceSessionModel session) {
+    final bool isCurrentDevice = session.isCurrent;
+    final String lastActiveStr =
+        DateFormat('HH:mm, dd/MM/yyyy').format(session.lastActive);
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: (isCurrentDevice ? Colors.green : themeProvider.foregroundColor)
+              .withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          session.deviceType == 'mobile'
+              ? Icons.phone_android_rounded
+              : session.deviceType == 'tablet'
+                  ? Icons.tablet_android_rounded
+                  : Icons.laptop_windows_rounded,
+          color: isCurrentDevice ? Colors.green : themeProvider.foregroundColor,
+          size: 24,
+        ),
+      ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              session.deviceName,
+              style: TextStyle(
+                color: themeProvider.foregroundColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          if (isCurrentDevice)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+              ),
+              child: const Text(
+                'Thiết bị này',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 4),
+          Text(
+            'HĐH: ${session.osVersion}',
+            style: TextStyle(
+              color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+              fontSize: 12,
+            ),
+          ),
+          Text(
+            'Hoạt động: $lastActiveStr',
+            style: TextStyle(
+              color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+      trailing: isCurrentDevice
+          ? null
+          : IconButton(
+              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+              onPressed: () => _deleteSession(context, session),
+              tooltip: 'Đăng xuất thiết bị này',
+            ),
+    );
+  }
+
+  void _deleteSession(BuildContext context, DeviceSessionModel session) {
+    final userProvider = context.read<UserProvider>();
+    final themeProvider = context.read<ThemeProvider>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: themeProvider.backgroundColor,
+        title: Text(
+          'Đăng xuất thiết bị?',
+          style: TextStyle(color: themeProvider.foregroundColor),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn đăng xuất khỏi thiết bị "${session.deviceName}" không?',
+          style: TextStyle(
+              color: themeProvider.foregroundColor.withValues(alpha: 0.8)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Hủy',
+              style: TextStyle(
+                  color: themeProvider.foregroundColor.withValues(alpha: 0.6)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              userProvider.removeDeviceSession(session.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content:
+                      Text('Đã yêu cầu đăng xuất thiết bị ${session.deviceName}'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

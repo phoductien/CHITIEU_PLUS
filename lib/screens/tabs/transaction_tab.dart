@@ -73,7 +73,7 @@ class _TransactionTabState extends State<TransactionTab> {
                     subtitle: Text(
                       'Dùng cho dữ liệu khối',
                       style: TextStyle(
-                        color: theme.foregroundColor.withValues(alpha: 0.5),
+                        color: theme.foregroundColor.withOpacity(0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -95,7 +95,7 @@ class _TransactionTabState extends State<TransactionTab> {
                     subtitle: Text(
                       'Dễ dàng mở bằng Excel',
                       style: TextStyle(
-                        color: theme.foregroundColor.withValues(alpha: 0.5),
+                        color: theme.foregroundColor.withOpacity(0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -276,8 +276,8 @@ class _TransactionTabState extends State<TransactionTab> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFEC5B13).withValues(alpha: 0.1),
-        border: Border.all(color: const Color(0xFFEC5B13).withValues(alpha: 0.3)),
+        color: const Color(0xFFEC5B13).withOpacity(0.1),
+        border: Border.all(color: const Color(0xFFEC5B13).withOpacity(0.3)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -294,7 +294,7 @@ class _TransactionTabState extends State<TransactionTab> {
                     Text(
                       'Số dư mô phỏng (Ví dùng thử)',
                       style: TextStyle(
-                        color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+                        color: themeProvider.foregroundColor.withOpacity(0.7),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -322,7 +322,7 @@ class _TransactionTabState extends State<TransactionTab> {
                   title: Text('Xóa số dư?', style: TextStyle(color: themeProvider.foregroundColor)),
                   content: Text(
                     'Toàn bộ giao dịch giả lập và tiền nạp dùng thử sẽ bị xóa sạch để làm lại từ đầu.',
-                    style: TextStyle(color: themeProvider.foregroundColor.withValues(alpha: 0.7)),
+                    style: TextStyle(color: themeProvider.foregroundColor.withOpacity(0.7)),
                   ),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
@@ -450,7 +450,7 @@ class _TransactionTabState extends State<TransactionTab> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFEC5B13).withValues(alpha: 0.3),
+                    color: const Color(0xFFEC5B13).withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -484,7 +484,7 @@ class _TransactionTabState extends State<TransactionTab> {
         content: Text(
           'Bạn có chắc chắn muốn xóa $count giao dịch đã chọn?',
           style: TextStyle(
-            color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+            color: themeProvider.foregroundColor.withOpacity(0.7),
           ),
         ),
         actions: [
@@ -615,7 +615,7 @@ class _TransactionTabState extends State<TransactionTab> {
                   color: themeProvider.secondaryColor,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: themeProvider.borderColor.withValues(alpha: 0.5),
+                    color: themeProvider.borderColor.withOpacity(0.5),
                   ),
                 ),
                 child: Row(
@@ -681,7 +681,7 @@ class _TransactionTabState extends State<TransactionTab> {
           style: TextStyle(
             color: isSelected
                 ? Colors.white
-                : themeProvider.foregroundColor.withValues(alpha: 0.5),
+                : themeProvider.foregroundColor.withOpacity(0.5),
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),
@@ -704,13 +704,13 @@ class _TransactionTabState extends State<TransactionTab> {
             Icon(
               Icons.inbox_rounded,
               size: 64,
-              color: themeProvider.foregroundColor.withValues(alpha: 0.1),
+              color: themeProvider.foregroundColor.withOpacity(0.1),
             ),
             const SizedBox(height: 16),
             Text(
               'Không có dữ liệu',
               style: TextStyle(
-                color: themeProvider.foregroundColor.withValues(alpha: 0.3),
+                color: themeProvider.foregroundColor.withOpacity(0.3),
               ),
             ),
           ],
@@ -768,7 +768,7 @@ class _TransactionTabState extends State<TransactionTab> {
                     '${dayTotal >= 0 ? '+' : ''}${NumberFormat('#,###').format(dayTotal)}đ',
                     style: TextStyle(
                       color: dayTotal >= 0
-                          ? Colors.green.withValues(alpha: 0.8)
+                          ? Colors.green.withOpacity(0.8)
                           : themeProvider.foregroundColor.withValues(
                               alpha: 0.5,
                             ),
@@ -835,13 +835,13 @@ class _TransactionTabState extends State<TransactionTab> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFEC5B13).withValues(alpha: 0.1)
-              : themeProvider.secondaryColor.withValues(alpha: 0.2),
+              ? const Color(0xFFEC5B13).withOpacity(0.1)
+              : themeProvider.secondaryColor.withOpacity(0.2),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFEC5B13).withValues(alpha: 0.5)
-                : themeProvider.borderColor.withValues(alpha: 0.5),
+                ? const Color(0xFFEC5B13).withOpacity(0.5)
+                : themeProvider.borderColor.withOpacity(0.5),
           ),
         ),
         child: Row(
@@ -855,13 +855,13 @@ class _TransactionTabState extends State<TransactionTab> {
                       : Icons.radio_button_unchecked_rounded,
                   color: isSelected
                       ? const Color(0xFFEC5B13)
-                      : themeProvider.foregroundColor.withValues(alpha: 0.2),
+                      : themeProvider.foregroundColor.withOpacity(0.2),
                 ),
               ),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _getCategoryColor(tx.category).withValues(alpha: 0.1),
+                color: _getCategoryColor(tx.category).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Stack(
@@ -962,7 +962,7 @@ class _TransactionTabState extends State<TransactionTab> {
                                   'Giao dịch này sẽ bị xóa vĩnh viễn.',
                                   style: TextStyle(
                                     color: themeProvider.foregroundColor
-                                        .withValues(alpha: 0.7),
+                                        .withOpacity(0.7),
                                   ),
                                 ),
                                 actions: [
@@ -1093,7 +1093,7 @@ class _TransactionTabState extends State<TransactionTab> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: themeProvider.foregroundColor.withValues(alpha: 0.2),
+                    color: themeProvider.foregroundColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1104,7 +1104,7 @@ class _TransactionTabState extends State<TransactionTab> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: _getCategoryColor(tx.category).withValues(alpha: 0.1),
+                      color: _getCategoryColor(tx.category).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -1129,7 +1129,7 @@ class _TransactionTabState extends State<TransactionTab> {
                         Text(
                           tx.category,
                           style: TextStyle(
-                            color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                            color: themeProvider.foregroundColor.withOpacity(0.5),
                             fontSize: 14,
                           ),
                         ),
@@ -1142,9 +1142,9 @@ class _TransactionTabState extends State<TransactionTab> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+                  color: themeProvider.secondaryColor.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: themeProvider.borderColor.withValues(alpha: 0.5)),
+                  border: Border.all(color: themeProvider.borderColor.withOpacity(0.5)),
                 ),
                 child: Column(
                   children: [
@@ -1178,7 +1178,7 @@ class _TransactionTabState extends State<TransactionTab> {
         Text(
           label,
           style: TextStyle(
-            color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+            color: themeProvider.foregroundColor.withOpacity(0.5),
             fontSize: 14,
           ),
         ),
@@ -1188,7 +1188,7 @@ class _TransactionTabState extends State<TransactionTab> {
             value,
             textAlign: TextAlign.right,
             style: TextStyle(
-              color: isAmount ? (isIncome ? const Color(0xFF4ADE80) : Colors.redAccent) : (isId ? themeProvider.foregroundColor.withValues(alpha: 0.4) : themeProvider.foregroundColor),
+              color: isAmount ? (isIncome ? const Color(0xFF4ADE80) : Colors.redAccent) : (isId ? themeProvider.foregroundColor.withOpacity(0.4) : themeProvider.foregroundColor),
               fontSize: isId ? 11 : (isAmount ? 18 : 14),
               fontWeight: (isAmount || isId == false) ? FontWeight.bold : FontWeight.normal,
             ),

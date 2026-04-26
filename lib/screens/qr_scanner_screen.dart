@@ -136,10 +136,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       vertical: 14,
                     ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: Colors.white.withOpacity(0.3),
                         ),
                       ),
                     child: const Row(
@@ -195,7 +195,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             // Darken outside area
             ColorFiltered(
               colorFilter: ColorFilter.mode(
-                Colors.black.withValues(alpha: 0.5),
+                Colors.black.withOpacity(0.5),
                 BlendMode.srcOut,
               ),
               child: Stack(
@@ -278,3 +278,4 @@ class _ScannerOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

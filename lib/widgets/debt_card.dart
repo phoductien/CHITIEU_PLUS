@@ -1,3 +1,5 @@
+﻿// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/debt_model.dart';
@@ -29,10 +31,10 @@ class DebtCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+            color: const Color(0xFF1E293B).withOpacity(0.5),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: Colors.white.withOpacity(0.1),
             ),
           ),
           child: Row(
@@ -41,7 +43,7 @@ class DebtCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -67,7 +69,7 @@ class DebtCard extends StatelessWidget {
                     Text(
                       debt.note.isNotEmpty ? debt.note : (isDebt ? 'Bạn nợ' : 'Người nợ bạn'),
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: Colors.white.withOpacity(0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -77,14 +79,14 @@ class DebtCard extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.calendar_month_rounded,
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: Colors.white.withOpacity(0.3),
                             size: 12,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'Hạn: ${DateFormat('dd/MM/yyyy').format(debt.dueDate!)}',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: Colors.white.withOpacity(0.3),
                               fontSize: 10,
                             ),
                           ),
@@ -98,9 +100,9 @@ class DebtCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${isDebt ? "-" : "+"}${NumberFormat('#,###').format(debt.amount)} đ',
+                    '${isDebt ? "-" : "+"}${NumberFormat('#,###').format(debt.amount)} ₫',
                     style: TextStyle(
-                      color: isPaid ? Colors.white.withValues(alpha: 0.3) : color,
+                      color: isPaid ? Colors.white.withOpacity(0.3) : color,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       decoration: isPaid ? TextDecoration.lineThrough : null,
@@ -113,13 +115,13 @@ class DebtCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: isPaid 
-                            ? Colors.grey.withValues(alpha: 0.2)
-                            : color.withValues(alpha: 0.1),
+                            ? Colors.grey.withOpacity(0.2)
+                            : color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: isPaid 
-                              ? Colors.grey.withValues(alpha: 0.3)
-                              : color.withValues(alpha: 0.3),
+                              ? Colors.grey.withOpacity(0.3)
+                              : color.withOpacity(0.3),
                         ),
                       ),
                       child: Text(

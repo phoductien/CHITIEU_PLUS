@@ -7,6 +7,8 @@ import '../models/transaction_model.dart';
 import '../services/transaction_service.dart';
 import '../services/realtime_db_service.dart';
 
+/// TransactionProvider: Quản lý danh sách giao dịch, số dư và đồng bộ hóa dữ liệu.
+/// Sử dụng Realtime Database để cập nhật giao dịch tức thì.
 class TransactionProvider with ChangeNotifier {
   List<TransactionModel> _transactions = [];
   bool _isLoading = true;
@@ -20,12 +22,26 @@ class TransactionProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   DateTime? get lastSyncTime => _lastSyncTime;
 
+  /// Tính toán tổng số dư dựa trên danh sách giao dịch hiện tại
+  double get totalBalance {
+    double balance = 0;
+    for (var tx in _transactions) {
+      if (tx.type == TransactionType.income) {
+        balance += tx.amount;
+      } else {
+        balance -= tx.amount;
+      }
+    }
+    return balance;
+  }
+
   TransactionProvider() {
     _loadLastSyncTime();
     _initAuthListener();
     _init();
   }
 
+  /// Lắng nghe trạng thái đăng nhập để tải lại dữ liệu khi người dùng thay đổi
   void _initAuthListener() {
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
@@ -46,6 +62,7 @@ class TransactionProvider with ChangeNotifier {
     });
   }
 
+  /// Khởi tạo kết nối Stream với Realtime Database
   void _init() {
     _subscription?.cancel();
     _isLoading = true;
@@ -164,12 +181,19 @@ class TransactionProvider with ChangeNotifier {
     await syncDataWithFirestore();
   }
 
-  /// Manually triggers a re-sync from Firestore to Realtime DB
+  bool _isSyncing = false;
+  bool get isSyncing => _isSyncing;
+
+  /// Đồng bộ hóa dữ liệu thủ công từ Firestore về Realtime Database
   Future<void> syncDataWithFirestore() async {
-    _isLoading = true;
+    _isSyncing = true;
     notifyListeners();
 
     try {
+      // 1. Fetch from SePay if linked (logic inside service handles checks)
+      await _service.syncWithSePay();
+
+      // 2. Sync Firestore to RTDB
       await _service.syncFirestoreToRealtime();
       // _init() will be triggered by data change in RTDB as well,
       // but we explicitly refresh anyway.
@@ -177,9 +201,11 @@ class TransactionProvider with ChangeNotifier {
       await _updateSyncTime();
     } catch (e) {
       debugPrint('[TransactionProvider] Sync Error: $e');
+      rethrow;
+    } finally {
+      _isSyncing = false;
       _isLoading = false;
       notifyListeners();
-      rethrow;
     }
   }
 

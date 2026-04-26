@@ -165,7 +165,7 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
     ).transactions;
     final now = DateTime.now();
     final historyContext =
-        "Ngày hiện tại: ${DateFormat('dd/MM/yyyy HH:mm').format(now)}\n${transactions.isEmpty ? "Người dùng hiện chưa có giao dịch nào recorded." : "Lịch sử giao dịch gần đây:\n${transactions.take(30).map((t) => "- ${DateFormat('dd/MM/yyyy').format(t.date)}: ${t.type == TransactionType.expense ? 'Chi' : 'Thu'} ${NumberFormat("#,###").format(t.amount)}đ cho ${t.title} (${t.category})").join("\n")}"}";
+        "Ngày hiện tại: ${DateFormat('dd/MM/yyyy HH:mm').format(now)}\n${transactions.isEmpty ? "Người dùng hiện chưa có giao dịch nào được ghi lại." : "Lịch sử giao dịch gần đây:\n${transactions.take(30).map((t) => "- ${DateFormat('dd/MM/yyyy').format(t.date)}: ${t.type == TransactionType.expense ? 'Chi' : 'Thu'} ${NumberFormat("#,###").format(t.amount)}đ cho ${t.title} (${t.category})").join("\n")}"}";
 
     final response = await AiService().sendMessage(
       text,

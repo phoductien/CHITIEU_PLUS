@@ -107,7 +107,7 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
                   _buildTotalCard(themeProvider),
                   const SizedBox(height: 30),
                   Text(
-                    'PHÂN BỔ THEO HẠNG MỤC',
+                    'PHÂN BỐ THEO HẠNG MỤC',
                     style: TextStyle(
                       color: themeProvider.foregroundColor.withValues(
                         alpha: 0.6,
@@ -164,7 +164,7 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+        color: themeProvider.secondaryColor.withOpacity(0.5),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: themeProvider.borderColor),
       ),
@@ -174,7 +174,7 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
           Text(
             'TỔNG NGÂN SÁCH DỰ KIẾN',
             style: TextStyle(
-              color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+              color: themeProvider.foregroundColor.withOpacity(0.6),
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -233,9 +233,9 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'ĐÃ PHÂN BỔ',
+                'ĐÃ PHÂN BỐ',
                 style: TextStyle(
-                  color: themeProvider.foregroundColor.withValues(alpha: 0.5),
+                  color: themeProvider.foregroundColor.withOpacity(0.5),
                   fontSize: 12,
                 ),
               ),
@@ -283,7 +283,7 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: _catColors[category]!.withValues(alpha: 0.15),
+                  color: _catColors[category]!.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -308,7 +308,7 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: themeProvider.secondaryColor.withValues(alpha: 0.5),
+                  color: themeProvider.secondaryColor.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: themeProvider.borderColor),
                 ),
@@ -347,7 +347,7 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
                 alpha: 0.1,
               ),
               thumbColor: Colors.white,
-              overlayColor: const Color(0xFFF05D15).withValues(alpha: 0.2),
+              overlayColor: const Color(0xFFF05D15).withOpacity(0.2),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
             ),
@@ -367,3 +367,4 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
     );
   }
 }
+

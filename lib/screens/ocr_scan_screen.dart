@@ -256,7 +256,7 @@ class _OcrScanScreenState extends State<OcrScanScreen>
                 _cameraError!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: Colors.white.withOpacity(0.5),
                   fontSize: 13,
                   height: 1.5,
                 ),
@@ -323,9 +323,9 @@ class _OcrScanScreenState extends State<OcrScanScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color(0xFF00D1FF).withValues(alpha: 0.0),
-                          const Color(0xFF00D1FF).withValues(alpha: 0.1),
-                          const Color(0xFF8978F8).withValues(alpha: 0.3),
+                          const Color(0xFF00D1FF).withOpacity(0.0),
+                          const Color(0xFF00D1FF).withOpacity(0.1),
+                          const Color(0xFF8978F8).withOpacity(0.3),
                         ],
                       ),
                       border: const Border(
@@ -368,7 +368,7 @@ class _OcrScanScreenState extends State<OcrScanScreen>
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: Colors.white.withOpacity(0.8),
               fontSize: 13,
             ),
           ),
@@ -537,7 +537,7 @@ class _OcrScanScreenState extends State<OcrScanScreen>
               'Căn chỉnh hóa đơn vào giữa khung hình',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.0),
+                color: Colors.white.withOpacity(0.0),
                 fontSize: 14,
               ), // Hidden according to screenshot, but code physically kept
             ),
@@ -594,7 +594,7 @@ class _OcrScanScreenState extends State<OcrScanScreen>
           // 6. Processing Indicator Loader
           if (_isProcessing)
             Container(
-              color: Colors.black.withValues(alpha: 0.7),
+              color: Colors.black.withOpacity(0.7),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -613,7 +613,7 @@ class _OcrScanScreenState extends State<OcrScanScreen>
                     Text(
                       'Trí tuệ nhân tạo đang xử lý...',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: Colors.white.withOpacity(0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -665,3 +665,4 @@ class ScannerOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

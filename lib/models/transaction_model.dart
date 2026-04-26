@@ -29,6 +29,10 @@ class TransactionModel {
     this.aiMetadata,
   });
 
+  /// Getters for SePay metadata convenience
+  String get bankBrandName => aiMetadata?['bank_brand_name'] ?? 'Khác';
+  String get accountNumber => aiMetadata?['account_number'] ?? '';
+
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,

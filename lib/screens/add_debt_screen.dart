@@ -108,7 +108,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        title: Text(isEdit ? 'Sửa thông tin' : 'Thêm mới'),
+        title: Text(isEdit ? 'SỬa thông tin' : 'Thêm mới'),
         backgroundColor: Colors.transparent,
         foregroundColor: themeProvider.foregroundColor,
         elevation: 0,
@@ -218,9 +218,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color : color.withValues(alpha: 0.1),
+          color: isSelected ? color : color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: isSelected ? 1 : 0.3)),
+          border: Border.all(color: color.withOpacity(isSelected ? 1 : 0.3)),
         ),
         child: Center(
           child: Text(
@@ -252,17 +252,17 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
         prefixIcon: Icon(icon, color: const Color(0xFFF05D15)),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
+        fillColor: Colors.white.withOpacity(0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -278,9 +278,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
         child: Row(
           children: [
@@ -293,7 +293,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                   Text(
                     'Ngày đến hạn',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: Colors.white.withOpacity(0.5),
                       fontSize: 12,
                     ),
                   ),
@@ -316,3 +316,4 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     );
   }
 }
+

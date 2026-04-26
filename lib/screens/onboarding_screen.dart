@@ -154,7 +154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
               // Khu vực nội dung các trang Onboarding có thể vuốt được
               Expanded(
-                // Expanded: Nong trương giãn nở cực độ nhồi nhét khuân chiếm toàn bộ không gian trống còn dư
+                // Expanded: Nong trương giãn nở cực độ nhồi nhét khuôn chiếm toàn bộ không gian trống còn dư
                 child: PageView(
                   controller:
                       _pageController, // controller: Kết nối dây chuyền quản trị thông tin vị trí các trang hiện hữu
@@ -172,7 +172,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24.0,
-                ), // padding: Cắt lấn chiếm hai khoảng bề ngang đồng đều
+                ), // padding: Cắt lấn chiếm hai khoảng bờ ngang đồng đều
                 child: Column(
                   children: [
                     // Nút Tiếp tục / Bắt đầu ngay
@@ -189,7 +189,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
                             16,
-                          ), // borderRadius: Quyết định giới hạn khum tròn các bờ bao gốc tư
+                          ), // borderRadius: Quyết định giới hạn khum tròn các bờ bao góc tư
                         ),
                         elevation:
                             0, // elevation: Loại bỏ chiều cao lơ lửng, tức chèn bẹp mảng nền mờ đổ tà bóng
@@ -229,9 +229,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         style: TextStyle(
                           color: Colors.white.withValues(
                             alpha: 0.8,
-                          ), // color: Cường độ hòa màu tinh xuyết điệm lên văn tự
+                          ), // color: Cường độ hòa màu tinh khiết điểm lên văn tự
                           fontWeight: FontWeight
-                              .bold, // fontWeight: Định danh trạng thái bản sắc cho nét nét chữ mạnh chọi
+                              .bold, // fontWeight: Định danh trạng thái bản sắc cho nét nét chữ mạnh chói
                           letterSpacing:
                               1.5, // letterSpacing: Gạt dàn rộng đều nhịp phân luồng giãn khoảng không cho từng từ
                         ),
@@ -250,7 +250,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               12, // fontSize: Nhỏ nhặt thu nhỏ biểu tượng kí tự làm chú rễ phụ hoạ
                           color: Colors.white.withValues(
                             alpha: 0.5,
-                          ), // color: Rải sắc hòa quyện yếu rờ chìm lịm lẩn sâu vào phong màn
+                          ), // color: Rải sắc hòa quyện yếu ớt chìm lịm lẩn sâu vào phong màn
                           height:
                               1.5, // height: Đôn nâng tầng xen lồng múa chênh lệch độ cao cho luồng đoạn dãn dài
                         ),
@@ -284,7 +284,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           TextSpan(
                             text: 'quyền riêng tư',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
+                              color: Colors.white.withOpacity(0.8),
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()
@@ -336,7 +336,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ), // color: Thổi hồn sắc cam đậm lúc làm chỉ huy hay lướt bóng xám khi thẩn thờ ngủ yên
         borderRadius: BorderRadius.circular(
           3,
-        ), // borderRadius: Tiện gọt dũa nếp cạnh trọn vành vạch
+        ), // borderRadius: Tiện gọt dũa nếp cạnh tròn vành vạch
       ),
     );
   }
@@ -357,7 +357,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF034177).withValues(
                   alpha: 0.6,
-                ), // color: Lót màn nhung nhuốm men xanh đại dương sâu rờn trong vắt
+                ), // color: Lót màn nhung nhuốm men xanh đại dương sâu rộng trong vắt
                 borderRadius: BorderRadius.circular(
                   40,
                 ), // borderRadius: Vát gọt bốn vế vuông hình trụ thon
@@ -376,7 +376,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   const Text(
                     'Chào mừng đến\nvới\nChiTieuPlus',
                     textAlign: TextAlign
-                        .center, // textAlign: Gom quy về trọng điểm chính ngự uy dũng giũa sảnh diện
+                        .center, // textAlign: Gom quy về trọng điểm chính ngự uy dũng giữa sảnh diện
                     style: TextStyle(
                       fontSize:
                           28, // fontSize: Uy thế phóng chiếu vóc đại cho diện tích văn mảnh
@@ -425,7 +425,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ), // color: Nhuộm đẫm sắc thái hồ hải lam lấp lánh biểu hạt
         const SizedBox(width: 16),
         Expanded(
-          // Expanded: Nong vãn bung phủ rợp trọn tàng che những lề khuất còn lưa cạn cợt ngang dọc
+          // Expanded: Nong vãn bung phủ rợp tròn tàng che những lỗ khuất còn lưa cạn cợt ngang dọc
           child: Text(
             text,
             style: const TextStyle(
@@ -447,13 +447,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment
-              .center, // crossAxisAlignment: Dằn nắn gò bó chỉnh hướng phỏng tụ về một điểm hội ngộ trục dọc
+              .center, // crossAxisAlignment: Dằn nặn gò bó chỉnh hướng phóng tụ về một điểm hội ngộ trục dọc
           children: [
             const Text(
               'Bạn tên là gì?',
               style: TextStyle(
                 fontSize:
-                    32, // fontSize: Uy trấn lộng diện quy mô sảnh bề vóc mặt chữ
+                    32, // fontSize: Uy trấn lộng diện quy mô sảnh bộ vóc mặt chữ
                 fontWeight: FontWeight
                     .bold, // fontWeight: Ép khắc dày chéo nén đậm sâu bóc vóc cự trụ chũm
                 color: Colors.white,
@@ -463,14 +463,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Text(
               'Chào mừng đến với ChiTieuPlus. Hãy\ncho chúng tôi biết tên của bạn để bắt\nđầu hành trình quản lý tài chính.',
               textAlign: TextAlign
-                  .center, // textAlign: Canh bằng ngay ngắn đồng lều nhượng tụ họp gộp vào ngự tâm
+                  .center, // textAlign: Canh bằng ngay ngắn đồng lựu nhường tụ hợp gộp vào ngự tâm
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white.withValues(
                   alpha: 0.85,
                 ), // color: Giảm độ xức chói lòe sáng lướt rợp độ câm thâm mờ
                 height:
-                    1.5, // height: Mở toang dạt dỏng rộng khung chiều hoành nhô cho khoảng giãn văn phong
+                    1.5, // height: Mở toang dạt dợng rộng khung chiều hoành nhô cho khoảng giãn văn phong
               ),
             ),
             const SizedBox(height: 48),
@@ -478,12 +478,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             // Form nhập dữ liệu văn bản
             Align(
               alignment: Alignment
-                  .centerLeft, // alignment: Xê xuôi dồn xô vách lề vóc dạt thềm về phía đằng tây
+                  .centerLeft, // alignment: Xê xuôi dồn xô vách lộ vóc dạt thềm về phía đằng tây
               child: Text(
                 'Họ và tên của bạn',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: Colors.white.withOpacity(0.85),
                   fontWeight: FontWeight
                       .w500, // fontWeight: Chuẩn nhịp cân bằng không quá mập đậm nẻo trung hòa
                 ),
@@ -494,10 +494,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF034177).withValues(
                   alpha: 0.6,
-                ), // color: Đổ nền khảm lấp ráo ranh khuông màu dạt hố thụt
+                ), // color: Đổ nền khảm lấp ráo ranh khuôn màu dạt hố thụt
                 borderRadius: BorderRadius.circular(
                   16,
-                ), // borderRadius: Vát khum đẽo vuốt nếp gò tít thềm các gốc góc
+                ), // borderRadius: Vát khum đẽo vuốt nếp gò tít thêm các gốc góc
                 border: Border.all(
                   color: Colors.white.withValues(
                     alpha: 0.2,
@@ -515,7 +515,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   hintStyle: TextStyle(
                     color: Colors.white.withValues(
                       alpha: 0.4,
-                    ), // hintStyle: Kẻ sắc chì câm gượng chữ điềm điệt mơ hồ trong hố hoang vắng chờ nhập
+                    ), // hintStyle: Kẻ sắc chì câm gượng chữ điểm điệt mơ hồ trong hố hoang vắng chờ nhập
                     fontSize: 16,
                   ),
                   prefixIcon: const Icon(
@@ -562,14 +562,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white.withValues(alpha: 0.85),
+                color: Colors.white.withOpacity(0.85),
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 32),
 
             // Danh sách các mục thả nổi lặp lại
-            _buildCurrencyItem('Vietnamese Dong (VND)', 'đ - Việt Nam', 'VND'),
+            _buildCurrencyItem('Vietnamese Dong (VND)', '₫ - Việt Nam', 'VND'),
             const SizedBox(height: 16),
             _buildCurrencyItem('US Dollar (USD)', '\$ - United States', 'USD'),
             const SizedBox(height: 16),
@@ -620,8 +620,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             color: isSelected
                 ? const Color(
                     0xFF5ADBD0,
-                  ) // border: Chiếu roi rọi khảm quang phổ lam lục bừng thêu vách bọc ngoài nhú
-                : Colors.white.withValues(alpha: 0.15),
+                  ) // border: Chiếu rọi khảm quang phổ lam lục bừng thêu vách bọc ngoài nhú
+                : Colors.white.withOpacity(0.15),
             width: isSelected
                 ? 1.5
                 : 1, // width: Phác thả phân thanh nét gằn rắn đục nếu đúng đích nhắm chọn
@@ -630,17 +630,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Row(
           children: [
             Expanded(
-              // Expanded: Kéo choàng gánh hết sải mỏn dư quang rạch khoảng vắng ôm trọn cự ngang sườn
+              // Expanded: Kéo choàng gánh hết sải mọn dư quang rạch khoảng vắng ôm trọn cự ngang sườn
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment
-                    .start, // crossAxisAlignment: Nêm xô đẩy dàn phẳng tấu lên phím dóc trái vuốt gờ
+                    .start, // crossAxisAlignment: Nêm xô đẩy dàn phẳng tấu lên phím dọc trái vuốt gợi
                 children: [
                   Text(
                     title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight
-                          .bold, // fontWeight: Chịu cự trọng nét in phơi chắc thẫm nề cội ghim tạc cốt gân
+                          .bold, // fontWeight: Chịu cự trọng nét in phơi chắc thẫm nền cội ghim tạc cốt gân
                       color: Colors.white,
                     ),
                   ),
@@ -663,8 +663,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                shape: BoxShape
-                    .circle, // shape: Điêu khắc gọt vỏ khoét nang túi hình cầu tròn lăn
+                shape: BoxShape.circle, // shape: Điêu khắc gọt vỏ khoét nang túi hình cầu tròn lăn
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFF5ADBD0)
@@ -694,3 +693,4 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 }
+

@@ -45,7 +45,7 @@ class _ReportTabState extends State<ReportTab> {
         try {
           await Share.shareXFiles(
             [XFile.fromData(pngBytes, mimeType: 'image/png', name: 'bao_cao_tai_chinh.png')],
-            text: 'Báo cáo tài chính từ CHITIEU PLUS 📊',
+            text: 'Báo cáo tài chính từ CHITIEU PLUS ðŸ“Š',
           );
         } catch (webShareError) {
           // Fallback for Web: Download the image if Share API is not supported
@@ -403,7 +403,7 @@ class _ReportTabState extends State<ReportTab> {
               Text(
                 title,
                 style: TextStyle(
-                  color: themeProvider.foregroundColor.withValues(alpha: 0.7),
+                  color: themeProvider.foregroundColor.withOpacity(0.7),
                   fontSize: 14,
                 ),
               ),
@@ -483,13 +483,13 @@ class _ReportTabState extends State<ReportTab> {
       barRods: [
         BarChartRodData(
           toY: y,
-          color: themeProvider.foregroundColor.withValues(alpha: 0.1),
+          color: themeProvider.foregroundColor.withOpacity(0.1),
           width: 14,
           borderRadius: BorderRadius.circular(4),
           backDrawRodData: BackgroundBarChartRodData(
             show: true,
             toY: 20,
-            color: themeProvider.backgroundColor.withValues(alpha: 0.3),
+            color: themeProvider.backgroundColor.withOpacity(0.3),
           ),
         ),
       ],

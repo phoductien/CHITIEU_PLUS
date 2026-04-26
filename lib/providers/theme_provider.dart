@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider with ChangeNotifier {
@@ -60,9 +60,9 @@ class ThemeProvider with ChangeNotifier {
 
   // Dynamic Border/Divider Color
   Color get borderColor {
-    if (_isEyeProtection) return Colors.black.withValues(alpha: 0.1);
+    if (_isEyeProtection) return Colors.black.withOpacity(0.1);
     // Use white borders when background is dark (both dark mode and new light mode)
-    return Colors.white.withValues(alpha: 0.1);
+    return Colors.white.withOpacity(0.1);
   }
 
   ThemeProvider() {
@@ -96,3 +96,4 @@ class ThemeProvider with ChangeNotifier {
     await prefs.setBool('isEyeProtection', _isEyeProtection);
   }
 }
+
