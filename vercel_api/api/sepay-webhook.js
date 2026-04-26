@@ -42,75 +42,83 @@ module.exports = async (req, res) => {
     console.log('Đã nhận dữ liệu từ SePay:', JSON.stringify(payload));
 
     // --- TRÍCH XUẤT DỮ LIỆU TỪ SEPAY ---
-    // SePay gửi các trường: id (mã giao dịch), content (nội dung), amount_in (tiền vào), amount_out (tiền ra)...
-    const sepayId = payload.id;
-    const content = payload.content || 'Giao dịch ngân hàng';
-    const amountIn = parseFloat(payload.amount_in || 0);
-    const amountOut = parseFloat(payload.amount_out || 0);
+    // Hỗ trợ cả snake_case và camelCase từ các phiên bản SePay khác nhau
+    const sepayId = payload.id || payload.transaction_id || payload.transactionId;
+    const content = payload.content || payload.transaction_content || payload.transactionContent || 'Giao dịch ngân hàng';
+    
+    // Thử lấy số tiền từ nhiều trường khác nhau (SePay có thể gửi amount_in/out hoặc transferAmount)
+    const amountIn = parseFloat(payload.amount_in || payload.amountIn || 0);
+    const amountOut = parseFloat(payload.amount_out || payload.amountOut || 0);
+    const transferAmount = parseFloat(payload.transfer_amount || payload.transferAmount || payload.amount || 0);
     
     let amount = 0;
-    let type = 'expense'; // Mặc định là chi tiêu
+    let type = 'expense';
     
     if (amountIn > 0) {
       amount = amountIn;
-      type = 'income'; // Nếu có tiền vào -> Thu nhập
+      type = 'income';
     } else if (amountOut > 0) {
       amount = amountOut;
-      type = 'expense'; // Nếu có tiền ra -> Chi tiêu
-    } else {
-      // Trường hợp SePay dùng format khác (transfer_amount)
-      amount = parseFloat(payload.transfer_amount || 0);
-      type = payload.transfer_type === 'in' ? 'income' : 'expense';
+      type = 'expense';
+    } else if (transferAmount > 0) {
+      amount = transferAmount;
+      // Nếu dùng transfer_amount, cần dựa vào transfer_type hoặc logic tiền vào/ra
+      const tType = (payload.transfer_type || payload.transferType || '').toLowerCase();
+      type = (tType === 'in' || tType === 'income') ? 'income' : 'expense';
     }
 
     // Nếu số tiền bằng 0 thì bỏ qua không lưu
     if (amount === 0) {
-      return res.status(200).json({ success: true, message: 'Giao dịch 0đ, không xử lý' });
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Giao dịch 0đ hoặc không xác định được số tiền',
+        received_payload: payload // Trả về payload để debug nếu cần
+      });
     }
 
     // --- XỬ LÝ THỜI GIAN ---
     let date = new Date();
-    if (payload.transaction_date) {
-      date = new Date(payload.transaction_date);
+    const dateStr = payload.transaction_date || payload.transactionDate || payload.createdAt;
+    if (dateStr) {
+      date = new Date(dateStr);
     }
 
-    // Tạo ID duy nhất cho giao dịch để tránh lưu trùng lặp nếu SePay gửi lại
+    // Tạo ID duy nhất cho giao dịch
     const transactionId = `sepay_${sepayId}`;
     const userPath = isGuest === 'true' ? 'guests' : 'users';
 
     // --- CHUẨN BỊ DỮ LIỆU ĐỂ LƯU ---
-    // Cấu trúc này phải khớp với TransactionModel trong Flutter
+    // Cấu trúc này phải khớp hoàn toàn với TransactionModel trong Flutter
     const firestoreData = {
       userId: userId,
       title: content,
       amount: amount,
-      category: 'Ngân hàng', // Phân loại mặc định khi nhận từ ngân hàng
-      date: admin.firestore.Timestamp.fromDate(date), // Firestore dùng Timestamp
+      category: 'Ngân hàng',
+      date: admin.firestore.Timestamp.fromDate(date),
       type: type,
       note: `Đồng bộ tự động từ SePay (${payload.bank_brand_name || 'Ngân hàng'})\nID: ${sepayId}`,
       wallet: 'main',
       isPinned: false,
       aiMetadata: {
         source: 'sepay_webhook',
-        bank: payload.bank_brand_name,
-        account: payload.account_number
+        bank_brand_name: payload.bank_brand_name || payload.bankBrandName || 'Ngân hàng',
+        account_number: payload.account_number || payload.accountNumber || ''
       }
     };
 
     // --- GHI DỮ LIỆU VÀO FIRESTORE ---
-    // Lưu vào collection của người dùng cụ thể
     const transactionDoc = db.collection(userPath).doc(userId).collection('transactions').doc(transactionId);
     await transactionDoc.set(firestoreData);
 
     // --- GHI DỮ LIỆU VÀO REALTIME DATABASE ---
-    // Bước này cực kỳ quan trọng để App nhận được thông báo thay đổi và cập nhật UI ngay lập tức
     const rtdbData = {
       ...firestoreData,
-      date: date.toISOString() // RTDB trong App Flutter đang dùng định dạng ISO8601
+      id: transactionId,
+      date: date.toISOString()
     };
     await rtdb.ref(`${userPath}/${userId}/transactions/${transactionId}`).set(rtdbData);
 
-    console.log(`Đã xử lý thành công giao dịch ${transactionId} cho người dùng ${userId}`);
+    console.log(`Đã xử lý thành công giao dịch ${transactionId} cho người dùng ${userId} (${amount}đ)`);
     return res.status(200).json({ 
       success: true, 
       transactionId,
