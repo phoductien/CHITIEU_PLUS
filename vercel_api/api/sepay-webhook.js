@@ -84,7 +84,7 @@ module.exports = async (req, res) => {
       userId: userId,
       title: content,
       amount: amount,
-      category: 'Tự động', // Phân loại mặc định khi nhận từ ngân hàng
+      category: 'Ngân hàng', // Phân loại mặc định khi nhận từ ngân hàng
       date: admin.firestore.Timestamp.fromDate(date), // Firestore dùng Timestamp
       type: type,
       note: `Đồng bộ tự động từ SePay (${payload.bank_brand_name || 'Ngân hàng'})\nID: ${sepayId}`,
