@@ -34,7 +34,6 @@ class BankService {
       final response = await http.get(
         Uri.parse(ApiConstants.sepayBankAccountsUrl),
         headers: {
-          'Authorization': 'Bearer ${ApiConstants.sepayApiToken}',
           'Content-Type': 'application/json',
         },
       );
@@ -57,7 +56,6 @@ class BankService {
       final response = await http.get(
         Uri.parse(ApiConstants.sepayTransactionsUrl),
         headers: {
-          'Authorization': 'Bearer ${ApiConstants.sepayApiToken}',
           'Content-Type': 'application/json',
         },
       );

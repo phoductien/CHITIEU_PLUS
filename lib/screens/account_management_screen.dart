@@ -63,9 +63,6 @@ class AccountManagementScreen extends StatelessWidget {
                       if (userProvider.bankAccounts.isEmpty)
                         _buildEmptyState('Chưa có tài khoản liên kết'),
                       const SizedBox(height: 30),
-                      _buildSectionTitle('ĐỒNG BỘ TỰ ĐỘNG (SEPAY)'),
-                      _buildSePayWebhookSection(context, userProvider.uid, txProvider),
-                      const SizedBox(height: 30),
                       _buildSectionTitle('PHƯƠNG THỨC ĐĂNG NHẬP HIỆN TẠI'),
                       _buildLoginMethod(userProvider.email),
                       const SizedBox(height: 30),
@@ -493,109 +490,7 @@ class AccountManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSePayWebhookSection(BuildContext context, String uid, TransactionProvider txProvider) {
-    final webhookUrl = '${ApiConstants.sepayWebhookUrl}?userId=$uid&key=${ApiConstants.sepayWebhookKey}';
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withOpacity(0.4),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFFFB74D).withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.sync_alt, color: Color(0xFFFFB74D), size: 20),
-              const SizedBox(width: 10),
-              const Text(
-                'Webhook URL',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              const Spacer(),
-              _buildBadge('ACTIVE'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Sử dụng URL này để cấu hình Webhook trên SePay.vn để tự động đồng bộ giao dịch ngân hàng.',
-            style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    webhookUrl,
-                    style: const TextStyle(color: Colors.white70, fontSize: 11, fontFamily: 'monospace'),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: webhookUrl));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Đã sao chép Webhook URL'),
-                        backgroundColor: Color(0xFF00BFA5),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  child: const Icon(Icons.copy, color: Color(0xFFFFB74D), size: 18),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: txProvider.isSyncing 
-                ? null 
-                : () async {
-                    try {
-                      await txProvider.syncDataWithFirestore();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Đã đồng bộ thành công!')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Lỗi đồng bộ: $e'), backgroundColor: Colors.redAccent),
-                        );
-                      }
-                    }
-                  },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFB74D).withOpacity(0.1),
-                foregroundColor: const Color(0xFFFFB74D),
-                side: const BorderSide(color: Color(0xFFFFB74D), width: 1),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              icon: txProvider.isSyncing 
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFB74D)))
-                : const Icon(Icons.refresh, size: 18),
-              label: Text(txProvider.isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ ngay'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildEmptyState(String message) {
     return Padding(
