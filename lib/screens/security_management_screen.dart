@@ -38,22 +38,42 @@ class SecurityManagementScreen extends StatelessWidget {
               _buildSectionTitle(themeProvider, 'Tài khoản ngân hàng liên kết'),
               const SizedBox(height: 12),
               if (userProvider.bankAccounts.isEmpty)
-                _buildEmptyState(themeProvider, 'Chưa có tài khoản ngân hàng nào được liên kết.')
+                _buildEmptyState(
+                  themeProvider,
+                  'Chưa có tài khoản ngân hàng nào được liên kết.',
+                )
               else
-                ...userProvider.bankAccounts.map((bank) => _buildBankCard(context, themeProvider, userProvider, bank)),
-              
+                ...userProvider.bankAccounts.map(
+                  (bank) => _buildBankCard(
+                    context,
+                    themeProvider,
+                    userProvider,
+                    bank,
+                  ),
+                ),
+
               const SizedBox(height: 32),
 
               // --- Device Sessions Section ---
               _buildSectionTitle(themeProvider, 'Thiết bị đang truy cập'),
               const SizedBox(height: 12),
               if (userProvider.deviceSessions.isEmpty)
-                _buildEmptyState(themeProvider, 'Không tìm thấy thông tin thiết bị.')
+                _buildEmptyState(
+                  themeProvider,
+                  'Không tìm thấy thông tin thiết bị.',
+                )
               else
-                ...userProvider.deviceSessions.map((session) => _buildDeviceCard(context, themeProvider, userProvider, session)),
-              
+                ...userProvider.deviceSessions.map(
+                  (session) => _buildDeviceCard(
+                    context,
+                    themeProvider,
+                    userProvider,
+                    session,
+                  ),
+                ),
+
               const SizedBox(height: 40),
-              
+
               // Security Tip
               Container(
                 padding: const EdgeInsets.all(16),
@@ -115,7 +135,12 @@ class SecurityManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBankCard(BuildContext context, ThemeProvider theme, UserProvider user, String bankName) {
+  Widget _buildBankCard(
+    BuildContext context,
+    ThemeProvider theme,
+    UserProvider user,
+    String bankName,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -138,7 +163,10 @@ class SecurityManagementScreen extends StatelessWidget {
               color: Colors.blue.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.account_balance_rounded, color: Colors.blue),
+            child: const Icon(
+              Icons.account_balance_rounded,
+              color: Colors.blue,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -167,23 +195,33 @@ class SecurityManagementScreen extends StatelessWidget {
           TextButton(
             onPressed: () => _confirmUnlinkBank(context, user, bankName),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hủy liên kết', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Hủy liên kết',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDeviceCard(BuildContext context, ThemeProvider theme, UserProvider user, DeviceSessionModel session) {
+  Widget _buildDeviceCard(
+    BuildContext context,
+    ThemeProvider theme,
+    UserProvider user,
+    DeviceSessionModel session,
+  ) {
     final isCurrent = session.isCurrentDevice;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.secondaryColor,
         borderRadius: BorderRadius.circular(16),
-        border: isCurrent ? Border.all(color: Colors.blue.withOpacity(0.5), width: 1.5) : null,
+        border: isCurrent
+            ? Border.all(color: Colors.blue.withOpacity(0.5), width: 1.5)
+            : null,
       ),
       child: Row(
         children: [
@@ -219,14 +257,21 @@ class SecurityManagementScreen extends StatelessWidget {
                     if (isCurrent) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.blue,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
                           'HIỆN TẠI',
-                          style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -241,9 +286,13 @@ class SecurityManagementScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  isCurrent ? 'Đang hoạt động' : 'Hoạt động: ${DateFormat('HH:mm, dd/MM/yyyy').format(session.lastActive)}',
+                  isCurrent
+                      ? 'Đang hoạt động'
+                      : 'Hoạt động: ${DateFormat('HH:mm, dd/MM/yyyy').format(session.lastActive)}',
                   style: TextStyle(
-                    color: isCurrent ? Colors.green : theme.foregroundColor.withOpacity(0.4),
+                    color: isCurrent
+                        ? Colors.green
+                        : theme.foregroundColor.withOpacity(0.4),
                     fontSize: 11,
                   ),
                 ),
@@ -253,7 +302,11 @@ class SecurityManagementScreen extends StatelessWidget {
           if (!isCurrent)
             IconButton(
               onPressed: () => _confirmLogoutDevice(context, user, session),
-              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+              icon: const Icon(
+                Icons.logout_rounded,
+                color: Colors.redAccent,
+                size: 20,
+              ),
               tooltip: 'Đăng xuất thiết bị này',
             ),
         ],
@@ -275,34 +328,55 @@ class SecurityManagementScreen extends StatelessWidget {
     }
   }
 
-  void _confirmUnlinkBank(BuildContext context, UserProvider user, String bankName) {
+  void _confirmUnlinkBank(
+    BuildContext context,
+    UserProvider user,
+    String bankName,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hủy liên kết?'),
-        content: Text('Bạn có chắc chắn muốn hủy liên kết tài khoản $bankName không?'),
+        content: Text(
+          'Bạn có chắc chắn muốn hủy liên kết tài khoản $bankName không?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Quay lại')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Quay lại'),
+          ),
           TextButton(
             onPressed: () {
               user.removeBankAccount(bankName);
               Navigator.pop(context);
             },
-            child: const Text('Hủy liên kết', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Hủy liên kết',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _confirmLogoutDevice(BuildContext context, UserProvider user, DeviceSessionModel session) {
+  void _confirmLogoutDevice(
+    BuildContext context,
+    UserProvider user,
+    DeviceSessionModel session,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Đăng xuất thiết bị?'),
-        content: Text('Thiết bị "${session.deviceName}" sẽ bị đăng xuất khỏi tài khoản của bạn.'),
+        content: Text(
+          'Thiết bị "${session.deviceName}" sẽ bị đăng xuất khỏi tài khoản của bạn.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Quay lại')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Quay lại'),
+          ),
           TextButton(
             onPressed: () {
               user.removeDeviceSession(session.id);
@@ -315,4 +389,3 @@ class SecurityManagementScreen extends StatelessWidget {
     );
   }
 }
-

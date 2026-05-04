@@ -19,7 +19,11 @@ class DeviceSessionModel {
 
   bool get isCurrent => isCurrentDevice;
 
-  factory DeviceSessionModel.fromMap(Map<String, dynamic> map, String docId, {String? currentDeviceId}) {
+  factory DeviceSessionModel.fromMap(
+    Map<String, dynamic> map,
+    String docId, {
+    String? currentDeviceId,
+  }) {
     return DeviceSessionModel(
       id: docId,
       deviceName: map['deviceName'] ?? 'Thiết bị không xác định',

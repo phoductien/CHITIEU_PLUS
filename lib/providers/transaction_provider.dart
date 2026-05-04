@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
 import '../services/transaction_service.dart';
 import '../services/realtime_db_service.dart';
+import '../providers/user_provider.dart';
 
 /// TransactionProvider: Quản lý danh sách giao dịch, số dư và đồng bộ hóa dữ liệu.
 /// Sử dụng Realtime Database để cập nhật giao dịch tức thì.
@@ -151,17 +152,32 @@ class TransactionProvider with ChangeNotifier {
     _init();
   }
 
-  Future<void> addTransaction(TransactionModel tx) async {
+  Future<void> addTransaction(TransactionModel tx, {UserProvider? userProvider}) async {
     await _service.addTransaction(tx);
+    
+    // Cập nhật số dư thực tế nếu có userProvider
+    // Việc này đảm bảo số dư luôn đi kèm với giao dịch mới
+    if (userProvider != null) {
+      double currentBalance = userProvider.totalBalance;
+      if (tx.type == TransactionType.income) {
+        currentBalance += tx.amount;
+      } else {
+        currentBalance -= tx.amount;
+      }
+      await userProvider.setTotalBalance(currentBalance);
+    }
+    
     await syncDataWithFirestore();
   }
 
   Future<void> deleteTransaction(String id) async {
+    // Logic: Chỉ xóa bản ghi giao dịch, không gọi cập nhật số dư trong UserProvider
     await _service.deleteTransaction(id);
     await syncDataWithFirestore();
   }
 
   Future<void> deleteTransactions(List<String> ids) async {
+    // Logic: Xóa danh sách giao dịch, số dư chính vẫn giữ nguyên
     await _service.deleteTransactions(ids);
     await syncDataWithFirestore();
   }
@@ -176,8 +192,16 @@ class TransactionProvider with ChangeNotifier {
     await syncDataWithFirestore();
   }
 
-  Future<void> deleteAllTransactions() async {
+  Future<void> deleteAllTransactions({UserProvider? userProvider, bool resetBalance = false}) async {
     await _service.deleteAllTransactions();
+    
+    // GHI CHÚ QUAN TRỌNG:
+    // 1. Mặc định resetBalance = false: Chỉ xóa lịch sử giao dịch, số dư giữ nguyên.
+    // 2. Chỉ khi resetBalance = true: Số dư mới được đưa về 0 (dùng cho nút "Xóa số dư").
+    if (resetBalance && userProvider != null) {
+      await userProvider.setTotalBalance(0);
+    }
+    
     await syncDataWithFirestore();
   }
 

@@ -9,8 +9,6 @@ import '../providers/user_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/auth_wrapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/services.dart';
-import '../constants/api_constants.dart';
 import 'balance_adjustment_screen.dart';
 
 // Màn hình Quản lý Tài khoản: cung cấp các tính năng quản lý ngân hàng, thiết bị và cài đặt bảo mật.
@@ -53,13 +51,15 @@ class AccountManagementScreen extends StatelessWidget {
                       _buildProfileHeader(userProvider),
                       const SizedBox(height: 30),
                       _buildSectionTitle('TÓM TẮT TÀI CHÍNH'),
-                      _buildBalanceCard(context, txProvider.totalBalance),
+                      _buildBalanceCard(context, userProvider.totalBalance),
                       const SizedBox(height: 20),
                       _buildSectionTitle('TÀI KHOẢN ĐANG SỬ DỤNG'),
                       // Hiển thị danh sách ngân hàng đã liên kết
-                      ...userProvider.bankAccounts.map((bank) => FadeInLeft(
-                            child: _buildBankItem(context, bank, userProvider),
-                          )),
+                      ...userProvider.bankAccounts.map(
+                        (bank) => FadeInLeft(
+                          child: _buildBankItem(context, bank, userProvider),
+                        ),
+                      ),
                       if (userProvider.bankAccounts.isEmpty)
                         _buildEmptyState('Chưa có tài khoản liên kết'),
                       const SizedBox(height: 30),
@@ -68,16 +68,32 @@ class AccountManagementScreen extends StatelessWidget {
                       const SizedBox(height: 30),
                       _buildSectionTitle('BẢO MẬT & ĐĂNG NHẬP'),
                       _buildSecurityItem(Icons.history, 'Đổi mật khẩu', true),
-                      _buildSecurityItem(Icons.verified_user_outlined, 'Xác thực 2 lớp', false, trailing: _buildBadge('BẬT')),
-                      _buildSecurityItem(Icons.fingerprint, 'Sinh trắc học / FaceID', false, trailing: _buildSwitch(true)),
+                      _buildSecurityItem(
+                        Icons.verified_user_outlined,
+                        'Xác thực 2 lớp',
+                        false,
+                        trailing: _buildBadge('BẬT'),
+                      ),
+                      _buildSecurityItem(
+                        Icons.fingerprint,
+                        'Sinh trắc học / FaceID',
+                        false,
+                        trailing: _buildSwitch(true),
+                      ),
                       const SizedBox(height: 30),
                       _buildAiSuggestionCard(),
                       const SizedBox(height: 30),
                       _buildSectionTitle('QUẢN LÝ THIẾT BỊ ĐÃ ĐĂNG NHẬP'),
                       // Hiển thị danh sách thiết bị đang đăng nhập
-                      ...userProvider.deviceSessions.map((session) => FadeInUp(
-                            child: _buildDeviceItem(context, session, userProvider),
-                          )),
+                      ...userProvider.deviceSessions.map(
+                        (session) => FadeInUp(
+                          child: _buildDeviceItem(
+                            context,
+                            session,
+                            userProvider,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 40),
                       _buildLogoutButton(context),
                       const SizedBox(height: 40),
@@ -106,17 +122,29 @@ class AccountManagementScreen extends StatelessWidget {
             children: [
               Text(
                 'Account',
-                style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               Text(
                 'Management',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
           const Text(
             'ChiTieuPlus',
-            style: TextStyle(color: Color(0xFFFFB74D), fontWeight: FontWeight.bold, fontSize: 16),
+            style: TextStyle(
+              color: Color(0xFFFFB74D),
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
         ],
       ),
@@ -137,10 +165,16 @@ class AccountManagementScreen extends StatelessWidget {
               child: CircleAvatar(
                 radius: 40,
                 backgroundImage: user.photoUrl.isEmpty
-                    ? const NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Felix') as ImageProvider
+                    ? const NetworkImage(
+                            'https://api.dicebear.com/7.x/avataaars/png?seed=Felix',
+                          )
+                          as ImageProvider
                     : (user.photoUrl.startsWith('data:image/')
-                        ? MemoryImage(base64Decode(user.photoUrl.split(',').last))
-                        : NetworkImage(user.photoUrl)) as ImageProvider,
+                              ? MemoryImage(
+                                  base64Decode(user.photoUrl.split(',').last),
+                                )
+                              : NetworkImage(user.photoUrl))
+                          as ImageProvider,
               ),
             ),
             Positioned(
@@ -152,7 +186,11 @@ class AccountManagementScreen extends StatelessWidget {
                   color: Color(0xFF0F172A),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle, color: Color(0xFF00BFA5), size: 20),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Color(0xFF00BFA5),
+                  size: 20,
+                ),
               ),
             ),
           ],
@@ -163,7 +201,11 @@ class AccountManagementScreen extends StatelessWidget {
           children: [
             Text(
               user.name.isNotEmpty ? user.name : 'Người dùng',
-              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Text(
               'Premium Alchemist',
@@ -207,12 +249,20 @@ class AccountManagementScreen extends StatelessWidget {
             children: [
               const Text(
                 'SỐ DƯ KHẢ DỤNG',
-                style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 _formatCurrency(balance).split('VND')[0],
-                style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const Text(
                 'VND',
@@ -226,13 +276,23 @@ class AccountManagementScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const BalanceAdjustmentScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const BalanceAdjustmentScreen(),
+                    ),
                   );
                 },
-                icon: const Icon(Icons.edit_note, color: Color(0xFFFFB74D), size: 28),
+                icon: const Icon(
+                  Icons.edit_note,
+                  color: Color(0xFFFFB74D),
+                  size: 28,
+                ),
                 tooltip: 'Cập nhật số dư',
               ),
-              Icon(Icons.wallet, color: Colors.white.withOpacity(0.1), size: 50),
+              Icon(
+                Icons.wallet,
+                color: Colors.white.withOpacity(0.1),
+                size: 50,
+              ),
             ],
           ),
         ],
@@ -241,14 +301,18 @@ class AccountManagementScreen extends StatelessWidget {
   }
 
   /// Xây dựng mục hiển thị tài khoản ngân hàng đã liên kết
-  Widget _buildBankItem(BuildContext context, String bankInfo, UserProvider userProvider) {
+  Widget _buildBankItem(
+    BuildContext context,
+    String bankInfo,
+    UserProvider userProvider,
+  ) {
     // Info format: "BankName - AccountNumber"
     final parts = bankInfo.split(' - ');
     final bankName = parts[0];
     final accountNo = parts.length > 1 ? parts[1] : '';
-    final maskedNo = accountNo.length > 4 
-      ? '**** ${accountNo.substring(accountNo.length - 4)}' 
-      : accountNo;
+    final maskedNo = accountNo.length > 4
+        ? '**** ${accountNo.substring(accountNo.length - 4)}'
+        : accountNo;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -266,7 +330,11 @@ class AccountManagementScreen extends StatelessWidget {
               color: const Color(0xFF0F172A),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.account_balance, color: Color(0xFF00BFA5), size: 24),
+            child: const Icon(
+              Icons.account_balance,
+              color: Color(0xFF00BFA5),
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -275,7 +343,11 @@ class AccountManagementScreen extends StatelessWidget {
               children: [
                 Text(
                   bankName,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 Text(
                   maskedNo,
@@ -286,7 +358,8 @@ class AccountManagementScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.link_off, color: Colors.redAccent, size: 20),
-            onPressed: () => _confirmUnlinkBank(context, bankInfo, userProvider),
+            onPressed: () =>
+                _confirmUnlinkBank(context, bankInfo, userProvider),
           ),
         ],
       ),
@@ -315,8 +388,17 @@ class AccountManagementScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
-                Text(email, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                const Text(
+                  'Email',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  email,
+                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                ),
               ],
             ),
           ),
@@ -326,7 +408,12 @@ class AccountManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSecurityItem(IconData icon, String title, bool hasArrow, {Widget? trailing}) {
+  Widget _buildSecurityItem(
+    IconData icon,
+    String title,
+    bool hasArrow, {
+    Widget? trailing,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -336,7 +423,11 @@ class AccountManagementScreen extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           if (trailing != null) trailing,
@@ -355,7 +446,11 @@ class AccountManagementScreen extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Color(0xFFFFB74D), fontSize: 10, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Color(0xFFFFB74D),
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -375,8 +470,8 @@ class AccountManagementScreen extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-          const Color(0xFF0F172A).withOpacity(0.8),
-          const Color(0xFF1E293B).withOpacity(0.8),
+            const Color(0xFF0F172A).withOpacity(0.8),
+            const Color(0xFF1E293B).withOpacity(0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
@@ -393,12 +488,20 @@ class AccountManagementScreen extends StatelessWidget {
               children: [
                 Text(
                   'Gợi ý từ AI',
-                  style: TextStyle(color: Color(0xFF00BFA5), fontWeight: FontWeight.bold, fontSize: 15),
+                  style: TextStyle(
+                    color: Color(0xFF00BFA5),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
                 SizedBox(height: 8),
                 Text(
                   'Tài khoản của bạn có thể an toàn hơn nếu kích hoạt thông báo đăng nhập từ thiết bị lạ.',
-                  style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -409,7 +512,11 @@ class AccountManagementScreen extends StatelessWidget {
   }
 
   /// Hiển thị thông tin thiết bị đã đăng nhập (hỗ trợ đăng xuất từ xa)
-  Widget _buildDeviceItem(BuildContext context, dynamic session, UserProvider userProvider) {
+  Widget _buildDeviceItem(
+    BuildContext context,
+    dynamic session,
+    UserProvider userProvider,
+  ) {
     final isCurrent = session.isCurrentDevice;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -421,7 +528,9 @@ class AccountManagementScreen extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            session.deviceType.toLowerCase().contains('phone') ? Icons.smartphone : Icons.laptop,
+            session.deviceType.toLowerCase().contains('phone')
+                ? Icons.smartphone
+                : Icons.laptop,
             color: Colors.white70,
           ),
           const SizedBox(width: 16),
@@ -431,12 +540,19 @@ class AccountManagementScreen extends StatelessWidget {
               children: [
                 Text(
                   session.deviceName,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 if (isCurrent)
                   const Text(
                     'THIẾT BỊ HIỆN TẠI',
-                    style: TextStyle(color: Color(0xFF00BFA5), fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Color(0xFF00BFA5),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   )
                 else
                   Text(
@@ -448,8 +564,12 @@ class AccountManagementScreen extends StatelessWidget {
           ),
           if (!isCurrent)
             TextButton(
-              onPressed: () => _confirmLogoutDevice(context, session, userProvider),
-              child: const Text('Đăng xuất', style: TextStyle(color: Color(0xFFFF8A65), fontSize: 13)),
+              onPressed: () =>
+                  _confirmLogoutDevice(context, session, userProvider),
+              child: const Text(
+                'Đăng xuất',
+                style: TextStyle(color: Color(0xFFFF8A65), fontSize: 13),
+              ),
             ),
         ],
       ),
@@ -479,18 +599,22 @@ class AccountManagementScreen extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
         ),
         icon: const Icon(Icons.logout, color: Colors.white),
         label: const Text(
           'Đăng xuất',
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
-
-
 
   Widget _buildEmptyState(String message) {
     return Padding(
@@ -498,19 +622,29 @@ class AccountManagementScreen extends StatelessWidget {
       child: Center(
         child: Text(
           message,
-          style: const TextStyle(color: Colors.white24, fontStyle: FontStyle.italic),
+          style: const TextStyle(
+            color: Colors.white24,
+            fontStyle: FontStyle.italic,
+          ),
         ),
       ),
     );
   }
 
   // Hiển thị hộp thoại xác nhận hủy liên kết ngân hàng
-  void _confirmUnlinkBank(BuildContext context, String bankInfo, UserProvider userProvider) {
+  void _confirmUnlinkBank(
+    BuildContext context,
+    String bankInfo,
+    UserProvider userProvider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Hủy liên kết?', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Hủy liên kết?',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Text(
           'Bạn có chắc chắn muốn hủy liên kết tài khoản $bankInfo?',
           style: const TextStyle(color: Colors.white70),
@@ -525,7 +659,10 @@ class AccountManagementScreen extends StatelessWidget {
               userProvider.removeBankAccount(bankInfo);
               Navigator.pop(context);
             },
-            child: const Text('Xác nhận', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Xác nhận',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
@@ -533,12 +670,19 @@ class AccountManagementScreen extends StatelessWidget {
   }
 
   // Hiển thị hộp thoại xác nhận đăng xuất thiết bị khác
-  void _confirmLogoutDevice(BuildContext context, dynamic session, UserProvider userProvider) {
+  void _confirmLogoutDevice(
+    BuildContext context,
+    dynamic session,
+    UserProvider userProvider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Đăng xuất thiết bị?', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Đăng xuất thiết bị?',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Text(
           'Thiết bị ${session.deviceName} sẽ bị đăng xuất khỏi tài khoản của bạn.',
           style: const TextStyle(color: Colors.white70),
@@ -553,7 +697,10 @@ class AccountManagementScreen extends StatelessWidget {
               userProvider.removeDeviceSession(session.id);
               Navigator.pop(context);
             },
-            child: const Text('Đăng xuất', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Đăng xuất',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
@@ -567,7 +714,10 @@ class AccountManagementScreen extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
         title: const Text('Đăng xuất?', style: TextStyle(color: Colors.white)),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất?', style: TextStyle(color: Colors.white70)),
+        content: const Text(
+          'Bạn có chắc chắn muốn đăng xuất?',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -575,7 +725,10 @@ class AccountManagementScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Đăng xuất', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Đăng xuất',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:animate_do/animate_do.dart';
 import 'package:chitieu_plus/models/notification_model.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
@@ -23,21 +22,31 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     final notificationProvider = context.watch<NotificationProvider>();
     final transactionProvider = context.watch<TransactionProvider>();
-    
+
     final txNotifications = transactionProvider.transactions.map((tx) {
       final isTopUp = tx.note == 'Nạp qua Ví dùng thử';
       final isIncome = tx.type == TransactionType.income;
       return NotificationModel(
         id: tx.id.hashCode,
-        title: isTopUp ? 'Biến động số dư' : (isIncome ? 'Thu nhập: ${tx.category}' : 'Chi tiêu: ${tx.category}'),
-        body: '${isIncome ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ • ${tx.title}\nTài khoản: ${tx.wallet == 'main' ? 'Ví chính' : 'Ví dùng thử'}',
+        title: isTopUp
+            ? 'Biến động số dư'
+            : (isIncome
+                  ? 'Thu nhập: ${tx.category}'
+                  : 'Chi tiêu: ${tx.category}'),
+        body:
+            '${isIncome ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ • ${tx.title}\nTài khoản: ${tx.wallet == 'main' ? 'Ví chính' : 'Ví dùng thử'}',
         timestamp: tx.date,
-        type: isTopUp ? NotificationType.fluctuation : NotificationType.transaction,
-        isRead: true, 
+        type: isTopUp
+            ? NotificationType.fluctuation
+            : NotificationType.transaction,
+        isRead: true,
       );
     }).toList();
 
-    final allItems = [...notificationProvider.notifications, ...txNotifications];
+    final allItems = [
+      ...notificationProvider.notifications,
+      ...txNotifications,
+    ];
     allItems.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
     final filteredNotifications = _selectedFilter == 'Tất cả'
@@ -120,7 +129,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Widget _buildFilterBar() {
-    final filters = ['Tất cả', 'Giao dịch', 'Biến động', 'Quan trọng', 'Tin khác'];
+    final filters = [
+      'Tất cả',
+      'Giao dịch',
+      'Biến động',
+      'Quan trọng',
+      'Tin khác',
+    ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -198,9 +213,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        if (item.type == NotificationType.transaction || item.type == NotificationType.fluctuation) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Xem và chỉnh sửa hóa đơn tại mục Giao dịch trên thanh điều hướng')));
-           return;
+        if (item.type == NotificationType.transaction ||
+            item.type == NotificationType.fluctuation) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Xem và chỉnh sửa hóa đơn tại mục Giao dịch trên thanh điều hướng',
+              ),
+            ),
+          );
+          return;
         }
         if (_isSelectionMode) {
           setState(() {
@@ -282,7 +304,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ],
               ),
             ),
-            if (_isSelectionMode && item.type != NotificationType.transaction && item.type != NotificationType.fluctuation)
+            if (_isSelectionMode &&
+                item.type != NotificationType.transaction &&
+                item.type != NotificationType.fluctuation)
               Checkbox(
                 value: isSelected,
                 onChanged: (val) {
@@ -303,4 +327,3 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 }
-

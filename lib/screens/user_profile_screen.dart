@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../widgets/premium_date_picker.dart'; // Thêm import
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
@@ -264,30 +265,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return NetworkImage(photoUrl);
   }
 
+  // Hàm chọn ngày sinh với giao diện Premium (Image 2 style)
   Future<void> _selectDate() async {
-    final themeProvider = context.read<ThemeProvider>();
     final initialDate =
         DateTime.tryParse(_selectedDob.split('/').reversed.join('-')) ??
         DateTime(2000, 1, 1);
 
-    final picked = await showDatePicker(
+    final picked = await showDialog<DateTime>(
       context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData(
-            colorScheme: themeProvider.isDarkMode
-                ? const ColorScheme.dark(primary: Colors.blue)
-                : const ColorScheme.light(primary: Colors.blue),
-            dialogTheme: DialogThemeData(
-              backgroundColor: themeProvider.backgroundColor,
-            ),
-          ),
-          child: child ?? const SizedBox(),
-        );
-      },
+      builder: (context) => PremiumDatePicker(
+        initialDate: initialDate,
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
+      ),
     );
     if (picked != null) {
       setState(() {
@@ -528,12 +518,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       theme: themeProvider,
                       icon: Icons.shield_rounded,
                       title: 'Bảo mật & Thiết bị',
-                      subtitle: 'Quản lý tài khoản ngân hàng và thiết bị đăng nhập',
+                      subtitle:
+                          'Quản lý tài khoản ngân hàng và thiết bị đăng nhập',
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const SecurityManagementScreen(),
+                            builder: (context) =>
+                                const SecurityManagementScreen(),
                           ),
                         );
                       },
@@ -634,11 +626,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.secondaryColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.foregroundColor.withOpacity(0.05),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF1E293B).withOpacity(0.5),
+            const Color(0xFF0F172A).withOpacity(0.5),
+          ],
         ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -646,25 +648,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.blue,
+              color: Color(0xFF00D1FF),
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
           Row(
             children: [
-              Icon(
-                icon,
-                color: theme.foregroundColor.withOpacity(0.5),
-                size: 20,
-              ),
+              Icon(icon, color: Colors.white54, size: 20),
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
                   controller: controller,
                   keyboardType: keyboardType,
-                  style: TextStyle(
-                    color: theme.foregroundColor,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
@@ -691,11 +689,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.secondaryColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.foregroundColor.withOpacity(0.05),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF1E293B).withOpacity(0.5),
+            const Color(0xFF0F172A).withOpacity(0.5),
+          ],
         ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -703,7 +711,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.blue,
+              color: Color(0xFF00D1FF),
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -711,17 +719,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(
-                icon,
-                color: theme.foregroundColor.withOpacity(0.5),
+              const Icon(
+                Icons.calendar_month_rounded,
+                color: Color(0xFF00D1FF),
                 size: 20,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   value,
-                  style: TextStyle(
-                    color: theme.foregroundColor,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
@@ -747,11 +755,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.secondaryColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.foregroundColor.withOpacity(0.05),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF1E293B).withOpacity(0.5),
+            const Color(0xFF0F172A).withOpacity(0.5),
+          ],
         ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -759,18 +777,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.blue,
+              color: Color(0xFF00D1FF),
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
           Row(
             children: [
-              Icon(
-                icon,
-                color: theme.foregroundColor.withOpacity(0.5),
-                size: 20,
-              ),
+              Icon(icon, color: Colors.white54, size: 20),
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonHideUnderline(
@@ -778,13 +792,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     value: value,
                     isExpanded: true,
                     isDense: true,
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: theme.foregroundColor.withOpacity(0.5),
+                      color: Colors.white54,
                     ),
-                    dropdownColor: theme.secondaryColor,
-                    style: TextStyle(
-                      color: theme.foregroundColor,
+                    dropdownColor: const Color(0xFF0F172A),
+                    style: const TextStyle(
+                      color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
@@ -800,7 +814,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8), // slightly balance padding
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -820,9 +834,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         decoration: BoxDecoration(
           color: theme.secondaryColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: theme.foregroundColor.withOpacity(0.05),
-          ),
+          border: Border.all(color: theme.foregroundColor.withOpacity(0.05)),
         ),
         child: Row(
           children: [

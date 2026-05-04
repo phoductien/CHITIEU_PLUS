@@ -33,11 +33,33 @@ class MainDrawer extends StatefulWidget {
 class _MainDrawerState extends State<MainDrawer> {
   final ScrollController _scrollController = ScrollController();
   String _cacheSize = '0.00 B';
+  bool _hasSeenOnboarding = true;
 
   @override
   void initState() {
     super.initState();
     _calculateCacheSize();
+    _loadOnboardingStatus();
+  }
+
+  Future<void> _loadOnboardingStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+      });
+    }
+  }
+
+  Future<void> _toggleOnboarding(bool show) async {
+    final prefs = await SharedPreferences.getInstance();
+    // has_seen_onboarding = true means skip, so if show is true, has_seen_onboarding is false
+    await prefs.setBool('has_seen_onboarding', !show);
+    if (mounted) {
+      setState(() {
+        _hasSeenOnboarding = !show;
+      });
+    }
   }
 
   @override
@@ -184,7 +206,8 @@ class _MainDrawerState extends State<MainDrawer> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const AccountManagementScreen(),
+                              builder: (context) =>
+                                  const AccountManagementScreen(),
                             ),
                           );
                         },
@@ -282,6 +305,14 @@ class _MainDrawerState extends State<MainDrawer> {
                         value: themeProvider.isDarkMode,
                         onChanged: (val) => themeProvider.toggleDarkMode(val),
                       ),
+                      _buildDrawerSwitch(
+                        context: context,
+                        themeProvider: themeProvider,
+                        icon: Icons.auto_awesome_motion_rounded,
+                        title: 'Hiển thị màn hình giới thiệu',
+                        value: !_hasSeenOnboarding,
+                        onChanged: (val) => _toggleOnboarding(val),
+                      ),
                       _buildDrawerItem(
                         context: context,
                         themeProvider: themeProvider,
@@ -312,7 +343,8 @@ class _MainDrawerState extends State<MainDrawer> {
                               fontSize: 13,
                             ),
                           ),
-                          onTap: () => _handleClearCache(context, themeProvider),
+                          onTap: () =>
+                              _handleClearCache(context, themeProvider),
                         ),
                       _buildDrawerItem(
                         context: context,
@@ -455,8 +487,7 @@ class _MainDrawerState extends State<MainDrawer> {
             Icon(
               icon,
               color:
-                  iconColor ??
-                  themeProvider.foregroundColor.withOpacity(0.7),
+                  iconColor ?? themeProvider.foregroundColor.withOpacity(0.7),
               size: 22,
             ),
             const SizedBox(width: 16),
@@ -552,7 +583,10 @@ class _MainDrawerState extends State<MainDrawer> {
     int size = 0;
     try {
       if (await directory.exists()) {
-        await for (var entity in directory.list(recursive: true, followLinks: false)) {
+        await for (var entity in directory.list(
+          recursive: true,
+          followLinks: false,
+        )) {
           if (entity is File) {
             size += await entity.length();
           }
@@ -593,7 +627,10 @@ class _MainDrawerState extends State<MainDrawer> {
         ),
         title: Row(
           children: [
-            const Icon(Icons.cleaning_services_rounded, color: Color(0xFFEC5B13)),
+            const Icon(
+              Icons.cleaning_services_rounded,
+              color: Color(0xFFEC5B13),
+            ),
             const SizedBox(width: 10),
             Text(
               'Dọn dẹp bộ nhớ đệm?',
@@ -752,4 +789,3 @@ class _MainDrawerState extends State<MainDrawer> {
     }
   }
 }
-

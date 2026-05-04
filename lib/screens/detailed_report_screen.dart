@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
-import '../services/transaction_service.dart';
 
 enum ReportPeriod { thisMonth, lastMonth, custom }
 
@@ -29,159 +28,66 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
 
   // Colors from the mockup
   final Color _bgColor = const Color(0xFF141824);
-  final Color _cardColor = const Color(0xFF1F2636);
-  final Color _incomeColor = const Color(0xFF00F0FF);
-  final Color _expenseColor = const Color(0xFFFFB74D);
+  final Color _cardColor = const Color(0xFF1C2230);
+  final Color _incomeColor = const Color(0xFF00E676); // Premium Green
+  final Color _expenseColor = const Color(0xFFFF5252); // Red premium
+  final Color _accentColor = const Color(0xFF7C4DFF);
 
   @override
   Widget build(BuildContext context) {
-    final transactionProvider = context.watch<TransactionProvider>();
-    final allTransactions = transactionProvider.transactions;
+    return Consumer<TransactionProvider>(
+      builder: (context, provider, child) {
+        final transactions = _filterTransactions(
+          provider.transactions,
+          _selectedPeriod,
+          false,
+        );
+        final hasData = transactions.any((tx) => tx.amount > 0);
 
-    // Current period
-    final currentTx = _filterTransactions(
-      allTransactions,
-      _selectedPeriod,
-      false,
-    );
-    // Previous period
-    final previousTx = _filterTransactions(
-      allTransactions,
-      _selectedPeriod,
-      true,
-    );
-
-    double currentIncome = _calculateTotal(currentTx, TransactionType.income);
-    double currentExpense = _calculateTotal(currentTx, TransactionType.expense);
-
-    double prevIncome = _calculateTotal(previousTx, TransactionType.income);
-    double prevExpense = _calculateTotal(previousTx, TransactionType.expense);
-
-    // Calculate percentages
-    double incomePct = prevIncome == 0
-        ? 0
-        : ((currentIncome - prevIncome) / prevIncome) * 100;
-    double expensePct = prevExpense == 0
-        ? 0
-        : ((currentExpense - prevExpense) / prevExpense) * 100;
-
-    Map<String, double> categorySpending = {};
-    for (var tx in currentTx) {
-      if (tx.type == TransactionType.expense) {
-        categorySpending[tx.category] =
-            (categorySpending[tx.category] ?? 0) + tx.amount;
-      }
-    }
-
-    // New stats
-    int txCount = currentTx.length;
-    
-    // Day count for average
-    final now = DateTime.now();
-    DateTime start;
-    DateTime end;
-    if (_selectedPeriod == ReportPeriod.thisMonth) {
-      start = DateTime(now.year, now.month, 1);
-      end = now;
-    } else if (_selectedPeriod == ReportPeriod.lastMonth) {
-      start = DateTime(now.year, now.month - 1, 1);
-      end = DateTime(now.year, now.month, 0);
-    } else if (_customDateRange != null) {
-      start = _customDateRange!.start;
-      end = _customDateRange!.end;
-    } else {
-      start = DateTime(now.year, now.month, 1);
-      end = now;
-    }
-    int days = end.difference(start).inDays + 1;
-    if (days <= 0) days = 1;
-    double avgDailySpend = currentExpense / days;
-
-    return Scaffold(
-      backgroundColor: _bgColor,
-      appBar: AppBar(
-        backgroundColor: _bgColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Báo cáo chi tiết',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0, top: 10, bottom: 10),
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                try {
-                  final service = TransactionService();
-                  await service.exportAllToSqliteBytes(webFormat: 'csv');
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Xuất file thành công')),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-                  }
-                }
-              },
-              icon: const Icon(
-                Icons.file_upload_outlined,
-                size: 16,
-                color: Color(0xFFFFB74D),
+        return Scaffold(
+          backgroundColor: _bgColor,
+          appBar: AppBar(
+            backgroundColor: _bgColor,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: const Text(
+              'Báo cáo chi tiết',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
-              label: const Text(
-                'Xuất Excel',
-                style: TextStyle(color: Color(0xFFFFB74D), fontSize: 12),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2A201C),
-                side: const BorderSide(color: Color(0xFFFFB74D), width: 1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 0,
-              ),
+            ),
+            centerTitle: true,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPeriodSelector(),
+                const SizedBox(height: 24),
+                if (!hasData)
+                  _buildEmptyState()
+                else ...[
+                  _buildSummaryCards(transactions),
+                  const SizedBox(height: 24),
+                  _buildCategoryAllocation(transactions),
+                  const SizedBox(height: 24),
+                  _buildTrendLineChart(transactions),
+                  const SizedBox(height: 24),
+                  _buildBankStatsSection(transactions),
+                  const SizedBox(height: 24),
+                  _buildBudgetLimits(_getCategorySpending(transactions)),
+                  const SizedBox(height: 32),
+                ],
+              ],
             ),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPeriodSelector(),
-            const SizedBox(height: 24),
-            _buildSummaryCards(
-              currentIncome,
-              currentExpense,
-              incomePct,
-              expensePct,
-              txCount,
-              avgDailySpend,
-            ),
-            const SizedBox(height: 24),
-            _buildAiAdvice(categorySpending, currentExpense),
-            const SizedBox(height: 24),
-            _buildDonutChart(categorySpending, currentExpense),
-            const SizedBox(height: 24),
-            _buildBarChart(currentTx),
-            const SizedBox(height: 24),
-            _buildBankStatsSection(currentTx),
-            const SizedBox(height: 24),
-            _buildBudgetLimits(categorySpending),
-            const SizedBox(height: 80),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -236,10 +142,29 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
         .toList();
   }
 
-  double _calculateTotal(List<TransactionModel> txs, TransactionType type) {
-    return txs
-        .where((t) => t.type == type)
-        .fold(0.0, (sum, t) => sum + t.amount);
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 100),
+          Icon(
+            Icons.analytics_outlined,
+            size: 80,
+            color: Colors.white.withOpacity(0.1),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Chưa có dữ liệu giao dịch',
+            style: TextStyle(color: Colors.white54, fontSize: 16),
+          ),
+          const Text(
+            'Hãy thêm giao dịch để xem báo cáo chi tiết',
+            style: TextStyle(color: Colors.white38, fontSize: 12),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildPeriodSelector() {
@@ -268,10 +193,10 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
               builder: (context, child) {
                 return Theme(
                   data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.dark(
-                      primary: Color(0xFFF57C00),
+                    colorScheme: ColorScheme.dark(
+                      primary: _accentColor,
                       onPrimary: Colors.white,
-                      surface: Color(0xFF1F2636),
+                      surface: _cardColor,
                       onSurface: Colors.white,
                     ),
                   ),
@@ -294,7 +219,7 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFF57C00) : _cardColor,
+            color: isSelected ? _accentColor : _cardColor,
             borderRadius: BorderRadius.circular(20),
           ),
           alignment: Alignment.center,
@@ -311,94 +236,27 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     );
   }
 
-  Widget _buildSummaryCards(
-    double income,
-    double expense,
-    double incomePct,
-    double expensePct,
-    int txCount,
-    double avgDailySpend,
-  ) {
-    final currencyFormat = NumberFormat('#,###', 'vi_VN');
-    return Column(
+  Widget _buildSummaryCards(List<TransactionModel> transactions) {
+    double income = 0;
+    double expense = 0;
+    for (var tx in transactions) {
+      if (tx.type == TransactionType.income) {
+        income += tx.amount;
+      } else {
+        expense += tx.amount;
+      }
+    }
+
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildSummaryCardItem(
-                'TỔNG THU NHẬP',
-                '+',
-                income,
-                incomePct,
-                _incomeColor,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildSummaryCardItem(
-                'TỔNG CHI TIÊU',
-                '-',
-                expense,
-                expensePct,
-                _expenseColor,
-              ),
-            ),
-          ],
+        Expanded(
+          child: _buildSummaryCardItem('THU NHẬP', '+', income, _incomeColor),
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildMiniStatCard(
-                'Số lượng GD',
-                txCount.toString(),
-                Icons.receipt_long_rounded,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildMiniStatCard(
-                'TB chi tiêu/ngày',
-                '${currencyFormat.format(avgDailySpend / 1000)}k',
-                Icons.analytics_rounded,
-              ),
-            ),
-          ],
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildSummaryCardItem('CHI TIÊU', '-', expense, _expenseColor),
         ),
       ],
-    );
-  }
-
-  Widget _buildMiniStatCard(String title, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white38, size: 20),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(color: Colors.white38, fontSize: 10),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -406,20 +264,13 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     String title,
     String sign,
     double amount,
-    double pct,
-    Color mainColor,
+    Color color,
   ) {
-    final currencyFormat = NumberFormat('#,###', 'vi_VN');
-    String formattedAmount = '$sign${currencyFormat.format(amount)}k';
-    if (amount == 0) formattedAmount = '0k';
-
-    String pctText = '~ ${pct.abs().toStringAsFixed(0)}% so với tháng trước';
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,121 +278,18 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
           Text(
             title,
             style: TextStyle(
-              color: mainColor,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            formattedAmount,
-            style: TextStyle(
-              color: mainColor,
-              fontSize: 22,
+              color: Colors.white54,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                pct >= 0 ? Icons.trending_up : Icons.trending_down,
-                size: 12,
-                color: Colors.white54,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  pctText,
-                  style: const TextStyle(color: Colors.white54, fontSize: 10),
-                  maxLines: 2,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAiAdvice(
-    Map<String, double> categorySpending,
-    double totalExpense,
-  ) {
-    String topCategory = 'Ăn uống';
-    if (categorySpending.isNotEmpty) {
-      topCategory = categorySpending.entries
-          .reduce((a, b) => a.value > b.value ? a : b)
-          .key;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: const Border(
-          left: BorderSide(color: Color(0xFF00F0FF), width: 4),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00F0FF).withAlpha(25),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFF00F0FF),
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Lời khuyên từ AI',
-                style: TextStyle(
-                  color: Color(0xFF00F0FF),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          RichText(
-            text: TextSpan(
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 13,
-                height: 1.5,
-              ),
-              children: [
-                const TextSpan(text: 'Bạn đã chi tiêu cho '),
-                TextSpan(
-                  text: topCategory,
-                  style: const TextStyle(
-                    color: Color(0xFFFFB74D),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(
-                  text:
-                      ' chiếm tỷ trọng lớn nhất. Hãy thử sử dụng gói coupon mới để tiết kiệm khoảng ',
-                ),
-                const TextSpan(
-                  text: '1,200k',
-                  style: TextStyle(
-                    color: Color(0xFF00F0FF),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: ' trong tuần tới.'),
-              ],
+          Text(
+            '$sign${NumberFormat('#,###', 'vi_VN').format(amount)}đ',
+            style: TextStyle(
+              color: color,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -549,12 +297,29 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     );
   }
 
-  Widget _buildDonutChart(Map<String, double> spending, double total) {
+  Widget _buildCategoryAllocation(List<TransactionModel> transactions) {
+    final categorySpending = _getCategorySpending(transactions);
+    if (categorySpending.isEmpty) return const SizedBox.shrink();
+
+    final totalExpense = categorySpending.values.fold(
+      0.0,
+      (sum, item) => sum + item,
+    );
+    final sortedCategories = categorySpending.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,162 +328,128 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Phân bổ chi tiêu',
+                'PHÂN BỔ CHI TIÊU',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.more_horiz, color: Colors.white54),
-                onPressed: () {},
+              Text(
+                'Tổng: ${NumberFormat('#,###', 'vi_VN').format(totalExpense)}đ',
+                style: TextStyle(
+                  color: _expenseColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          if (total == 0 || spending.isEmpty)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text(
-                  'Chưa có dữ liệu',
-                  style: TextStyle(color: Colors.white54),
-                ),
-              ),
-            )
-          else
-            Row(
-              children: [
-                SizedBox(
-                  height: 140,
-                  width: 140,
-                  child: Stack(
-                    alignment: Alignment.center,
+          const SizedBox(height: 20),
+          ...sortedCategories.take(5).map((entry) {
+            final double percentage = totalExpense > 0
+                ? (entry.value / totalExpense)
+                : 0;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _accentColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      _getCategoryIcon(entry.key),
+                      color: _accentColor,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        LinearProgressIndicator(
+                          value: percentage,
+                          minHeight: 4,
+                          backgroundColor: Colors.white10,
+                          valueColor: AlwaysStoppedAnimation(_accentColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      PieChart(
-                        PieChartData(
-                          sectionsSpace: 4,
-                          centerSpaceRadius: 50,
-                          startDegreeOffset: -90,
-                          sections: _generatePieSections(spending, total),
+                      Text(
+                        '${(percentage * 100).toStringAsFixed(1)}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'TỔNG',
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 10,
-                            ),
-                          ),
-                          Text(
-                            '100%',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        '${NumberFormat('#,###', 'vi_VN').format(entry.value)}đ',
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _generateLegend(spending, total),
-                  ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
   }
 
-  List<PieChartSectionData> _generatePieSections(
-    Map<String, double> spending,
-    double total,
-  ) {
-    final sorted = spending.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    return sorted.map((e) {
-      return PieChartSectionData(
-        color: _getCategoryChartColor(e.key),
-        value: e.value,
-        title: '',
-        radius: 12,
-        showTitle: false,
-      );
-    }).toList();
-  }
+  Widget _buildTrendLineChart(List<TransactionModel> transactions) {
+    final dailyData = _groupTransactionsByDate(transactions);
+    if (dailyData.isEmpty) return const SizedBox.shrink();
 
-  List<Widget> _generateLegend(Map<String, double> spending, double total) {
-    final sorted = spending.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    return sorted.take(4).map((e) {
-      double pct = (e.value / total) * 100;
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8.0),
-        child: Row(
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _getCategoryChartColor(e.key),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                e.key,
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Text(
-              '${pct.toStringAsFixed(0)}%',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      );
-    }).toList();
-  }
+    final List<FlSpot> spots = [];
+    final List<DateTime> dates = dailyData.keys.toList()..sort();
 
-  Color _getCategoryChartColor(String category) {
-    switch (category) {
-      case 'Ăn uống':
-        return const Color(0xFFFFB74D);
-      case 'Mua sắm':
-        return const Color(0xFF00F0FF);
-      case 'Di chuyển':
-        return const Color(0xFF7986CB);
-      case 'Giáo dục':
-        return const Color(0xFF81C784);
-      default:
-        return Colors.white24;
+    for (int i = 0; i < dates.length; i++) {
+      final date = dates[i];
+      final data = dailyData[date]!;
+      final netChange = (data['income'] ?? 0) - (data['expense'] ?? 0);
+      spots.add(FlSpot(i.toDouble(), netChange / 1000));
     }
-  }
 
-  Widget _buildBarChart(List<TransactionModel> transactions) {
+    final bool isTrendingUp =
+        spots.isNotEmpty && (spots.last.y >= spots.first.y);
+    final chartColor = isTrendingUp ? _incomeColor : _expenseColor;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -727,99 +458,184 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Xu hướng thu chi',
+                'XU HƯỚNG THU CHI',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
                 ),
               ),
-              const Text(
-                'Theo thứ',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+              Row(
+                children: [
+                  _buildChartLegend('TĂNG', _incomeColor),
+                  const SizedBox(width: 12),
+                  _buildChartLegend('GIẢM', _expenseColor),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _buildChartLegend('Thu nhập', _incomeColor),
-              const SizedBox(width: 16),
-              _buildChartLegend('Chi tiêu', _expenseColor),
-            ],
-          ),
-          const SizedBox(height: 24),
-          if (transactions.isEmpty)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text(
-                  'Chưa có dữ liệu',
-                  style: TextStyle(color: Colors.white54),
+          const SizedBox(height: 32),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.white.withOpacity(0.05),
+                    strokeWidth: 1,
+                  ),
                 ),
-              ),
-            )
-          else
-            SizedBox(
-              height: 180,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: _getMaxBarValue(transactions) * 1.2,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      tooltipBgColor: const Color(0xFF2D3748),
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        return BarTooltipItem(
-                          '${rod.toY.toStringAsFixed(0)}k',
-                          TextStyle(
-                            color: rod.color,
-                            fontWeight: FontWeight.bold,
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: (dates.length / 5).clamp(1, 10).toDouble(),
+                      getTitlesWidget: (value, meta) {
+                        int index = value.toInt();
+                        if (index < 0 || index >= dates.length)
+                          return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            DateFormat('dd/MM').format(dates[index]),
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 10,
+                            ),
                           ),
                         );
                       },
                     ),
                   ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              _getBarXLabel(value.toInt()),
-                              style: const TextStyle(
-                                color: Colors.white54,
-                                fontSize: 10,
-                              ),
-                            ),
-                          );
-                        },
-                        reservedSize: 22,
-                      ),
-                    ),
-                    leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    color: chartColor,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: chartColor.withOpacity(0.1),
                     ),
                   ),
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  barGroups: _generateBarGroups(transactions),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    tooltipBgColor: _cardColor,
+                    tooltipRoundedRadius: 12,
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final date = dates[spot.x.toInt()];
+                        final data = dailyData[date]!;
+                        final total =
+                            (data['income'] ?? 0) - (data['expense'] ?? 0);
+                        return LineTooltipItem(
+                          '${DateFormat('dd/MM/yyyy').format(date)}\n',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: '${data['count']} giao dịch\n',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  '${NumberFormat('#,###', 'vi_VN').format(total)}đ',
+                              style: TextStyle(
+                                color: total >= 0
+                                    ? _incomeColor
+                                    : _expenseColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList();
+                    },
+                  ),
                 ),
               ),
             ),
+          ),
         ],
       ),
     );
+  }
+
+  Map<DateTime, Map<String, dynamic>> _groupTransactionsByDate(
+    List<TransactionModel> txs,
+  ) {
+    Map<DateTime, Map<String, dynamic>> result = {};
+    for (var tx in txs) {
+      final date = DateTime(tx.date.year, tx.date.month, tx.date.day);
+      result.putIfAbsent(
+        date,
+        () => {'income': 0.0, 'expense': 0.0, 'count': 0},
+      );
+      if (tx.type == TransactionType.income) {
+        result[date]!['income'] += tx.amount;
+      } else {
+        result[date]!['expense'] += tx.amount;
+      }
+      result[date]!['count'] += 1;
+    }
+    return result;
+  }
+
+  Map<String, double> _getCategorySpending(
+    List<TransactionModel> transactions,
+  ) {
+    Map<String, double> spending = {};
+    for (var tx in transactions) {
+      if (tx.type == TransactionType.expense) {
+        spending[tx.category] = (spending[tx.category] ?? 0) + tx.amount;
+      }
+    }
+    return spending;
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Ăn uống':
+        return Icons.restaurant;
+      case 'Di chuyển':
+        return Icons.directions_car;
+      case 'Mua sắm':
+        return Icons.shopping_bag;
+      case 'Giải trí':
+        return Icons.movie;
+      case 'Sức khỏe':
+        return Icons.medical_services;
+      case 'Giáo dục':
+        return Icons.school;
+      default:
+        return Icons.category;
+    }
   }
 
   Widget _buildChartLegend(String label, Color color) {
@@ -842,87 +658,10 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     );
   }
 
-  double _getMaxBarValue(List<TransactionModel> txs) {
-    final groups = _groupTransactionsForBarChart(txs);
-    double maxV = 0;
-    for (var dayMap in groups.values) {
-      for (var v in dayMap.values) {
-        if (v > maxV) maxV = v;
-      }
-    }
-    return maxV == 0 ? 100 : maxV;
-  }
-
-  Map<int, Map<TransactionType, double>> _groupTransactionsForBarChart(
-    List<TransactionModel> txs,
-  ) {
-    Map<int, Map<TransactionType, double>> result = {};
-    for (var tx in txs) {
-      int key = tx.date.weekday; // 1 to 7
-      result.putIfAbsent(
-        key,
-        () => {TransactionType.income: 0, TransactionType.expense: 0},
-      );
-      result[key]![tx.type] = (result[key]![tx.type] ?? 0) + (tx.amount / 1000);
-    }
-    return result;
-  }
-
-  List<BarChartGroupData> _generateBarGroups(List<TransactionModel> txs) {
-    final groups = _groupTransactionsForBarChart(txs);
-    List<BarChartGroupData> data = [];
-    for (int i = 1; i <= 7; i++) {
-      final dayData =
-          groups[i] ?? {TransactionType.income: 0, TransactionType.expense: 0};
-      data.add(
-        BarChartGroupData(
-          x: i,
-          barRods: [
-            BarChartRodData(
-              toY: dayData[TransactionType.income] ?? 0,
-              color: _incomeColor,
-              width: 10,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(4),
-              ),
-            ),
-            BarChartRodData(
-              toY: dayData[TransactionType.expense] ?? 0,
-              color: _expenseColor,
-              width: 10,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(4),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return data;
-  }
-
   Widget _buildBankStatsSection(List<TransactionModel> transactions) {
     Map<String, Map<TransactionType, double>> bankStats = {};
     for (var tx in transactions) {
-      String bankName = tx.bankBrandName;
-      String accNum = tx.accountNumber;
-
-      // Fallback cho dữ liệu cũ: parse từ note
-      if (bankName == 'Khác' && tx.note != null && tx.note!.startsWith('Từ: ')) {
-        try {
-          final parts = tx.note!.substring(4).split(' (');
-          bankName = parts[0];
-          if (parts.length > 1) {
-            accNum = parts[1].replaceAll(')', '');
-          }
-        } catch (_) {}
-      }
-
-      if (bankName == 'Khác' && accNum.isEmpty) continue; // Bỏ qua nếu không phải GD ngân hàng
-
-      String key = accNum.isEmpty ? bankName : '$bankName - $accNum';
+      String key = tx.bankBrandName.isNotEmpty ? tx.bankBrandName : 'Khác';
       bankStats.putIfAbsent(
         key,
         () => {TransactionType.income: 0, TransactionType.expense: 0},
@@ -933,23 +672,24 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
     final currencyFormat = NumberFormat('#,###', 'vi_VN');
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Thống kê theo tài khoản',
+            'THỐNG KÊ TÀI KHOẢN',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           if (bankStats.isEmpty)
             const Text(
               'Chưa có dữ liệu ngân hàng',
@@ -993,7 +733,7 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
         ],
       ),
     );
@@ -1016,10 +756,7 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: TextStyle(color: color, fontSize: 10),
-            ),
+            Text(label, style: TextStyle(color: color, fontSize: 10)),
             Text(
               '${format.format(amount)}đ',
               style: TextStyle(
@@ -1033,27 +770,6 @@ class _DetailedReportScreenState extends State<DetailedReportScreen> {
         ),
       ),
     );
-  }
-
-  String _getBarXLabel(int index) {
-    switch (index) {
-      case 1:
-        return 'T2';
-      case 2:
-        return 'T3';
-      case 3:
-        return 'T4';
-      case 4:
-        return 'T5';
-      case 5:
-        return 'T6';
-      case 6:
-        return 'T7';
-      case 7:
-        return 'CN';
-      default:
-        return '';
-    }
   }
 
   Widget _buildBudgetLimits(Map<String, double> categorySpending) {

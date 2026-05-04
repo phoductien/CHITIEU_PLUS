@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
+import '../widgets/premium_date_picker.dart'; // Thêm import
 import 'package:chitieu_plus/providers/app_session_provider.dart';
 import '../models/saving_goal_model.dart';
 import '../providers/saving_goal_provider.dart';
@@ -20,7 +21,7 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _targetController = TextEditingController();
   final TextEditingController _currentController = TextEditingController();
-  
+
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 30));
   String _selectedIcon = 'savings';
   String _selectedColor = '#F05D15';
@@ -52,8 +53,12 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
     super.initState();
     if (widget.initialGoal != null) {
       _titleController.text = widget.initialGoal!.title;
-      _targetController.text = widget.initialGoal!.targetAmount.toInt().toString();
-      _currentController.text = widget.initialGoal!.currentAmount.toInt().toString();
+      _targetController.text = widget.initialGoal!.targetAmount
+          .toInt()
+          .toString();
+      _currentController.text = widget.initialGoal!.currentAmount
+          .toInt()
+          .toString();
       _selectedDate = widget.initialGoal!.deadline;
       _selectedIcon = widget.initialGoal!.icon;
       _selectedColor = widget.initialGoal!.color;
@@ -72,25 +77,15 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
     super.dispose();
   }
 
+  // Hàm chọn ngày hạn định với giao diện Premium (Image 2 style)
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showDialog<DateTime>(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2101),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFFF05D15),
-              onPrimary: Colors.white,
-              surface: Color(0xFF1E293B),
-              onSurface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: (context) => PremiumDatePicker(
+        initialDate: _selectedDate,
+        firstDate: DateTime.now(),
+        lastDate: DateTime(2101),
+      ),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -109,8 +104,14 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
       id: widget.initialGoal?.id ?? const Uuid().v4(),
       userId: user.uid,
       title: _titleController.text.trim(),
-      targetAmount: double.parse(_targetController.text.replaceAll(RegExp(r'[^0-9]'), '')),
-      currentAmount: double.tryParse(_currentController.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
+      targetAmount: double.parse(
+        _targetController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+      ),
+      currentAmount:
+          double.tryParse(
+            _currentController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+          ) ??
+          0.0,
       deadline: _selectedDate,
       icon: _selectedIcon,
       color: _selectedColor,
@@ -123,7 +124,11 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.initialGoal == null ? 'Đã tạo mục tiêu mới!' : 'Đã cập nhật mục tiêu!'),
+            content: Text(
+              widget.initialGoal == null
+                  ? 'Đã tạo mục tiêu mới!'
+                  : 'Đã cập nhật mục tiêu!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -145,12 +150,20 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.initialGoal == null ? 'Tạo mục tiêu mới' : 'Chỉnh sửa mục tiêu',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          widget.initialGoal == null
+              ? 'Tạo mục tiêu mới'
+              : 'Chỉnh sửa mục tiêu',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: Form(
@@ -165,7 +178,8 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
                 label: 'TÊN MỤC TIÊU',
                 hint: 'Ví dụ: Mua iPhone 16 Pro Max',
                 icon: Icons.edit_note_rounded,
-                validator: (v) => v!.isEmpty ? 'Vui lòng nhập tên mục tiêu' : null,
+                validator: (v) =>
+                    v!.isEmpty ? 'Vui lòng nhập tên mục tiêu' : null,
               ),
               const SizedBox(height: 24),
               _buildTextField(
@@ -175,7 +189,8 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
                 icon: Icons.payments_rounded,
                 keyboardType: TextInputType.number,
                 suffixText: 'đ',
-                validator: (v) => v!.isEmpty ? 'Vui lòng nhập số tiền mục tiêu' : null,
+                validator: (v) =>
+                    v!.isEmpty ? 'Vui lòng nhập số tiền mục tiêu' : null,
               ),
               const SizedBox(height: 24),
               _buildTextField(
@@ -191,14 +206,22 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
               const SizedBox(height: 32),
               const Text(
                 'BIỂU TƯỢNG',
-                style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               _buildIconPicker(),
               const SizedBox(height: 32),
               const Text(
                 'MÀU SẮC',
-                style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               _buildColorPicker(),
@@ -210,11 +233,17 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
                   onPressed: _saveGoal,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF05D15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   child: const Text(
                     'LƯU MỤC TIÊU',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
@@ -225,11 +254,22 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
                   height: 56,
                   child: TextButton.icon(
                     onPressed: () {
-                      context.read<SavingGoalProvider>().deleteGoal(widget.initialGoal!.id);
+                      context.read<SavingGoalProvider>().deleteGoal(
+                        widget.initialGoal!.id,
+                      );
                       Navigator.pop(context);
                     },
-                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                    label: const Text('XÓA MỤC TIÊU', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.redAccent,
+                    ),
+                    label: const Text(
+                      'XÓA MỤC TIÊU',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -255,7 +295,11 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white60,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -268,11 +312,20 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
             hintStyle: const TextStyle(color: Colors.white24),
             prefixIcon: Icon(icon, color: Colors.white54, size: 20),
             suffixText: suffixText,
-            suffixStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            suffixStyle: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
             filled: true,
             fillColor: const Color(0xFF1E293B),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
       ],
@@ -285,28 +338,55 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
       children: [
         const Text(
           'HẠN ĐỊNH',
-          style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white60,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
-        InkWell(
+        GestureDetector(
           onTap: () => _selectDate(context),
-          borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF1E293B).withOpacity(0.5),
+                  const Color(0xFF0F172A).withOpacity(0.5),
+                ],
+              ),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                const Icon(Icons.calendar_month_rounded, color: Colors.white54, size: 20),
+                const Icon(
+                  Icons.calendar_month_rounded,
+                  color: Color(0xFF00D1FF),
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   DateFormat('dd/MM/yyyy').format(_selectedDate),
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const Spacer(),
-                const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white54),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Colors.white54,
+                ),
               ],
             ),
           ),
@@ -326,7 +406,9 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF05D15) : const Color(0xFF1E293B),
+              color: isSelected
+                  ? const Color(0xFFF05D15)
+                  : const Color(0xFF1E293B),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -355,9 +437,13 @@ class _AddSavingGoalScreenState extends State<AddSavingGoalScreen> {
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
-              border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
+              border: isSelected
+                  ? Border.all(color: Colors.white, width: 3)
+                  : null,
             ),
-            child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
+            child: isSelected
+                ? const Icon(Icons.check, color: Colors.white, size: 20)
+                : null,
           ),
         );
       }).toList(),

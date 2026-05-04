@@ -159,7 +159,9 @@ class _OcrScanScreenState extends State<OcrScanScreen>
       final bytes = await image.readAsBytes();
       final aiService = AiService();
 
-      final prompt = widget.customPrompt ?? '''
+      final prompt =
+          widget.customPrompt ??
+          '''
       Hãy đóng vai một chuyên gia kế toán. Tôi sẽ gửi cho bạn một ảnh hóa đơn. 
       Nhiệm vụ của bạn là trích xuất các thông tin sau dưới dạng JSON:
       - title: Tên cửa hàng hoặc nội dung chính của hóa đơn (Ví dụ: "Phở Lý Quốc Sư", "Siêu thị Winmart").
@@ -665,4 +667,3 @@ class ScannerOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

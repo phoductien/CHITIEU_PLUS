@@ -73,7 +73,10 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
             : 'Nạp qua ngân hàng $_selectedSource',
       );
 
-      await transactionProvider.addTransaction(tx);
+      await transactionProvider.addTransaction(
+        tx,
+        userProvider: context.read<UserProvider>(),
+      );
 
       if (mounted) {
         // Add notification
@@ -215,9 +218,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
           _buildDetailRow(
             'Nguồn tiền',
             _selectedSource ??
-                (userProvider.isGuest
-                    ? 'Ví dùng thử (Demo)'
-                    : 'Ví của bạn'),
+                (userProvider.isGuest ? 'Ví dùng thử (Demo)' : 'Ví của bạn'),
             themeProvider,
             valueColor: _selectedSource == null ? Colors.orange : Colors.blue,
           ),
@@ -314,7 +315,10 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.redAccent,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(

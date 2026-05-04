@@ -241,7 +241,7 @@ class TransactionService {
       for (var st in sepayTransactions) {
         // SePay transaction ID as unique identifier
         final String sepayId = 'sepay_${st['id']}';
-        
+
         // Check if transaction already exists in Firestore
         final doc = await _transactionsRef.doc(sepayId).get();
         if (doc.exists) continue;
@@ -256,7 +256,9 @@ class TransactionService {
         final double amountIn = parseAmount(st['amount_in']);
         final double amountOut = parseAmount(st['amount_out']);
         final double amount = amountIn > 0 ? amountIn : amountOut;
-        final TransactionType type = amountIn > 0 ? TransactionType.income : TransactionType.expense;
+        final TransactionType type = amountIn > 0
+            ? TransactionType.income
+            : TransactionType.expense;
 
         final tx = TransactionModel(
           id: sepayId,
@@ -264,7 +266,8 @@ class TransactionService {
           title: st['transaction_content'] ?? 'Giao dịch ngân hàng',
           amount: amount,
           category: 'Ngân hàng',
-          date: DateTime.tryParse(st['transaction_date'] ?? '') ?? DateTime.now(),
+          date:
+              DateTime.tryParse(st['transaction_date'] ?? '') ?? DateTime.now(),
           type: type,
           note: 'Từ: ${st['bank_brand_name']} (${st['account_number']})',
           wallet: 'main',

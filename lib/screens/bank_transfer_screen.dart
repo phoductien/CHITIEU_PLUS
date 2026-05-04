@@ -21,8 +21,10 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   Map<String, dynamic>? _selectedBank;
   bool _isFormMode = false;
 
-  final TextEditingController _accountNumberController = TextEditingController();
-  final TextEditingController _accountHolderController = TextEditingController();
+  final TextEditingController _accountNumberController =
+      TextEditingController();
+  final TextEditingController _accountHolderController =
+      TextEditingController();
   final TextEditingController _idCardController = TextEditingController();
 
   bool _isVerifying = false; // Trạng thái đang kiểm tra tài khoản
@@ -456,7 +458,9 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
           }
           if (data['fullName'] != null) {
             // Chuẩn hóa tên cho ngân hàng (viết hoa không dấu)
-            _accountHolderController.text = _bankService.removeVietnameseTones(data['fullName'].toString()).toUpperCase();
+            _accountHolderController.text = _bankService
+                .removeVietnameseTones(data['fullName'].toString())
+                .toUpperCase();
           }
         });
         if (mounted) {
@@ -492,7 +496,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
       return;
     }
 
-    // BƯỚC 2: Bật trạng thái Loading để người dùng chờ 
+    // BƯỚC 2: Bật trạng thái Loading để người dùng chờ
     setState(() {
       _isVerifying = true;
     });
@@ -514,14 +518,15 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
 
         if (result['success']) {
           // BƯỚC 5A: XÁC THỰC THÀNH CÔNG
-          
+
           // Cập nhật thông tin vào UserProvider để hiển thị lên ví chính
-          final bankName = _selectedBank!['shortName'] ?? _selectedBank!['name'];
+          final bankName =
+              _selectedBank!['shortName'] ?? _selectedBank!['name'];
           final displayInfo = '$bankName - ${_accountNumberController.text}';
-          
+
           if (mounted) {
             await context.read<UserProvider>().addBankAccount(displayInfo);
-            
+
             // Hiển thị Dialog thông báo và tên chủ tài khoản đã được chuẩn hóa từ Ngân hàng.
             _showSuccessDialog(result['accountName'], displayInfo);
           }
@@ -544,12 +549,15 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
           _isVerifying = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Có lỗi xảy ra trong quá trình kết nối. Vui lòng thử lại sau.')),
+          const SnackBar(
+            content: Text(
+              'Có lỗi xảy ra trong quá trình kết nối. Vui lòng thử lại sau.',
+            ),
+          ),
         );
       }
     }
   }
-
 
   void _showSuccessDialog(String accountName, String bankInfo) {
     showDialog(
@@ -570,22 +578,35 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
           children: [
             Text(
               'Đã xác thực tài khoản:',
-              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 12,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               accountName,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               'Thông tin ngân hàng:',
-              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 12,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               bankInfo,
-              style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.greenAccent,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -600,7 +621,13 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
               Navigator.pop(context); // Đóng dialog
               Navigator.pop(context); // Quay lại màn hình chính
             },
-            child: const Text('Tuyệt vời', style: TextStyle(color: Color(0xFFFF6D00), fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Tuyệt vời',
+              style: TextStyle(
+                color: Color(0xFFFF6D00),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -648,8 +675,8 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
         child: _selectedBank == null
             ? _buildSelectionView(themeProvider)
             : (_isFormMode
-                ? _buildLinkingFormView(themeProvider)
-                : _buildLinkingView(themeProvider)),
+                  ? _buildLinkingFormView(themeProvider)
+                  : _buildLinkingView(themeProvider)),
       ),
     );
   }
@@ -739,9 +766,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                       borderRadius: BorderRadius.circular(15),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(
-                            0xFF2DD4BF,
-                          ).withOpacity(0.3),
+                          color: const Color(0xFF2DD4BF).withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -853,7 +878,9 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: isSacombank ? BoxShape.circle : BoxShape.rectangle,
-                    borderRadius: isSacombank ? null : BorderRadius.circular(20),
+                    borderRadius: isSacombank
+                        ? null
+                        : BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
                         color: (_selectedBank!['color'] as Color).withValues(
@@ -869,9 +896,9 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                     child: isLocal
                         ? Image.asset(logoPath, fit: BoxFit.contain)
                         : Image.network(
-                          'https://img.vietqr.io/image/bank_logo_$logoPath.png',
-                          fit: BoxFit.contain,
-                        ),
+                            'https://img.vietqr.io/image/bank_logo_$logoPath.png',
+                            fit: BoxFit.contain,
+                          ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1052,7 +1079,10 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                     'Nhập 12 số CCCD',
                     _idCardController,
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF2DD4BF)),
+                      icon: const Icon(
+                        Icons.qr_code_scanner_rounded,
+                        color: Color(0xFF2DD4BF),
+                      ),
                       onPressed: _handleCccdOcr,
                       tooltip: 'Quét CCCD',
                     ),
@@ -1145,7 +1175,10 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
             duration: const Duration(milliseconds: 700),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(30),
@@ -1153,15 +1186,16 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.shield_rounded, color: Colors.blueAccent, size: 24),
+                    Icon(
+                      Icons.shield_rounded,
+                      color: Colors.blueAccent,
+                      size: 24,
+                    ),
                     SizedBox(width: 10),
                     Flexible(
                       child: Text(
                         'Bảo mật chuẩn quốc tế PCI DSS level 1 - Cấp độ cao nhất toàn cầu.',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: Colors.white54, fontSize: 11),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1206,21 +1240,21 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                 ),
                 child: _isVerifying
                     ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : const Text(
-                      'Xác nhận liên kết',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        'Xác nhận liên kết',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
               ),
             ),
           ),
@@ -1730,9 +1764,7 @@ class _AllBanksBottomSheetState extends State<_AllBanksBottomSheet> {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.03),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.05),
-                    ),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
                   ),
                   child: ListTile(
                     leading: Container(
@@ -1793,7 +1825,9 @@ class _AllBanksBottomSheetState extends State<_AllBanksBottomSheet> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: themeProvider.secondaryColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             child: const Row(
               children: [
@@ -1824,4 +1858,3 @@ class _AllBanksBottomSheetState extends State<_AllBanksBottomSheet> {
     );
   }
 }
-

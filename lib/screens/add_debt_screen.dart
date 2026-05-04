@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/premium_date_picker.dart'; // Thêm import
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/debt_model.dart';
@@ -42,27 +43,17 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     super.dispose();
   }
 
+  // Hàm chọn ngày đến hạn với giao diện Premium (Image 2 style)
   Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showDialog<DateTime>(
       context: context,
-      initialDate: _dueDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFFF05D15),
-              onPrimary: Colors.white,
-              surface: Color(0xFF1E293B),
-              onSurface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: (context) => PremiumDatePicker(
+        initialDate: _dueDate ?? DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101),
+      ),
     );
-    if (picked != null) {
+    if (picked != null && picked != _dueDate) {
       setState(() {
         _dueDate = picked;
       });
@@ -177,7 +168,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                   onPressed: _save,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF05D15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   child: const Text(
                     'LƯU THÔNG TIN',
@@ -196,10 +189,15 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                   width: double.infinity,
                   child: TextButton(
                     onPressed: () async {
-                      await context.read<DebtProvider>().deleteDebt(widget.debt!.id);
+                      await context.read<DebtProvider>().deleteDebt(
+                        widget.debt!.id,
+                      );
                       if (mounted) Navigator.pop(context);
                     },
-                    child: const Text('Xóa mục này', style: TextStyle(color: Colors.redAccent)),
+                    child: const Text(
+                      'Xóa mục này',
+                      style: TextStyle(color: Colors.redAccent),
+                    ),
                   ),
                 ),
               ],
@@ -276,15 +274,31 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return GestureDetector(
       onTap: _selectDate,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF1E293B).withOpacity(0.5),
+              const Color(0xFF0F172A).withOpacity(0.5),
+            ],
+          ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded, color: Color(0xFFF05D15)),
+            const Icon(
+              Icons.calendar_today_rounded,
+              color: Color(0xFF00D1FF),
+              size: 20,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -299,8 +313,13 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _dueDate == null ? 'Không có hạn' : DateFormat('dd/MM/yyyy').format(_dueDate!),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    _dueDate == null
+                        ? 'Không có hạn'
+                        : DateFormat('dd/MM/yyyy').format(_dueDate!),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -316,4 +335,3 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     );
   }
 }
-

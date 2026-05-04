@@ -14,7 +14,8 @@ class DebtListScreen extends StatefulWidget {
   State<DebtListScreen> createState() => _DebtListScreenState();
 }
 
-class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProviderStateMixin {
+class _DebtListScreenState extends State<DebtListScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -59,7 +60,9 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
             controller: _tabController,
             indicatorColor: const Color(0xFFF05D15),
             labelColor: const Color(0xFFF05D15),
-            unselectedLabelColor: themeProvider.foregroundColor.withOpacity(0.5),
+            unselectedLabelColor: themeProvider.foregroundColor.withOpacity(
+              0.5,
+            ),
             tabs: const [
               Tab(text: 'CHƯA TRẢ'),
               Tab(text: 'ĐÃ TRẢ'),
@@ -69,8 +72,16 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildDebtList(debtProvider.pendingDebts, debtProvider.isLoading, context),
-                _buildDebtList(debtProvider.paidDebts, debtProvider.isLoading, context),
+                _buildDebtList(
+                  debtProvider.pendingDebts,
+                  debtProvider.isLoading,
+                  context,
+                ),
+                _buildDebtList(
+                  debtProvider.paidDebts,
+                  debtProvider.isLoading,
+                  context,
+                ),
               ],
             ),
           ),
@@ -118,7 +129,12 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildStatItem(String label, double amount, Color color, IconData icon) {
+  Widget _buildStatItem(
+    String label,
+    double amount,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -152,9 +168,15 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildDebtList(List<dynamic> debts, bool isLoading, BuildContext context) {
+  Widget _buildDebtList(
+    List<dynamic> debts,
+    bool isLoading,
+    BuildContext context,
+  ) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFF05D15)));
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFF05D15)),
+      );
     }
 
     if (debts.isEmpty) {
@@ -184,4 +206,3 @@ class _DebtListScreenState extends State<DebtListScreen> with SingleTickerProvid
     );
   }
 }
-

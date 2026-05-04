@@ -4,6 +4,7 @@ import 'package:chitieu_plus/providers/theme_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:chitieu_plus/models/transaction_model.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
+import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import 'dart:io' as io;
 import 'dart:typed_data';
@@ -23,6 +24,7 @@ class ReportTab extends StatefulWidget {
 class _ReportTabState extends State<ReportTab> {
   final GlobalKey _reportKey = GlobalKey();
   bool _isSharing = false;
+  String _selectedTrendPeriod = 'Tuần';
 
   Future<void> _captureAndShareReport() async {
     if (_isSharing) return;
@@ -31,7 +33,9 @@ class _ReportTabState extends State<ReportTab> {
 
     try {
       // 1. Capture the widget
-      final boundary = _reportKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary =
+          _reportKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return;
 
       final image = await boundary.toImage(pixelRatio: 3.0);
@@ -43,42 +47,53 @@ class _ReportTabState extends State<ReportTab> {
       if (kIsWeb) {
         // Web Implementation: Use XFile.fromData or simple download
         try {
-          await Share.shareXFiles(
-            [XFile.fromData(pngBytes, mimeType: 'image/png', name: 'bao_cao_tai_chinh.png')],
-            text: 'Báo cáo tài chính từ CHITIEU PLUS ðŸ“Š',
-          );
+          await Share.shareXFiles([
+            XFile.fromData(
+              pngBytes,
+              mimeType: 'image/png',
+              name: 'bao_cao_tai_chinh.png',
+            ),
+          ], text: 'Báo cáo tài chính từ CHITIEU PLUS ðŸ“Š');
         } catch (webShareError) {
           // Fallback for Web: Download the image if Share API is not supported
           final blob = u_html.Blob([pngBytes]);
           final url = u_html.Url.createObjectUrlFromBlob(blob);
           final anchor = u_html.AnchorElement(href: url)
-            ..setAttribute("download", "bao_cao_tai_chinh_${DateTime.now().millisecondsSinceEpoch}.png")
+            ..setAttribute(
+              "download",
+              "bao_cao_tai_chinh_${DateTime.now().millisecondsSinceEpoch}.png",
+            )
             ..click();
           u_html.Url.revokeObjectUrl(url);
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Trình duyệt không hỗ trợ chia sẻ trực tiếp. Đã tự động tải ảnh về máy.')),
+              const SnackBar(
+                content: Text(
+                  'Trình duyệt không hỗ trợ chia sẻ trực tiếp. Đã tự động tải ảnh về máy.',
+                ),
+              ),
             );
           }
         }
       } else {
         // Mobile/Desktop Implementation (using dart:io and path_provider)
         final tempDir = await getTemporaryDirectory();
-        final file = await io.File('${tempDir.path}/bao_cao_tai_chinh_${DateTime.now().millisecondsSinceEpoch}.png').create();
+        final file = await io.File(
+          '${tempDir.path}/bao_cao_tai_chinh_${DateTime.now().millisecondsSinceEpoch}.png',
+        ).create();
         await file.writeAsBytes(pngBytes);
 
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          text: 'Báo cáo tài chính từ CHITIEU PLUS 📊',
-        );
+        await Share.shareXFiles([
+          XFile(file.path),
+        ], text: 'Báo cáo tài chính từ CHITIEU PLUS 📊');
       }
     } catch (e) {
       debugPrint('[ReportTab] Error sharing report: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi chia sẻ: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi chia sẻ: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSharing = false);
@@ -91,409 +106,1132 @@ class _ReportTabState extends State<ReportTab> {
     final transactionProvider = context.watch<TransactionProvider>();
     final transactions = transactionProvider.transactions;
 
-    // Calculate Chart Data
-    Map<String, double> catTotals = {
-      'Ăn uống': 0,
-      'Mua sắm': 0,
-      'Di chuyển': 0,
-      'Khác': 0,
-    };
-    List<double> last7Days = List.filled(7, 0.0);
+    // --- DATA CALCULATION ---
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final firstDayThisMonth = DateTime(now.year, now.month, 1);
+    final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
+    final lastDayLastMonth = DateTime(now.year, now.month, 0);
+
+    double expenseThisMonth = 0;
+    double incomeThisMonth = 0;
+    double expenseLastMonth = 0;
+
+    Map<String, double> categorySpending = {};
+    Map<String, double> categoryIncome = {};
+    Map<String, double> categorySavings = {};
 
     for (var tx in transactions) {
-      if (tx.type == TransactionType.expense) {
-        if (catTotals.containsKey(tx.category)) {
-          catTotals[tx.category] = catTotals[tx.category]! + tx.amount;
+      if (tx.date.isAfter(
+        firstDayThisMonth.subtract(const Duration(seconds: 1)),
+      )) {
+        if (tx.type == TransactionType.income) {
+          incomeThisMonth += tx.amount;
+          if (tx.category.contains('Tiết kiệm') ||
+              tx.category.contains('Đầu tư')) {
+            categorySavings[tx.category] =
+                (categorySavings[tx.category] ?? 0) + tx.amount;
+          } else {
+            categoryIncome[tx.category] =
+                (categoryIncome[tx.category] ?? 0) + tx.amount;
+          }
         } else {
-          catTotals['Khác'] = catTotals['Khác']! + tx.amount;
+          expenseThisMonth += tx.amount;
+          if (tx.category.contains('Tiết kiệm') ||
+              tx.category.contains('Đầu tư')) {
+            categorySavings[tx.category] =
+                (categorySavings[tx.category] ?? 0) + tx.amount;
+          } else {
+            categorySpending[tx.category] =
+                (categorySpending[tx.category] ?? 0) + tx.amount;
+          }
         }
-        int dayDiff = today.difference(tx.date).inDays;
-        if (dayDiff >= 0 && dayDiff < 7) {
-          int index = (tx.date.weekday - 1);
-          last7Days[index] += tx.amount;
+      } else if (tx.date.isAfter(
+            firstDayLastMonth.subtract(const Duration(seconds: 1)),
+          ) &&
+          tx.date.isBefore(
+            lastDayLastMonth.add(const Duration(hours: 23, minutes: 59)),
+          )) {
+        if (tx.type == TransactionType.expense) {
+          expenseLastMonth += tx.amount;
         }
       }
     }
 
-    double maxVal = last7Days.reduce((a, b) => a > b ? a : b);
-    List<double> barValues = maxVal > 0
-        ? last7Days.map((v) => (v / maxVal) * 20).toList()
-        : List.filled(7, 0.0);
-    double totalExpense = catTotals.values.reduce((a, b) => a + b);
-    List<double> pieValues = totalExpense > 0
-        ? [
-            (catTotals['Ăn uống']! / totalExpense) * 100,
-            (catTotals['Mua sắm']! / totalExpense) * 100,
-            (catTotals['Di chuyển']! / totalExpense) * 100,
-            (catTotals['Khác']! / totalExpense) * 100,
-          ]
-        : List.filled(4, 0.0);
+    double percentChange = 0;
+    if (expenseLastMonth > 0) {
+      percentChange =
+          ((expenseThisMonth - expenseLastMonth) / expenseLastMonth) * 100;
+    }
+
+    final currencyFormat = NumberFormat('#,###', 'vi_VN');
+
+    if (transactions.isEmpty) {
+      return Scaffold(
+        backgroundColor: themeProvider.backgroundColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.analytics_outlined,
+                size: 80,
+                color: themeProvider.foregroundColor.withOpacity(0.1),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'CHƯA CÓ DỮ LIỆU',
+                style: TextStyle(
+                  color: themeProvider.foregroundColor.withOpacity(0.3),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Hãy thêm giao dịch để xem báo cáo chi tiết',
+                style: TextStyle(
+                  color: themeProvider.foregroundColor.withOpacity(0.2),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: RepaintBoundary(
+            key: _reportKey,
+            child: Container(
+              color: themeProvider
+                  .backgroundColor, // Ensure background is captured
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Báo cáo tài chính',
-                    style: TextStyle(
-                      color: themeProvider.foregroundColor,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const SizedBox(height: 16),
+                  _buildHeader(themeProvider),
+                  const SizedBox(height: 24),
+                  _buildMonthlySummary(
+                    expenseThisMonth,
+                    percentChange,
+                    themeProvider,
+                    currencyFormat,
                   ),
-                  GestureDetector(
-                    onTap: _captureAndShareReport,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: themeProvider.secondaryColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: _isSharing
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.share_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                    ),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('PHÂN BỔ CHI TIÊU', themeProvider),
+                  const SizedBox(height: 16),
+                  _buildAllocationSection(
+                    categorySpending,
+                    expenseThisMonth,
+                    themeProvider,
                   ),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('XU HƯỚNG TỔNG HỢP', themeProvider),
+                  const SizedBox(height: 16),
+                  _buildTrendChart(transactions, themeProvider),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('CHI TIẾT DANH MỤC', themeProvider),
+                  const SizedBox(height: 16),
+                  _buildCategoryDetails(
+                    categoryIncome,
+                    categorySpending,
+                    categorySavings,
+                    transactions,
+                    themeProvider,
+                    currencyFormat,
+                  ),
+                  const SizedBox(height: 32),
+                  _buildOracleInsights(
+                    categorySpending,
+                    incomeThisMonth,
+                    expenseThisMonth,
+                    themeProvider,
+                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
-            Expanded(
-              child: RepaintBoundary(
-                key: _reportKey,
-                child: Container(
-                  color: themeProvider.backgroundColor, // Ensure background is captured
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 10),
-                        Text(
-                          'CƠ CẤU CHI TIÊU',
-                          style: TextStyle(
-                            color: themeProvider.foregroundColor.withValues(
-                              alpha: 0.6,
-                            ),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: themeProvider.secondaryColor.withValues(
-                              alpha: 0.4,
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: themeProvider.borderColor),
-                          ),
-                          child: _buildDonutChart(themeProvider, pieValues),
-                        ),
-                        const SizedBox(height: 35),
-                        Text(
-                          'XU HƯỚNG CHI TIÊU',
-                          style: TextStyle(
-                            color: themeProvider.foregroundColor.withValues(
-                              alpha: 0.6,
-                            ),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          height: 180,
-                          width: double.infinity,
-                          padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
-                          decoration: BoxDecoration(
-                            color: themeProvider.secondaryColor.withValues(
-                              alpha: 0.4,
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: themeProvider.borderColor),
-                          ),
-                          child: _buildBarChart(themeProvider, barValues),
-                        ),
-                        const SizedBox(height: 100),
-                      ],
-                    ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(ThemeProvider themeProvider) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.auto_graph_rounded,
+              color: themeProvider.foregroundColor,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'CHITIEU PLUS',
+              style: TextStyle(
+                color: themeProvider.foregroundColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            GestureDetector(
+              onTap: _captureAndShareReport,
+              child: Icon(
+                Icons.share_rounded,
+                color: themeProvider.foregroundColor.withOpacity(0.6),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 20),
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: themeProvider.secondaryColor.withOpacity(0.2),
+              child: Icon(
+                Icons.person_rounded,
+                color: themeProvider.foregroundColor,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMonthlySummary(
+    double total,
+    double change,
+    ThemeProvider themeProvider,
+    NumberFormat format,
+  ) {
+    final isIncrease = change > 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'BÁO CÁO THÁNG ${DateTime.now().month}',
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withOpacity(0.5),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '${format.format(total)}đ',
+              style: TextStyle(
+                color: themeProvider.foregroundColor,
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isIncrease ? Colors.red : Colors.green).withOpacity(
+                    0.1,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${isIncrease ? '+' : ''}${change.toStringAsFixed(1)}% vs tháng trước',
+                  style: TextStyle(
+                    color: isIncrease ? Colors.redAccent : Colors.greenAccent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildDonutChart(ThemeProvider themeProvider, List<double> pieValues) {
+  Widget _buildSectionTitle(String title, ThemeProvider themeProvider) {
     return Row(
       children: [
-        Expanded(
-          flex: 2,
-          child: SizedBox(
-            height: 140,
-            child: Stack(
-              children: [
-                PieChart(
-                  PieChartData(
-                    sectionsSpace: 0,
-                    centerSpaceRadius: 45,
-                    sections: [
-                      ...(pieValues[0] == 0 &&
-                              pieValues[1] == 0 &&
-                              pieValues[2] == 0 &&
-                              pieValues[3] == 0
-                          ? [
-                              PieChartSectionData(
-                                color: themeProvider.foregroundColor.withValues(
-                                  alpha: 0.1,
-                                ),
-                                value: 100,
-                                radius: 16,
-                                showTitle: false,
-                              ),
-                            ]
-                          : [
-                              PieChartSectionData(
-                                color: const Color(0xFFFF6D00),
-                                value: pieValues[0],
-                                radius: 18,
-                                showTitle: false,
-                              ),
-                              PieChartSectionData(
-                                color: Colors.blue,
-                                value: pieValues[1],
-                                radius: 16,
-                                showTitle: false,
-                              ),
-                              PieChartSectionData(
-                                color: Colors.green,
-                                value: pieValues[2],
-                                radius: 14,
-                                showTitle: false,
-                              ),
-                              PieChartSectionData(
-                                color: Colors.yellow,
-                                value: pieValues[3],
-                                radius: 12,
-                                showTitle: false,
-                              ),
-                            ]),
-                    ],
-                  ),
-                  swapAnimationDuration: const Duration(milliseconds: 1200),
-                  swapAnimationCurve: Curves.easeOutCubic,
-                ),
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Tổng',
-                        style: TextStyle(
-                          color: themeProvider.foregroundColor.withValues(
-                            alpha: 0.6,
-                          ),
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        pieValues[0] == 0 && pieValues[1] == 0 ? '0%' : '100%',
-                        style: TextStyle(
-                          color: themeProvider.foregroundColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: themeProvider.foregroundColor.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: 20),
-        Expanded(
-          flex: 3,
-          child: Column(
-            children: [
-              _buildAllocationItem(
-                'Ăn uống',
-                pieValues[0] == 0
-                    ? '0%'
-                    : '${pieValues[0].toStringAsFixed(0)}%',
-                const Color(0xFFFF6D00),
-                themeProvider,
-              ),
-              _buildAllocationItem(
-                'Mua sắm',
-                pieValues[1] == 0
-                    ? '0%'
-                    : '${pieValues[1].toStringAsFixed(0)}%',
-                Colors.blue,
-                themeProvider,
-              ),
-              _buildAllocationItem(
-                'Di chuyển',
-                pieValues[2] == 0
-                    ? '0%'
-                    : '${pieValues[2].toStringAsFixed(0)}%',
-                Colors.green,
-                themeProvider,
-              ),
-              _buildAllocationItem(
-                'Khác',
-                pieValues[3] == 0
-                    ? '0%'
-                    : '${pieValues[3].toStringAsFixed(0)}%',
-                Colors.yellow,
-                themeProvider,
-              ),
-            ],
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: TextStyle(
+            color: themeProvider.foregroundColor,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildAllocationItem(
-    String title,
-    String percent,
+  Widget _buildAllocationSection(
+    Map<String, double> spending,
+    double total,
+    ThemeProvider themeProvider,
+  ) {
+    if (spending.isEmpty) {
+      return Center(
+        child: Text(
+          'Chưa có dữ liệu chi tiêu',
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withOpacity(0.3),
+          ),
+        ),
+      );
+    }
+
+    final sorted = spending.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final displayItems = sorted.take(4).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: themeProvider.secondaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: themeProvider.foregroundColor.withOpacity(0.05),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: displayItems.map((entry) {
+          final percent = total > 0 ? (entry.value / total) : 0.0;
+          return Column(
+            children: [
+              SizedBox(
+                height: 60,
+                width: 60,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CircularProgressIndicator(
+                      value: 1,
+                      strokeWidth: 6,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation(
+                        themeProvider.foregroundColor.withOpacity(0.05),
+                      ),
+                    ),
+                    CircularProgressIndicator(
+                      value: percent,
+                      strokeWidth: 6,
+                      strokeCap: StrokeCap.round,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation(
+                        _getCategoryColor(entry.key),
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        '${(percent * 100).toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          color: themeProvider.foregroundColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                entry.key,
+                style: TextStyle(
+                  color: themeProvider.foregroundColor.withOpacity(0.5),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTrendChart(
+    List<TransactionModel> txs,
+    ThemeProvider themeProvider,
+  ) {
+    final now = DateTime.now();
+    List<Map<String, dynamic>> chartData = [];
+    int itemCount = 7;
+
+    if (_selectedTrendPeriod == 'Tuần') {
+      itemCount = 7;
+      chartData = List.generate(7, (i) {
+        final date = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(Duration(days: 6 - i));
+        final dailyTxs = txs.where((t) {
+          final tDate = t.date;
+          return tDate.year == date.year &&
+              tDate.month == date.month &&
+              tDate.day == date.day;
+        }).toList();
+
+        double income = 0;
+        double expense = 0;
+        double savings = 0;
+        int incomeCount = 0;
+        int expenseCount = 0;
+        int savingsCount = 0;
+
+        for (var t in dailyTxs) {
+          final isSavings =
+              t.category.contains('Tiết kiệm') || t.category.contains('Đầu tư');
+          if (isSavings) {
+            savings += t.amount;
+            savingsCount++;
+          } else if (t.type == TransactionType.income) {
+            income += t.amount;
+            incomeCount++;
+          } else {
+            expense += t.amount;
+            expenseCount++;
+          }
+        }
+
+        return {
+          'date': date,
+          'income': income,
+          'expense': expense,
+          'savings': savings,
+          'incomeCount': incomeCount,
+          'expenseCount': expenseCount,
+          'savingsCount': savingsCount,
+          'label': DateFormat('dd/MM').format(date),
+          'shortLabel': DateFormat('E', 'vi_VN').format(date),
+        };
+      });
+    } else if (_selectedTrendPeriod == 'Tháng') {
+      itemCount = 4;
+      chartData = List.generate(4, (i) {
+        // Divide the last 28 days into 4 weeks
+        final endDay = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(Duration(days: (3 - i) * 7));
+        final startDay = endDay.subtract(const Duration(days: 6));
+
+        final weeklyTxs = txs.where((t) {
+          final tDate = t.date;
+          return tDate.isAfter(startDay.subtract(const Duration(seconds: 1))) &&
+              tDate.isBefore(endDay.add(const Duration(days: 1)));
+        }).toList();
+
+        double income = 0;
+        double expense = 0;
+        double savings = 0;
+        int incomeCount = 0;
+        int expenseCount = 0;
+        int savingsCount = 0;
+
+        for (var t in weeklyTxs) {
+          final isSavings =
+              t.category.contains('Tiết kiệm') || t.category.contains('Đầu tư');
+          if (isSavings) {
+            savings += t.amount;
+            savingsCount++;
+          } else if (t.type == TransactionType.income) {
+            income += t.amount;
+            incomeCount++;
+          } else {
+            expense += t.amount;
+            expenseCount++;
+          }
+        }
+
+        return {
+          'date': endDay,
+          'income': income,
+          'expense': expense,
+          'savings': savings,
+          'incomeCount': incomeCount,
+          'expenseCount': expenseCount,
+          'savingsCount': savingsCount,
+          'label': 'Tuần ${i + 1}',
+          'shortLabel': 'T${i + 1}',
+        };
+      });
+    } else {
+      // Year view - 12 months
+      itemCount = 12;
+      chartData = List.generate(12, (i) {
+        final month = i + 1;
+        final monthlyTxs = txs
+            .where((t) => t.date.year == now.year && t.date.month == month)
+            .toList();
+
+        double income = 0;
+        double expense = 0;
+        double savings = 0;
+        int incomeCount = 0;
+        int expenseCount = 0;
+        int savingsCount = 0;
+
+        for (var t in monthlyTxs) {
+          final isSavings =
+              t.category.contains('Tiết kiệm') || t.category.contains('Đầu tư');
+          if (isSavings) {
+            savings += t.amount;
+            savingsCount++;
+          } else if (t.type == TransactionType.income) {
+            income += t.amount;
+            incomeCount++;
+          } else {
+            expense += t.amount;
+            expenseCount++;
+          }
+        }
+
+        return {
+          'date': DateTime(now.year, month, 1),
+          'income': income,
+          'expense': expense,
+          'savings': savings,
+          'incomeCount': incomeCount,
+          'expenseCount': expenseCount,
+          'savingsCount': savingsCount,
+          'label': 'Tháng $month',
+          'shortLabel': 'T$month',
+        };
+      });
+    }
+
+    double maxVal = 0;
+    for (var d in chartData) {
+      if ((d['income'] as double) > maxVal) maxVal = d['income'] as double;
+      if ((d['expense'] as double) > maxVal) maxVal = d['expense'] as double;
+      if ((d['savings'] as double) > maxVal) maxVal = d['savings'] as double;
+    }
+    if (maxVal == 0) maxVal = 1000000;
+
+    return Container(
+      height: 300, // Increased height to accommodate selector
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: themeProvider.secondaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: themeProvider.foregroundColor.withOpacity(0.05),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Period Selector
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: themeProvider.foregroundColor.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: ['Tuần', 'Tháng', 'Năm'].map((period) {
+                final isSelected = _selectedTrendPeriod == period;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selectedTrendPeriod = period),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? themeProvider.secondaryColor
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : [],
+                      ),
+                      child: Center(
+                        child: Text(
+                          period,
+                          style: TextStyle(
+                            color: isSelected
+                                ? themeProvider.foregroundColor
+                                : themeProvider.foregroundColor.withOpacity(
+                                    0.4,
+                                  ),
+                            fontSize: 11,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildChartLegend(
+                'THU NHẬP',
+                const Color(0xFF00E5FF),
+                themeProvider,
+              ), // Electric Cyan
+              const SizedBox(width: 16),
+              _buildChartLegend(
+                'CHI TIÊU',
+                const Color(0xFFFF2D55),
+                themeProvider,
+              ), // Rose Pink
+              const SizedBox(width: 16),
+              _buildChartLegend(
+                'TIẾT KIỆM',
+                const Color(0xFFBF5AF2),
+                themeProvider,
+              ), // Purple
+            ],
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: maxVal * 1.2,
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    tooltipBgColor: themeProvider.secondaryColor,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final data = chartData[groupIndex];
+                      final label = data['label'] as String;
+
+                      String type = "";
+                      String amountStr = NumberFormat.compactCurrency(
+                        locale: 'vi_VN',
+                        symbol: 'đ',
+                      ).format(rod.toY);
+                      int count = 0;
+
+                      if (rodIndex == 0) {
+                        type = "Thu nhập";
+                        count = data['incomeCount'] as int;
+                      } else if (rodIndex == 1) {
+                        type = "Chi tiêu";
+                        count = data['expenseCount'] as int;
+                      } else {
+                        type = "Tiết kiệm";
+                        count = data['savingsCount'] as int;
+                      }
+
+                      return BarTooltipItem(
+                        '$label\n',
+                        TextStyle(
+                          color: themeProvider.foregroundColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: '$type: $amountStr\n',
+                            style: TextStyle(
+                              color: rod.color,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Số lượng: $count',
+                            style: TextStyle(
+                              color: themeProvider.foregroundColor.withOpacity(
+                                0.5,
+                              ),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        if (value < 0 || value >= itemCount)
+                          return const SizedBox.shrink();
+                        final data = chartData[value.toInt()];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            data['shortLabel'].toString(),
+                            style: TextStyle(
+                              color: themeProvider.foregroundColor.withOpacity(
+                                0.3,
+                              ),
+                              fontSize: _selectedTrendPeriod == 'Năm' ? 8 : 10,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                gridData: const FlGridData(show: false),
+                borderData: FlBorderData(show: false),
+                barGroups: List.generate(itemCount, (i) {
+                  final d = chartData[i];
+                  return _makeGroupData(
+                    i,
+                    d['income'] as double,
+                    d['expense'] as double,
+                    d['savings'] as double,
+                  );
+                }),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.trending_up, color: Colors.greenAccent, size: 14),
+              const SizedBox(width: 4),
+              Text(
+                'TĂNG (THU NHẬP)',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Icon(Icons.trending_down, color: Colors.redAccent, size: 14),
+              const SizedBox(width: 4),
+              Text(
+                'GIẢM (CHI TIÊU)',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  BarChartGroupData _makeGroupData(
+    int x,
+    double income,
+    double expense,
+    double savings,
+  ) {
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          toY: income,
+          color: const Color(0xFF00E5FF),
+          width: 8,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+        ),
+        BarChartRodData(
+          toY: expense,
+          color: const Color(0xFFFF2D55),
+          width: 8,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+        ),
+        BarChartRodData(
+          toY: savings,
+          color: const Color(0xFFBF5AF2),
+          width: 8,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChartLegend(
+    String label,
     Color color,
     ThemeProvider themeProvider,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withOpacity(0.5),
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryDetails(
+    Map<String, double> income,
+    Map<String, double> spending,
+    Map<String, double> savings,
+    List<TransactionModel> txs,
+    ThemeProvider themeProvider,
+    NumberFormat format,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (income.isNotEmpty) ...[
+          _buildSubSectionTitle('THU NHẬP', Colors.blue, themeProvider),
+          const SizedBox(height: 12),
+          ..._buildCategoryList(
+            income,
+            TransactionType.income,
+            txs,
+            themeProvider,
+            format,
+          ),
+          const SizedBox(height: 24),
+        ],
+        if (spending.isNotEmpty) ...[
+          _buildSubSectionTitle('CHI TIÊU', Colors.orange, themeProvider),
+          const SizedBox(height: 12),
+          ..._buildCategoryList(
+            spending,
+            TransactionType.expense,
+            txs,
+            themeProvider,
+            format,
+          ),
+          const SizedBox(height: 24),
+        ],
+        if (savings.isNotEmpty) ...[
+          _buildSubSectionTitle('TIẾT KIỆM', Colors.cyanAccent, themeProvider),
+          const SizedBox(height: 12),
+          ..._buildCategoryList(savings, null, txs, themeProvider, format),
+          const SizedBox(height: 24),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSubSectionTitle(
+    String title,
+    Color color,
+    ThemeProvider themeProvider,
+  ) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withOpacity(0.6),
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildCategoryList(
+    Map<String, double> data,
+    TransactionType? type,
+    List<TransactionModel> txs,
+    ThemeProvider themeProvider,
+    NumberFormat format,
+  ) {
+    final sorted = data.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return sorted.map((entry) {
+      final count = txs
+          .where(
+            (tx) =>
+                tx.category == entry.key && (type == null || tx.type == type),
+          )
+          .length;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: themeProvider.secondaryColor.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
             children: [
               Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: _getCategoryColor(entry.key).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  _getCategoryIcon(entry.key),
+                  color: _getCategoryColor(entry.key),
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.key,
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      '$count giao dịch',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withOpacity(0.4),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Text(
-                title,
+                '${format.format(entry.value)}đ',
                 style: TextStyle(
-                  color: themeProvider.foregroundColor.withOpacity(0.7),
+                  color: themeProvider.foregroundColor,
+                  fontWeight: FontWeight.w800,
                   fontSize: 14,
                 ),
               ),
             ],
           ),
-          Text(
-            percent,
-            style: TextStyle(
-              color: themeProvider.foregroundColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBarChart(ThemeProvider themeProvider, List<double> barValues) {
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        maxY: 20,
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    days[value.toInt() % days.length],
-                    style: TextStyle(
-                      color: themeProvider.foregroundColor.withValues(
-                        alpha: 0.6,
-                      ),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
         ),
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        barGroups: [
-          _makeBarData(0, barValues[0], themeProvider),
-          _makeBarData(1, barValues[1], themeProvider),
-          _makeBarData(2, barValues[2], themeProvider),
-          _makeBarData(3, barValues[3], themeProvider),
-          _makeBarData(4, barValues[4], themeProvider),
-          _makeBarData(5, barValues[5], themeProvider),
-          _makeBarData(6, barValues[6], themeProvider),
-        ],
-      ),
-      swapAnimationDuration: const Duration(milliseconds: 1000),
-      swapAnimationCurve: Curves.easeOutQuart,
-    );
+      );
+    }).toList();
   }
+}
 
-  BarChartGroupData _makeBarData(int x, double y, ThemeProvider themeProvider) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          color: themeProvider.foregroundColor.withOpacity(0.1),
-          width: 14,
-          borderRadius: BorderRadius.circular(4),
-          backDrawRodData: BackgroundBarChartRodData(
-            show: true,
-            toY: 20,
-            color: themeProvider.backgroundColor.withOpacity(0.3),
+Widget _buildOracleInsights(
+  Map<String, double> spending,
+  double income,
+  double expense,
+  ThemeProvider themeProvider,
+) {
+  String topCategory = "N/A";
+  double topAmount = 0;
+  spending.forEach((key, value) {
+    if (value > topAmount) {
+      topAmount = value;
+      topCategory = key;
+    }
+  });
+
+  final savings = income - expense;
+  final savingsPercent = income > 0
+      ? (savings / income * 100).toStringAsFixed(0)
+      : "0";
+
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          themeProvider.secondaryColor.withOpacity(0.2),
+          themeProvider.secondaryColor.withOpacity(0.05),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(32),
+      border: Border.all(color: Colors.cyanAccent.withOpacity(0.1)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              'ORACLE INSIGHTS',
+              style: TextStyle(
+                color: Colors.cyanAccent,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        if (topAmount > 0)
+          _buildInsightItem(
+            Icons.lightbulb_outline_rounded,
+            'Hạng mục "$topCategory" đang chiếm tỷ trọng lớn nhất (${NumberFormat('#,###', 'vi_VN').format(topAmount)}đ). Hãy cân nhắc tối ưu hóa khoản này.',
+            Colors.amberAccent,
+            themeProvider,
           ),
+        const SizedBox(height: 20),
+        _buildInsightItem(
+          Icons.savings_outlined,
+          savings > 0
+              ? 'Tỷ lệ tiết kiệm tháng này là $savingsPercent%. Bạn đang đi đúng hướng để đạt mục tiêu tài chính!'
+              : 'Chi tiêu đang vượt quá thu nhập. Hãy xem lại danh sách giao dịch để cắt giảm các khoản không cần thiết.',
+          savings > 0 ? Colors.greenAccent : Colors.redAccent,
+          themeProvider,
         ),
       ],
-    );
+    ),
+  );
+}
+
+Widget _buildInsightItem(
+  IconData icon,
+  String text,
+  Color color,
+  ThemeProvider themeProvider,
+) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 16),
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        child: Text(
+          text,
+          style: TextStyle(
+            color: themeProvider.foregroundColor.withOpacity(0.7),
+            fontSize: 12,
+            height: 1.5,
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+Color _getCategoryColor(String category) {
+  if (category.contains('Tiết kiệm')) return const Color(0xFFBF5AF2);
+  if (category.contains('Đầu tư')) return const Color(0xFF5E5CE6);
+
+  switch (category) {
+    case 'Ăn uống':
+      return const Color(0xFFFF9F0A);
+    case 'Di chuyển':
+      return const Color(0xFF64D2FF);
+    case 'Mua sắm':
+      return const Color(0xFFFF375F);
+    case 'Giải trí':
+      return const Color(0xFFA2845E);
+    case 'Sức khỏe':
+      return const Color(0xFF30D158);
+    case 'Nhà cửa':
+      return const Color(0xFF5E5CE6);
+    case 'Giáo dục':
+      return const Color(0xFFBF5AF2);
+    default:
+      return Colors.blueGrey;
+  }
+}
+
+IconData _getCategoryIcon(String category) {
+  if (category.contains('Tiết kiệm')) return Icons.savings_rounded;
+  if (category.contains('Đầu tư')) return Icons.trending_up_rounded;
+
+  switch (category) {
+    case 'Ăn uống':
+      return Icons.restaurant_rounded;
+    case 'Di chuyển':
+      return Icons.directions_car_rounded;
+    case 'Mua sắm':
+      return Icons.shopping_bag_rounded;
+    case 'Giải trí':
+      return Icons.movie_filter_rounded;
+    case 'Sức khỏe':
+      return Icons.medical_services_rounded;
+    case 'Nhà cửa':
+      return Icons.home_rounded;
+    case 'Giáo dục':
+      return Icons.school_rounded;
+    default:
+      return Icons.category_rounded;
   }
 }
 

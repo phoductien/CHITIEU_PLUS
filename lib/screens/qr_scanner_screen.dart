@@ -135,13 +135,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       horizontal: 24,
                       vertical: 14,
                     ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                        ),
-                      ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -263,7 +261,12 @@ class _ScannerOverlayPainter extends CustomPainter {
     // Bottom Right
     path.moveTo(size.width, size.width - cornerLength);
     path.lineTo(size.width, size.width - radius);
-    path.quadraticBezierTo(size.width, size.width, size.width - radius, size.width);
+    path.quadraticBezierTo(
+      size.width,
+      size.width,
+      size.width - radius,
+      size.width,
+    );
     path.lineTo(size.width - cornerLength, size.width);
 
     // Bottom Left
@@ -278,4 +281,3 @@ class _ScannerOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

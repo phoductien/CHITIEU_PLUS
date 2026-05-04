@@ -18,6 +18,7 @@ import 'package:chitieu_plus/models/notification_model.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
 import 'package:chitieu_plus/providers/language_provider.dart';
 import 'package:chitieu_plus/providers/theme_provider.dart';
+import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:chitieu_plus/providers/app_session_provider.dart';
 
@@ -1003,9 +1004,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E293B).withOpacity(0.5),
                   border: Border(
-                    top: BorderSide(
-                      color: Colors.white.withOpacity(0.05),
-                    ),
+                    top: BorderSide(color: Colors.white.withOpacity(0.05)),
                   ),
                 ),
                 child: Column(
@@ -1484,7 +1483,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
         wallet: data['wallet'] ?? 'main',
       );
 
-      await context.read<TransactionProvider>().addTransaction(transaction);
+      await context.read<TransactionProvider>().addTransaction(
+            transaction,
+            userProvider: context.read<UserProvider>(),
+          );
 
       // Add Notification
       if (mounted) {
@@ -1678,10 +1680,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
         ),
         child: Text(
           text,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
-            fontSize: 13,
-          ),
+          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13),
         ),
       ),
     );
@@ -1695,4 +1694,3 @@ class _AiChatScreenState extends State<AiChatScreen> {
     return "$hours:$minutes:$seconds";
   }
 }
-

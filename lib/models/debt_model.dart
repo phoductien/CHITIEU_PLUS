@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 enum DebtType { debt, loan }
+
 enum DebtStatus { pending, paid }
 
 class DebtModel {
@@ -46,8 +45,8 @@ class DebtModel {
       type: map['type'] == 'loan' ? DebtType.loan : DebtType.debt,
       status: map['status'] == 'paid' ? DebtStatus.paid : DebtStatus.pending,
       note: map['note'] ?? '',
-      createdAt: map['createdAt'] != null 
-          ? DateTime.parse(map['createdAt']) 
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
     );
   }

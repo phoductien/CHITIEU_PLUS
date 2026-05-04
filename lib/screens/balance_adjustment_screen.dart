@@ -6,13 +6,15 @@ import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/user_provider.dart';
 import '../models/transaction_model.dart';
 
 class BalanceAdjustmentScreen extends StatefulWidget {
   const BalanceAdjustmentScreen({super.key});
 
   @override
-  State<BalanceAdjustmentScreen> createState() => _BalanceAdjustmentScreenState();
+  State<BalanceAdjustmentScreen> createState() =>
+      _BalanceAdjustmentScreenState();
 }
 
 class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
@@ -30,17 +32,17 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
   Future<void> _handleUpdateBalance(double currentBalance) async {
     final newBalanceStr = _balanceController.text.replaceAll(',', '');
     if (newBalanceStr.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập số dư mới')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Vui lòng nhập số dư mới')));
       return;
     }
 
     final newBalance = double.tryParse(newBalanceStr);
     if (newBalance == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Số tiền không hợp lệ')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Số tiền không hợp lệ')));
       return;
     }
 
@@ -58,8 +60,8 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
       final adjustmentTx = TransactionModel(
         id: const Uuid().v4(),
         userId: FirebaseAuth.instance.currentUser?.uid ?? '',
-        title: _reasonController.text.isNotEmpty 
-            ? _reasonController.text 
+        title: _reasonController.text.isNotEmpty
+            ? _reasonController.text
             : 'Điều chỉnh số dư',
         amount: diff.abs(),
         category: 'Điều chỉnh',
@@ -69,7 +71,11 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
         wallet: 'main',
       );
 
-      await txProvider.addTransaction(adjustmentTx);
+      final userProvider = context.read<UserProvider>();
+      await txProvider.addTransaction(
+        adjustmentTx,
+        userProvider: userProvider,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cập nhật số dư thành công')),
@@ -78,9 +84,9 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -94,10 +100,15 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
         final themeProvider = context.read<ThemeProvider>();
         return AlertDialog(
           backgroundColor: themeProvider.secondaryColor,
-          title: Text('Xóa toàn bộ số dư?', style: TextStyle(color: themeProvider.foregroundColor)),
+          title: Text(
+            'Xóa toàn bộ số dư?',
+            style: TextStyle(color: themeProvider.foregroundColor),
+          ),
           content: Text(
             'Tất cả giao dịch sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.',
-            style: TextStyle(color: themeProvider.foregroundColor.withOpacity(0.7)),
+            style: TextStyle(
+              color: themeProvider.foregroundColor.withOpacity(0.7),
+            ),
           ),
           actions: [
             TextButton(
@@ -117,18 +128,22 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
     if (confirm == true && mounted) {
       setState(() => _isSaving = true);
       try {
-        await context.read<TransactionProvider>().deleteAllTransactions();
+        final userProvider = context.read<UserProvider>();
+        await context.read<TransactionProvider>().deleteAllTransactions(
+              userProvider: userProvider,
+              resetBalance: true,
+            );
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã xóa toàn bộ số dư')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Đã xóa toàn bộ số dư')));
           Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi khi xóa: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Lỗi khi xóa: $e')));
         }
       } finally {
         if (mounted) setState(() => _isSaving = false);
@@ -140,7 +155,8 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final txProvider = context.watch<TransactionProvider>();
-    final currentBalance = txProvider.totalBalance;
+    final userProvider = context.watch<UserProvider>();
+    final currentBalance = userProvider.totalBalance;
 
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
@@ -148,7 +164,10 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: themeProvider.foregroundColor),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: themeProvider.foregroundColor,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -205,14 +224,24 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
                       width: double.infinity,
                       height: 55,
                       child: ElevatedButton(
-                        onPressed: _isSaving ? null : () => _handleUpdateBalance(currentBalance),
+                        onPressed: _isSaving
+                            ? null
+                            : () => _handleUpdateBalance(currentBalance),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFEC5B13),
-                          shape: RoundedRectanglePlatform.isIOS ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)) : RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectanglePlatform.isIOS
+                              ? RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                )
+                              : RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                           elevation: 0,
                         ),
                         child: _isSaving
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : const Text(
                                 'Xác nhận cập nhật',
                                 style: TextStyle(
@@ -227,10 +256,16 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
                     Center(
                       child: TextButton.icon(
                         onPressed: _isSaving ? null : _handleResetBalance,
-                        icon: const Icon(Icons.delete_forever_rounded, color: Colors.redAccent),
+                        icon: const Icon(
+                          Icons.delete_forever_rounded,
+                          color: Colors.redAccent,
+                        ),
                         label: const Text(
                           'Xóa toàn bộ số dư & giao dịch',
-                          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -333,10 +368,15 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
             style: TextStyle(color: themeProvider.foregroundColor),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(color: themeProvider.foregroundColor.withOpacity(0.3)),
+              hintStyle: TextStyle(
+                color: themeProvider.foregroundColor.withOpacity(0.3),
+              ),
               prefixIcon: Icon(icon, color: const Color(0xFFEC5B13), size: 20),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
         ),
@@ -346,5 +386,6 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
 }
 
 class RoundedRectanglePlatform {
-  static bool get isIOS => true; // Mocking for simplicity as per common project structure
+  static bool get isIOS =>
+      true; // Mocking for simplicity as per common project structure
 }

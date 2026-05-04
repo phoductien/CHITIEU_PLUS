@@ -27,7 +27,7 @@ class _DepositScreenState extends State<DepositScreen> {
     super.initState();
     _amountController = TextEditingController(text: "500.000");
     _amountController.addListener(_onAmountChanged);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppSessionProvider>().setLastRoute('deposit');
     });
@@ -339,8 +339,11 @@ class _DepositScreenState extends State<DepositScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.info_outline_rounded,
-                      color: Colors.orangeAccent, size: 16),
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    color: Colors.orangeAccent,
+                    size: 16,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Vui lòng liên kết ngân hàng để nạp tiền',
@@ -436,4 +439,3 @@ class _DepositScreenState extends State<DepositScreen> {
     );
   }
 }
-

@@ -1,4 +1,4 @@
-﻿// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -33,9 +33,7 @@ class DebtCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B).withOpacity(0.5),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
           ),
           child: Row(
             children: [
@@ -47,7 +45,9 @@ class DebtCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isDebt ? Icons.call_made_rounded : Icons.call_received_rounded,
+                  isDebt
+                      ? Icons.call_made_rounded
+                      : Icons.call_received_rounded,
                   color: color,
                   size: 24,
                 ),
@@ -67,7 +67,9 @@ class DebtCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      debt.note.isNotEmpty ? debt.note : (isDebt ? 'Bạn nợ' : 'Người nợ bạn'),
+                      debt.note.isNotEmpty
+                          ? debt.note
+                          : (isDebt ? 'Bạn nợ' : 'Người nợ bạn'),
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.5),
                         fontSize: 12,
@@ -112,14 +114,17 @@ class DebtCard extends StatelessWidget {
                   GestureDetector(
                     onTap: onToggleStatus,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: isPaid 
+                        color: isPaid
                             ? Colors.grey.withOpacity(0.2)
                             : color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: isPaid 
+                          color: isPaid
                               ? Colors.grey.withOpacity(0.3)
                               : color.withOpacity(0.3),
                         ),

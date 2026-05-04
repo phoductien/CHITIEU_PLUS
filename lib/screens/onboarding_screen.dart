@@ -8,7 +8,8 @@ import 'package:chitieu_plus/screens/terms_and_privacy_screen.dart';
 import 'package:chitieu_plus/widgets/app_logo.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  final bool isReviewMode;
+  const OnboardingScreen({super.key, this.isReviewMode = false});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -46,11 +47,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  Future<void> _finishOnboarding() async {
+  Future<void> _finishOnboarding({bool skipPermanently = true}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('has_seen_onboarding', true);
+    await prefs.setBool('has_seen_onboarding', skipPermanently);
 
     if (!mounted) return;
+
+    if (widget.isReviewMode) {
+      Navigator.pop(context);
+      return;
+    }
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
@@ -74,7 +81,70 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _skip() {
-    _finishOnboarding();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF02467D),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.white.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.help_outline, color: Color(0xFF5ADBD0)),
+            const SizedBox(width: 12),
+            const Text(
+              'Bỏ qua giới thiệu?',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Bạn có muốn bỏ qua màn hình giới thiệu này ở những lần truy cập kế tiếp không?\n\nLưu ý: Bạn vẫn có thể thay đổi thiết lập này trong phần Cài đặt của ứng dụng.',
+          style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+        ),
+        actionsPadding: const EdgeInsets.only(right: 16, bottom: 16),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _finishOnboarding(skipPermanently: false);
+            },
+            child: Text(
+              'Không, hiện lại sau',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _finishOnboarding(skipPermanently: true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF05D15),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Bỏ qua luôn',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -663,7 +733,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                shape: BoxShape.circle, // shape: Điêu khắc gọt vỏ khoét nang túi hình cầu tròn lăn
+                shape: BoxShape
+                    .circle, // shape: Điêu khắc gọt vỏ khoét nang túi hình cầu tròn lăn
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFF5ADBD0)
@@ -693,4 +764,3 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 }
-

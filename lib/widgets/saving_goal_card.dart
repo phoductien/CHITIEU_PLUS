@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/saving_goal_model.dart';
 
@@ -6,11 +6,7 @@ class SavingGoalCard extends StatelessWidget {
   final SavingGoalModel goal;
   final VoidCallback? onTap;
 
-  const SavingGoalCard({
-    super.key,
-    required this.goal,
-    this.onTap,
-  });
+  const SavingGoalCard({super.key, required this.goal, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +23,7 @@ class SavingGoalCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 1.5,
-          ),
+          border: Border.all(color: color.withOpacity(0.2), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,10 +58,7 @@ class SavingGoalCard extends StatelessWidget {
                       ),
                       Text(
                         'Còn ${goal.daysRemaining} ngày',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -81,10 +71,7 @@ class SavingGoalCard extends StatelessWidget {
               children: [
                 Text(
                   currencyFormat.format(goal.currentAmount),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: color),
                 ),
                 Text(
                   '$percent%',
@@ -109,10 +96,7 @@ class SavingGoalCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Mục tiêu: ${currencyFormat.format(goal.targetAmount)}',
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -122,13 +106,20 @@ class SavingGoalCard extends StatelessWidget {
 
   IconData _getIcon(String iconName) {
     switch (iconName) {
-      case 'savings': return Icons.savings_rounded;
-      case 'home': return Icons.home_rounded;
-      case 'flight': return Icons.flight_rounded;
-      case 'directions_car': return Icons.directions_car_rounded;
-      case 'laptop': return Icons.laptop_mac_rounded;
-      case 'phone': return Icons.phone_android_rounded;
-      default: return Icons.star_rounded;
+      case 'savings':
+        return Icons.savings_rounded;
+      case 'home':
+        return Icons.home_rounded;
+      case 'flight':
+        return Icons.flight_rounded;
+      case 'directions_car':
+        return Icons.directions_car_rounded;
+      case 'laptop':
+        return Icons.laptop_mac_rounded;
+      case 'phone':
+        return Icons.phone_android_rounded;
+      default:
+        return Icons.star_rounded;
     }
   }
 }

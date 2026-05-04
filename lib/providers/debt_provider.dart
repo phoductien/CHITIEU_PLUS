@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import '../models/debt_model.dart';
 import '../services/realtime_db_service.dart';
 
@@ -11,8 +10,10 @@ class DebtProvider with ChangeNotifier {
   final RealtimeDbService _dbService = RealtimeDbService();
 
   List<DebtModel> get debts => _debts;
-  List<DebtModel> get pendingDebts => _debts.where((d) => d.status == DebtStatus.pending).toList();
-  List<DebtModel> get paidDebts => _debts.where((d) => d.status == DebtStatus.paid).toList();
+  List<DebtModel> get pendingDebts =>
+      _debts.where((d) => d.status == DebtStatus.pending).toList();
+  List<DebtModel> get paidDebts =>
+      _debts.where((d) => d.status == DebtStatus.paid).toList();
   bool get isLoading => _isLoading;
 
   double get totalLoan => _debts
@@ -33,7 +34,9 @@ class DebtProvider with ChangeNotifier {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data != null) {
         data.forEach((key, value) {
-          _debts.add(DebtModel.fromMap(value as Map<dynamic, dynamic>, key as String));
+          _debts.add(
+            DebtModel.fromMap(value as Map<dynamic, dynamic>, key as String),
+          );
         });
         _debts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       }
@@ -55,7 +58,9 @@ class DebtProvider with ChangeNotifier {
   }
 
   Future<void> toggleStatus(DebtModel debt) async {
-    final newStatus = debt.status == DebtStatus.pending ? DebtStatus.paid : DebtStatus.pending;
+    final newStatus = debt.status == DebtStatus.pending
+        ? DebtStatus.paid
+        : DebtStatus.pending;
     await _dbService.saveDebt(debt.copyWith(status: newStatus));
   }
 

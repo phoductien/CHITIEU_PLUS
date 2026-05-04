@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class AppLogo extends StatelessWidget {
   final double size;
@@ -41,4 +41,3 @@ class AppLogo extends StatelessWidget {
     );
   }
 }
-

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../widgets/premium_date_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
@@ -13,6 +14,7 @@ import 'package:chitieu_plus/screens/ocr_scan_screen.dart';
 import 'package:chitieu_plus/screens/qr_scanner_screen.dart';
 import 'package:chitieu_plus/providers/app_session_provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
+import 'package:chitieu_plus/screens/online_category_screen.dart'; // Thêm import màn hình danh mục trực tuyến
 
 class AddTransactionScreen extends StatefulWidget {
   final String? initialOcrResult;
@@ -126,25 +128,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
     super.dispose();
   }
 
+  // Hàm chọn ngày với giao diện Premium tùy chỉnh (khớp Hình 2)
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
+    final DateTime? pickedDate = await showDialog<DateTime>(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFFEC5B13),
-              onPrimary: Colors.white,
-              surface: Color(0xFF1E293B),
-              onSurface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: (context) => PremiumDatePicker(
+        initialDate: _selectedDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101),
+      ),
     );
     if (pickedDate != null) {
       setState(() {
@@ -159,6 +151,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
     }
   }
 
+  // Hàm chọn giờ với giao diện đồng bộ
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -166,11 +159,32 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
+            // Đồng bộ màu sắc với DatePicker
             colorScheme: const ColorScheme.dark(
               primary: Color(0xFFEC5B13),
               onPrimary: Colors.white,
               surface: Color(0xFF1E293B),
               onSurface: Colors.white,
+            ),
+            // Tùy chỉnh giao diện chọn giờ
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: const Color(0xFF0F172A),
+              hourMinuteColor: const Color(0xFF1E293B),
+              hourMinuteTextColor: Colors.white,
+              dayPeriodColor: const Color(0xFF1E293B),
+              dayPeriodTextColor: Colors.white,
+              dialBackgroundColor: const Color(0xFF1E293B),
+              dialHandColor: const Color(0xFFEC5B13),
+              dialTextColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF00D1FF),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           child: child!,
@@ -276,22 +290,28 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
 
     final userProvider = context.read<UserProvider>();
     final isGuest = userProvider.isGuest;
-    final walletType = (isGuest && type == TransactionType.expense) ? 'demo' : 'main';
+    final walletType = (isGuest && type == TransactionType.expense)
+        ? 'demo'
+        : 'main';
 
     if (type == TransactionType.expense) {
       final transactions = context.read<TransactionProvider>().transactions;
       double currentBalance = 0;
       double demoExpenses = 0;
-      
+
       for (var t in transactions) {
         if (t.wallet == 'main') {
-          currentBalance += (t.type == TransactionType.income ? t.amount : -t.amount);
+          currentBalance += (t.type == TransactionType.income
+              ? t.amount
+              : -t.amount);
         } else if (t.wallet == 'demo' && t.type == TransactionType.expense) {
           demoExpenses += t.amount;
         }
       }
 
-      double checkBalance = isGuest ? (currentBalance - demoExpenses) : currentBalance;
+      double checkBalance = isGuest
+          ? (currentBalance - demoExpenses)
+          : currentBalance;
 
       if (checkBalance < amount) {
         if (mounted) {
@@ -303,7 +323,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                 children: [
                   Icon(Icons.warning_amber_rounded, color: Colors.orange),
                   SizedBox(width: 8),
-                  Text('Số dư không đủ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(
+                    'Số dư không đủ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
               content: Text(
@@ -313,7 +340,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Đã hiểu', style: TextStyle(color: Color(0xFFEC5B13))),
+                  child: const Text(
+                    'Đã hiểu',
+                    style: TextStyle(color: Color(0xFFEC5B13)),
+                  ),
                 ),
               ],
             ),
@@ -339,7 +369,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
     );
 
     try {
-      await context.read<TransactionProvider>().addTransaction(transaction);
+      final userProvider = context.read<UserProvider>();
+      await context.read<TransactionProvider>().addTransaction(
+            transaction,
+            userProvider: userProvider,
+          );
       if (mounted) {
         context.read<NotificationProvider>().addNotification(
           title: 'Giao dịch thành công',
@@ -389,7 +423,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
 
     try {
       final aiService = AiService();
-      final prompt = '''
+      final prompt =
+          '''
 Dựa vào nội dung QR code sau (có thể là VietQR hoặc text thông thường), hãy trích xuất thông tin giao dịch.
 Nội dung: "$qrText"
 
@@ -401,7 +436,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
 }
 ''';
       final response = await aiService.sendMessage(prompt);
-      
+
       // Clean and parse JSON from response
       String jsonStr = response;
       if (jsonStr.contains('```json')) {
@@ -431,9 +466,9 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
     } catch (e) {
       debugPrint('QR Processing Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi xử lý QR: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi xử lý QR: $e')));
       }
     } finally {
       if (mounted) {
@@ -530,7 +565,13 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
       ),
       body: Stack(
         children: [
-          _buildBody(),
+          // Thêm Center và ConstrainedBox để căn giữa và giới hạn kích thước trên màn hình rộng (Web)
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: _buildBody(),
+            ),
+          ),
           if (_isAiProcessing)
             Container(
               color: Colors.black54,
@@ -676,8 +717,39 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                     final cat = _categories[index];
                     final isSelected = _selectedCategory == cat['name'];
                     return GestureDetector(
-                      onTap: () =>
-                          setState(() => _selectedCategory = cat['name']),
+                      onTap: () async {
+                        // Nếu chọn "Khác", mở màn hình danh mục trực tuyến
+                        // If "Other" is selected, open online category screen
+                        if (cat['name'] == 'Khác') {
+                          final result =
+                              await Navigator.push<Map<String, dynamic>>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const OnlineCategoryScreen(),
+                                ),
+                              );
+
+                          if (result != null) {
+                            setState(() {
+                              _selectedCategory = result['name'];
+                              // Tạm thời thêm vào danh sách hiển thị nếu chưa có
+                              // Temporarily add to display list if not present
+                              if (!_categories.any(
+                                (c) => c['name'] == result['name'],
+                              )) {
+                                _categories.insert(_categories.length - 1, {
+                                  'name': result['name'],
+                                  'icon': result['icon'],
+                                  'color': result['color'],
+                                });
+                              }
+                            });
+                          }
+                        } else {
+                          setState(() => _selectedCategory = cat['name']);
+                        }
+                      },
                       child: Column(
                         children: [
                           Container(
@@ -730,19 +802,32 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                             vertical: 16,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF334155,
-                            ).withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF1E293B).withOpacity(0.5),
+                                const Color(0xFF0F172A).withOpacity(0.5),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.05),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
                               const Icon(
                                 Icons.calendar_month_rounded,
-                                color: Colors.white54,
+                                color: Color(0xFF00D1FF),
                                 size: 20,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   DateFormat(
@@ -752,6 +837,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 15,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
@@ -771,25 +857,39 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                             vertical: 16,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF334155,
-                            ).withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF1E293B).withOpacity(0.5),
+                                const Color(0xFF0F172A).withOpacity(0.5),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.05),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
                               const Icon(
                                 Icons.access_time_rounded,
-                                color: Colors.white54,
+                                color: Color(0xFF00D1FF),
                                 size: 20,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   DateFormat('HH:mm').format(_selectedDate),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 15,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
@@ -989,24 +1089,34 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
   Widget _buildBottomAction() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-      child: ElevatedButton(
-        onPressed: _saveTransaction,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC5B13),
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+      // Thêm Row, Flexible và ConstrainedBox để nút không bị quá to trên Web
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: ElevatedButton(
+                onPressed: _saveTransaction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEC5B13),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 8,
+                  shadowColor: const Color(0xFFEC5B13).withOpacity(0.5),
+                ),
+                child: const Text(
+                  'Lưu giao dịch',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
           ),
-          elevation: 8,
-          shadowColor: const Color(0xFFEC5B13).withOpacity(0.5),
-        ),
-        child: const Text(
-          'Lưu giao dịch',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        ],
       ),
     );
   }
 }
-

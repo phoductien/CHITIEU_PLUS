@@ -465,4 +465,3 @@ class _EyeProtectionScreenState extends State<EyeProtectionScreen> {
     );
   }
 }
-

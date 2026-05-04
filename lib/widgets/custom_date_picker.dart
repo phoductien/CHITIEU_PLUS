@@ -1,9 +1,10 @@
-﻿// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import 'premium_date_picker.dart'; // Thêm import
 
 class CustomDatePicker extends StatefulWidget {
   final DateTime? initialStartDate;
@@ -33,30 +34,15 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
     _endDate = widget.initialEndDate ?? DateTime(now.year, now.month + 1, 0);
   }
 
+  // Hàm chọn ngày với giao diện Premium (Image 2 style)
   Future<void> _selectDate(BuildContext context, bool isStart) async {
-    final themeProvider = context.read<ThemeProvider>();
-
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showDialog<DateTime>(
       context: context,
-      initialDate: isStart ? _startDate : _endDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: const Color(0xFFEC5B13),
-              onPrimary: Colors.white,
-              surface: themeProvider.backgroundColor,
-              onSurface: themeProvider.foregroundColor,
-            ),
-            dialogTheme: DialogThemeData(
-              backgroundColor: themeProvider.secondaryColor,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: (context) => PremiumDatePicker(
+        initialDate: isStart ? _startDate : _endDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      ),
     );
 
     if (picked != null) {
@@ -200,11 +186,11 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                  Icon(
-                    Icons.calendar_today_rounded,
-                    color: themeProvider.foregroundColor.withOpacity(0.5),
-                    size: 16,
-                  ),
+                Icon(
+                  Icons.calendar_today_rounded,
+                  color: themeProvider.foregroundColor.withOpacity(0.5),
+                  size: 16,
+                ),
               ],
             ),
           ),

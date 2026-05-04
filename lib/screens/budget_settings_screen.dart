@@ -367,4 +367,3 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
     );
   }
 }
-

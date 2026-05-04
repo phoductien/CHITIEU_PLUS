@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:chitieu_plus/firebase_options.dart';
@@ -73,7 +73,7 @@ void main() async {
 
   final sessionProvider = AppSessionProvider();
   await sessionProvider.loadSession();
-  
+
   // Decide whether to skip splash screen (warm start check)
   bool shouldSkipSplash = false;
   if (kIsWeb && session_helper.checkIsReload()) {
@@ -290,4 +290,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-

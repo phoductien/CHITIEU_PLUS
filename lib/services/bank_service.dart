@@ -6,9 +6,8 @@ import '../constants/api_constants.dart';
 
 /// Service xử lý các nghiệp vụ liên quan đến Ngân hàng và SePay.
 class BankService {
-  
   /// XÁC THỰC TÀI KHOẢN NGÂN HÀNG
-  /// 
+  ///
   /// LƯU Ý: SePay không hỗ trợ tra cứu tên chủ tài khoản từ số tài khoản bất kỳ.
   /// Hàm này hiện tại trả về kết quả giả định hoặc có thể tích hợp API khác nếu cần.
   Future<Map<String, dynamic>> verifyAccount({
@@ -18,9 +17,9 @@ class BankService {
   }) async {
     // Vì SePay không hỗ trợ Lookup, chúng ta sẽ giả định thành công để người dùng trải nghiệm flow
     // Trong thực tế, bạn cần một provider khác (như VietQR) nếu muốn tính năng này.
-    
+
     await Future.delayed(const Duration(seconds: 1)); // Giả lập độ trễ mạng
-    
+
     return {
       'success': true,
       'accountName': expectedName.toUpperCase(),
@@ -33,31 +32,29 @@ class BankService {
     try {
       final response = await http.get(
         Uri.parse(ApiConstants.sepayBankAccountsUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
       );
- 
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['bank_accounts'] ?? [];
       } else {
-        throw Exception('Lỗi khi lấy danh sách tài khoản: ${response.statusCode}');
+        throw Exception(
+          'Lỗi khi lấy danh sách tài khoản: ${response.statusCode}',
+        );
       }
     } catch (e) {
       debugPrint('SePay Bank Account Error: $e');
       return [];
     }
   }
- 
+
   /// LẤY DANH SÁCH GIAO DỊCH TỪ SEPAY
   Future<List<dynamic>> fetchTransactions() async {
     try {
       final response = await http.get(
         Uri.parse(ApiConstants.sepayTransactionsUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -73,7 +70,7 @@ class BankService {
   }
 
   /// LOẠI BỎ DẤU TIẾNG VIỆT
-  /// 
+  ///
   /// Chuyển đổi các ký tự có dấu thành không dấu để chuẩn hóa dữ liệu.
   String removeVietnameseTones(String str) {
     var result = str;
@@ -91,9 +88,8 @@ class BankService {
     result = result.replaceAll(RegExp(r'[ỲÝỴỶỸ]'), 'Y');
     result = result.replaceAll(RegExp(r'[đ]'), 'd');
     result = result.replaceAll(RegExp(r'[Đ]'), 'D');
-    
+
     // Loại bỏ một số ký tự đặc biệt nếu cần, hoặc trả về kết quả
     return result;
   }
-
 }

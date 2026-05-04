@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chitieu_plus/screens/login_screen.dart';
@@ -38,11 +38,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF01142F),
-              Color(0xFF022C4F),
-              Color(0xFF015BB5),
-            ],
+            colors: [Color(0xFF01142F), Color(0xFF022C4F), Color(0xFF015BB5)],
             stops: [0.0, 0.5, 1.0],
           ),
         ),
@@ -55,9 +51,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
-                  ),
+                  border: Border.all(color: Colors.white.withOpacity(0.15)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.2),
@@ -102,7 +96,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
             // If we are waiting and have no initial data, show splash/loader
             if (connectionState == ConnectionState.waiting && user == null) {
-              return widget.skipSplash ? _buildLoadingScreen() : const SplashScreen();
+              return widget.skipSplash
+                  ? _buildLoadingScreen()
+                  : const SplashScreen();
             }
 
             if (user != null) {
@@ -112,7 +108,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 }
               });
 
-              return widget.skipSplash ? const HomeScreen() : const SplashScreen();
+              return widget.skipSplash
+                  ? const HomeScreen()
+                  : const SplashScreen();
             } else {
               // User is null. Is it a logout or just startup?
               // If we were previously logged in, it's a logout -> show Splash
@@ -122,9 +120,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
               // Standard startup check for logged out users
               if (UserProvider.isCleaningUpGuest) {
-                return widget.skipSplash ? const LoginScreen() : const SplashScreen();
+                return widget.skipSplash
+                    ? const LoginScreen()
+                    : const SplashScreen();
               }
-              return widget.skipSplash ? const LoginScreen() : const SplashScreen();
+              return widget.skipSplash
+                  ? const LoginScreen()
+                  : const SplashScreen();
             }
           },
         );

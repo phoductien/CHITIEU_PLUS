@@ -1,3 +1,4 @@
+import 'package:chitieu_plus/screens/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
@@ -22,6 +23,34 @@ class SettingsTab extends StatefulWidget {
 }
 
 class _SettingsTabState extends State<SettingsTab> {
+  bool _hasSeenOnboarding = false;
+  bool _isLoadingOnboarding = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOnboardingStatus();
+  }
+
+  Future<void> _loadOnboardingStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+      _isLoadingOnboarding = false;
+    });
+  }
+
+  Future<void> _toggleOnboarding(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    // value is for "Show Onboarding"
+    // has_seen_onboarding = true means HIDE
+    // so has_seen_onboarding = !value
+    await prefs.setBool('has_seen_onboarding', !value);
+    setState(() {
+      _hasSeenOnboarding = !value;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
@@ -136,9 +165,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         themeProvider: themeProvider,
                         icon: Icons.smart_toy_rounded,
                         iconColor: const Color(0xFFEC5B13),
-                        iconBgColor: const Color(
-                          0xFFEC5B13,
-                        ).withOpacity(0.2),
+                        iconBgColor: const Color(0xFFEC5B13).withOpacity(0.2),
                         title: 'Chat với trợ lý ảo',
                         onTap: () {
                           Navigator.push(
@@ -226,6 +253,39 @@ class _SettingsTabState extends State<SettingsTab> {
                         value: themeProvider.isEyeProtection,
                         onChanged: (val) =>
                             themeProvider.toggleEyeProtection(val),
+                      ),
+                      _buildDivider(themeProvider),
+                      _buildSwitchItem(
+                        themeProvider: themeProvider,
+                        icon: Icons.rocket_launch_rounded,
+                        iconColor: themeProvider.foregroundColor,
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
+                        title: 'Hiển thị màn hình giới thiệu',
+                        value: !_hasSeenOnboarding,
+                        onChanged: _isLoadingOnboarding
+                            ? (val) {}
+                            : (val) => _toggleOnboarding(val),
+                      ),
+                      _buildDivider(themeProvider),
+                      _buildSettingsItem(
+                        themeProvider: themeProvider,
+                        icon: Icons.help_outline_rounded,
+                        iconColor: themeProvider.foregroundColor,
+                        iconBgColor: themeProvider.foregroundColor.withValues(
+                          alpha: 0.1,
+                        ),
+                        title: 'Xem hướng dẫn sử dụng',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const OnboardingScreen(isReviewMode: true),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -558,8 +618,11 @@ class _SettingsTabState extends State<SettingsTab> {
       ),
     );
   }
+
   Widget _buildDeviceManagementSection(
-      UserProvider userProvider, ThemeProvider themeProvider) {
+    UserProvider userProvider,
+    ThemeProvider themeProvider,
+  ) {
     final sessions = userProvider.deviceSessions;
 
     if (sessions.isEmpty) {
@@ -599,27 +662,32 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
-  Widget _buildDeviceItem(UserProvider userProvider,
-      ThemeProvider themeProvider, DeviceSessionModel session) {
+  Widget _buildDeviceItem(
+    UserProvider userProvider,
+    ThemeProvider themeProvider,
+    DeviceSessionModel session,
+  ) {
     final bool isCurrentDevice = session.isCurrent;
-    final String lastActiveStr =
-        DateFormat('HH:mm, dd/MM/yyyy').format(session.lastActive);
+    final String lastActiveStr = DateFormat(
+      'HH:mm, dd/MM/yyyy',
+    ).format(session.lastActive);
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: (isCurrentDevice ? Colors.green : themeProvider.foregroundColor)
-              .withValues(alpha: 0.1),
+          color:
+              (isCurrentDevice ? Colors.green : themeProvider.foregroundColor)
+                  .withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(
           session.deviceType == 'mobile'
               ? Icons.phone_android_rounded
               : session.deviceType == 'tablet'
-                  ? Icons.tablet_android_rounded
-                  : Icons.laptop_windows_rounded,
+              ? Icons.tablet_android_rounded
+              : Icons.laptop_windows_rounded,
           color: isCurrentDevice ? Colors.green : themeProvider.foregroundColor,
           size: 24,
         ),
@@ -700,7 +768,8 @@ class _SettingsTabState extends State<SettingsTab> {
         content: Text(
           'Bạn có chắc chắn muốn đăng xuất khỏi thiết bị "${session.deviceName}" không?',
           style: TextStyle(
-              color: themeProvider.foregroundColor.withValues(alpha: 0.8)),
+            color: themeProvider.foregroundColor.withValues(alpha: 0.8),
+          ),
         ),
         actions: [
           TextButton(
@@ -708,7 +777,8 @@ class _SettingsTabState extends State<SettingsTab> {
             child: Text(
               'Hủy',
               style: TextStyle(
-                  color: themeProvider.foregroundColor.withValues(alpha: 0.6)),
+                color: themeProvider.foregroundColor.withValues(alpha: 0.6),
+              ),
             ),
           ),
           ElevatedButton(
@@ -717,8 +787,9 @@ class _SettingsTabState extends State<SettingsTab> {
               userProvider.removeDeviceSession(session.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content:
-                      Text('Đã yêu cầu đăng xuất thiết bị ${session.deviceName}'),
+                  content: Text(
+                    'Đã yêu cầu đăng xuất thiết bị ${session.deviceName}',
+                  ),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -734,4 +805,3 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 }
-

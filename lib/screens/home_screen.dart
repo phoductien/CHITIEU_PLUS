@@ -19,7 +19,6 @@ import 'package:chitieu_plus/screens/tabs/home_tab.dart';
 import 'package:chitieu_plus/screens/tabs/transaction_tab.dart';
 import 'package:chitieu_plus/screens/tabs/budget_tab.dart';
 import 'package:chitieu_plus/screens/tabs/report_tab.dart';
-import 'package:chitieu_plus/screens/tabs/news_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? welcomeMessage;
@@ -42,10 +41,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return 'Giao dịch hôm nay thế nào?\nĐể tôi tóm tắt giúp nhé!';
       case 2:
-        return 'Cập nhật tin tức tài chính?\nHãy đọc những bản tin mới nhất!';
-      case 3:
         return 'Lên kế hoạch thông minh?\nĐể tôi hỗ trợ bạn!';
-      case 4:
+      case 3:
         return 'Phân tích chi tiêu của bạn?\nTôi luôn sẵn sàng hỗ trợ!';
       default:
         return 'Chào bạn! Tôi có thể giúp gì cho bạn?';
@@ -323,7 +320,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                   const TransactionTab(),
-                  const NewsTab(),
                   const BudgetTab(),
                   const ReportTab(),
                 ],
@@ -386,9 +382,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   vertical: 12,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: themeProvider.secondaryColor.withValues(
-                                    alpha: 0.95,
-                                  ),
+                                  color: themeProvider.secondaryColor
+                                      .withValues(alpha: 0.95),
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(16),
                                     topRight: Radius.circular(16),
@@ -445,7 +440,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        bottomNavigationBar: _buildBottomNavBar(themeProvider, languageProvider),
+        bottomNavigationBar: _buildBottomNavBar(
+          themeProvider,
+          languageProvider,
+        ),
       ),
     );
   }
@@ -491,21 +489,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   languageProvider.translate('tab_transactions'),
                   themeProvider,
                 ),
-                _buildNavItem(
-                  2,
-                  Icons.newspaper_rounded,
-                  languageProvider.translate('tab_news'),
-                  themeProvider,
-                ),
                 const SizedBox(width: 60), // Space for AI Scan button
                 _buildNavItem(
-                  3,
+                  2,
                   Icons.account_balance_wallet_rounded,
                   languageProvider.translate('tab_budget'),
                   themeProvider,
                 ),
                 _buildNavItem(
-                  4,
+                  3,
                   Icons.analytics_rounded,
                   languageProvider.translate('tab_report'),
                   themeProvider,
@@ -638,4 +630,3 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // --- TAB 1: TRANG CHỦ ---
-

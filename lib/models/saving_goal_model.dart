@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class SavingGoalModel {
   final String id;
   final String userId;
@@ -23,11 +21,12 @@ class SavingGoalModel {
     required this.createdAt,
   });
 
-  double get progress => targetAmount > 0 ? (currentAmount / targetAmount) : 0.0;
+  double get progress =>
+      targetAmount > 0 ? (currentAmount / targetAmount) : 0.0;
   bool get isCompleted => currentAmount >= targetAmount;
-  
+
   double get remainingAmount => targetAmount - currentAmount;
-  
+
   int get daysRemaining {
     final difference = deadline.difference(DateTime.now()).inDays;
     return difference < 0 ? 0 : difference;
@@ -53,13 +52,13 @@ class SavingGoalModel {
       title: map['title'] ?? '',
       targetAmount: (map['targetAmount'] ?? 0.0).toDouble(),
       currentAmount: (map['currentAmount'] ?? 0.0).toDouble(),
-      deadline: map['deadline'] != null 
-          ? DateTime.parse(map['deadline']) 
+      deadline: map['deadline'] != null
+          ? DateTime.parse(map['deadline'])
           : DateTime.now().add(const Duration(days: 30)),
       icon: map['icon'] ?? 'savings',
       color: map['color'] ?? '#F05D15',
-      createdAt: map['createdAt'] != null 
-          ? DateTime.parse(map['createdAt']) 
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
     );
   }

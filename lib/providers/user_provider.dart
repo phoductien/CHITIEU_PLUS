@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:io'; // Added for Platform check
@@ -27,6 +26,7 @@ class UserProvider with ChangeNotifier {
   bool _isGuest = false;
 
   double _totalBudget = 5000000;
+  double _totalBalance = 0;
   Map<String, double> _categoryBudgets = {};
   List<String> _bankAccounts = [];
   List<DeviceSessionModel> _deviceSessions = [];
@@ -48,6 +48,7 @@ class UserProvider with ChangeNotifier {
   String get uid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   double get totalBudget => _totalBudget;
+  double get totalBalance => _totalBalance;
   Map<String, double> get categoryBudgets => _categoryBudgets;
   List<String> get bankAccounts => _bankAccounts;
   List<DeviceSessionModel> get deviceSessions => _deviceSessions;
@@ -68,6 +69,7 @@ class UserProvider with ChangeNotifier {
     _isGuest = prefs.getBool('is_guest') ?? false;
 
     _totalBudget = prefs.getDouble('user_total_budget') ?? 5000000;
+    _totalBalance = prefs.getDouble('user_total_balance') ?? 0;
     _bankAccounts = prefs.getStringList('user_bank_accounts') ?? [];
     _currentDeviceId = prefs.getString('device_session_id');
 
@@ -209,7 +211,9 @@ class UserProvider with ChangeNotifier {
 
     if (docId.isNotEmpty) {
       _startUserDocumentListener(docId);
-      await updateCurrentDeviceSession(docId); // Ensure session is registered first
+      await updateCurrentDeviceSession(
+        docId,
+      ); // Ensure session is registered first
       _startSessionsListener(docId); // Then start monitoring
 
       if (!_isGuest) {
@@ -232,13 +236,14 @@ class UserProvider with ChangeNotifier {
 
         _totalBudget =
             (data['totalBudget'] as num?)?.toDouble() ?? _totalBudget;
+        _totalBalance =
+            (data['totalBalance'] as num?)?.toDouble() ?? _totalBalance;
         _bankAccounts = List<String>.from(
           data['bankAccounts'] ?? _bankAccounts,
         );
         if (data['categoryBudgets'] != null) {
-          _categoryBudgets = (data['categoryBudgets'] as Map<String, dynamic>).map(
-            (k, v) => MapEntry(k, (v as num).toDouble()),
-          );
+          _categoryBudgets = (data['categoryBudgets'] as Map<String, dynamic>)
+              .map((k, v) => MapEntry(k, (v as num).toDouble()));
         }
 
         // Cập nhật SharedPreferences
@@ -252,8 +257,12 @@ class UserProvider with ChangeNotifier {
         await prefs.setString('user_gender', _gender);
         await prefs.setBool('is_guest', _isGuest);
         await prefs.setDouble('user_total_budget', _totalBudget);
+        await prefs.setDouble('user_total_balance', _totalBalance);
         await prefs.setStringList('user_bank_accounts', _bankAccounts);
-        await prefs.setString('user_category_budgets', jsonEncode(_categoryBudgets));
+        await prefs.setString(
+          'user_category_budgets',
+          jsonEncode(_categoryBudgets),
+        );
 
         notifyListeners();
       } else {
@@ -313,7 +322,7 @@ class UserProvider with ChangeNotifier {
     if (docId.isNotEmpty) {
       _startUserDocumentListener(docId);
       _startSessionsListener(docId);
-      
+
       final data = {
         'name': _name,
         'email': _isGuest ? 'guest@chitieuplus.internal' : targetEmail,
@@ -324,6 +333,7 @@ class UserProvider with ChangeNotifier {
         'gender': _gender,
         'isGuest': _isGuest,
         'totalBudget': _totalBudget,
+        'totalBalance': _totalBalance,
         'categoryBudgets': _categoryBudgets,
         'bankAccounts': _bankAccounts,
       };
@@ -356,6 +366,14 @@ class UserProvider with ChangeNotifier {
         debugPrint('[UserProvider] Error saving to Realtime Database: $e');
       }
     }
+  }
+
+  Future<void> setTotalBalance(double value) async {
+    _totalBalance = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('user_total_balance', value);
+    await syncToFirebase();
   }
 
   Future<void> setTotalBudget(double value) async {
@@ -400,11 +418,13 @@ class UserProvider with ChangeNotifier {
   Future<void> updateCurrentDeviceSession(String uid) async {
     final prefs = await SharedPreferences.getInstance();
     String? sessionId = prefs.getString('device_session_id');
-    
+
     // Generate a simple unique ID if not exists
     if (sessionId == null) {
-      sessionId = DateTime.now().millisecondsSinceEpoch.toString() + '_' + 
-                 (1000 + (DateTime.now().microsecond % 9000)).toString();
+      sessionId =
+          DateTime.now().millisecondsSinceEpoch.toString() +
+          '_' +
+          (1000 + (DateTime.now().microsecond % 9000)).toString();
       await prefs.setString('device_session_id', sessionId);
     }
     _currentDeviceId = sessionId;
@@ -416,7 +436,11 @@ class UserProvider with ChangeNotifier {
 
     if (kIsWeb) {
       final webInfo = await deviceInfo.webBrowserInfo;
-      final browserName = webInfo.browserName.toString().split('.').last.toUpperCase();
+      final browserName = webInfo.browserName
+          .toString()
+          .split('.')
+          .last
+          .toUpperCase();
       deviceName = 'Trình duyệt $browserName';
       deviceType = 'Web';
       osVersion = webInfo.platform ?? 'Web';
@@ -466,28 +490,33 @@ class UserProvider with ChangeNotifier {
         .collection('sessions')
         .orderBy('lastActive', descending: true)
         .snapshots()
-        .listen((snapshot) {
-      _deviceSessions = snapshot.docs.map((doc) {
-        return DeviceSessionModel.fromMap(
-          doc.data() as Map<String, dynamic>,
-          doc.id,
-          currentDeviceId: _currentDeviceId,
-        );
-      }).toList();
-      notifyListeners();
+        .listen(
+          (snapshot) {
+            _deviceSessions = snapshot.docs.map((doc) {
+              return DeviceSessionModel.fromMap(
+                doc.data(),
+                doc.id,
+                currentDeviceId: _currentDeviceId,
+              );
+            }).toList();
+            notifyListeners();
 
-      // Logic: If current session is missing from Firestore, it means it was revoked
-      // Only sign out if we have some sessions and the current one is not among them
-      if (_currentDeviceId != null &&
-          _deviceSessions.isNotEmpty &&
-          !isCleaningUpGuest && // Avoid race conditions during explicit logout
-          !_deviceSessions.any((s) => s.id == _currentDeviceId)) {
-        debugPrint('[UserProvider] Current session revoked. Logging out...');
-        FirebaseAuth.instance.signOut();
-      }
-    }, onError: (error) {
-      debugPrint('[UserProvider] Error in sessions listener: $error');
-    });
+            // Logic: If current session is missing from Firestore, it means it was revoked
+            // Only sign out if we have some sessions and the current one is not among them
+            if (_currentDeviceId != null &&
+                _deviceSessions.isNotEmpty &&
+                !isCleaningUpGuest && // Avoid race conditions during explicit logout
+                !_deviceSessions.any((s) => s.id == _currentDeviceId)) {
+              debugPrint(
+                '[UserProvider] Current session revoked. Logging out...',
+              );
+              FirebaseAuth.instance.signOut();
+            }
+          },
+          onError: (error) {
+            debugPrint('[UserProvider] Error in sessions listener: $error');
+          },
+        );
   }
 
   static bool isCleaningUpGuest = false;
@@ -565,18 +594,22 @@ class UserProvider with ChangeNotifier {
         .collection('users')
         .doc(uid)
         .snapshots()
-        .listen((snapshot) {
-          if (!snapshot.exists) {
+        .listen(
+          (snapshot) {
+            if (!snapshot.exists) {
+              debugPrint(
+                '[UserProvider] User document DOES NOT exist or was DELETED from Firestore. Ensuring it exists...',
+              );
+              syncToFirebase();
+            }
+          },
+          onError: (error) {
             debugPrint(
-              '[UserProvider] User document DOES NOT exist or was DELETED from Firestore. Ensuring it exists...',
+              '[UserProvider] Error in user document listener: $error',
             );
-            syncToFirebase();
-          }
-        }, onError: (error) {
-          debugPrint('[UserProvider] Error in user document listener: $error');
-        });
+          },
+        );
   }
-
 
   @override
   void dispose() {

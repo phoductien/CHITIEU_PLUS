@@ -11,6 +11,7 @@ import 'package:chitieu_plus/utils/download_helper.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:chitieu_plus/widgets/custom_date_picker.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
+import 'package:chitieu_plus/screens/transaction_detail_screen.dart';
 
 class TransactionTab extends StatefulWidget {
   const TransactionTab({super.key});
@@ -223,13 +224,13 @@ class _TransactionTabState extends State<TransactionTab> {
     final transactionProvider = context.watch<TransactionProvider>();
     final themeProvider = context.watch<ThemeProvider>();
     final userProvider = context.watch<UserProvider>();
-    
+
     final isLoading = transactionProvider.isLoading;
     final allTransactions = transactionProvider.transactions
         .where((tx) => tx.note != 'Nạp qua Ví dùng thử')
         .toList();
     final filteredTransactions = _getFilteredTransactions(allTransactions);
-    
+
     final isGuest = userProvider.bankAccounts.isEmpty;
     double simulatedBalance = 0;
     if (isGuest) {
@@ -237,7 +238,9 @@ class _TransactionTabState extends State<TransactionTab> {
       double demoExpenses = 0;
       for (var tx in transactionProvider.transactions) {
         if (tx.wallet == 'main') {
-          realBalance += (tx.type == TransactionType.income ? tx.amount : -tx.amount);
+          realBalance += (tx.type == TransactionType.income
+              ? tx.amount
+              : -tx.amount);
         } else if (tx.wallet == 'demo' && tx.type == TransactionType.expense) {
           demoExpenses += tx.amount;
         }
@@ -252,7 +255,8 @@ class _TransactionTabState extends State<TransactionTab> {
           children: [
             _buildHeader(themeProvider, filteredTransactions),
             _buildSearchAndFilters(themeProvider, filteredTransactions),
-            if (isGuest) _buildDemoBalanceBanner(themeProvider, simulatedBalance),
+            if (isGuest)
+              _buildDemoBalanceBanner(themeProvider, simulatedBalance),
             Expanded(
               child: isLoading
                   ? const Center(
@@ -289,7 +293,11 @@ class _TransactionTabState extends State<TransactionTab> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded, color: Color(0xFFDF520F), size: 16),
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: Color(0xFFDF520F),
+                      size: 16,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Số dư mô phỏng (Ví dùng thử)',
@@ -319,25 +327,48 @@ class _TransactionTabState extends State<TransactionTab> {
                 context: context,
                 builder: (context) => AlertDialog(
                   backgroundColor: themeProvider.secondaryColor,
-                  title: Text('Xóa số dư?', style: TextStyle(color: themeProvider.foregroundColor)),
+                  title: Text(
+                    'Xóa số dư?',
+                    style: TextStyle(color: themeProvider.foregroundColor),
+                  ),
                   content: Text(
                     'Toàn bộ giao dịch giả lập và tiền nạp dùng thử sẽ bị xóa sạch để làm lại từ đầu.',
-                    style: TextStyle(color: themeProvider.foregroundColor.withOpacity(0.7)),
+                    style: TextStyle(
+                      color: themeProvider.foregroundColor.withOpacity(0.7),
+                    ),
                   ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xóa', style: TextStyle(color: Colors.redAccent))),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Hủy'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text(
+                        'Xóa',
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    ),
                   ],
                 ),
               );
-              
+
               if (confirm == true && mounted) {
                 final txProvider = context.read<TransactionProvider>();
-                final demoIds = txProvider.transactions.where((tx) => tx.note == 'Nạp qua Ví dùng thử' || tx.wallet == 'demo').map((tx) => tx.id).toList();
+                final demoIds = txProvider.transactions
+                    .where(
+                      (tx) =>
+                          tx.note == 'Nạp qua Ví dùng thử' ||
+                          tx.wallet == 'demo',
+                    )
+                    .map((tx) => tx.id)
+                    .toList();
                 if (demoIds.isNotEmpty) {
                   await txProvider.deleteTransactions(demoIds);
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa số dư ví dùng thử')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đã xóa số dư ví dùng thử')),
+                    );
                   }
                 }
               }
@@ -799,7 +830,7 @@ class _TransactionTabState extends State<TransactionTab> {
       prefix = 'HÔM QUA, ';
     }
 
-    return '$prefix${DateFormat('d THÁNG M').format(date).toUpperCase()}';
+    return '$prefix${DateFormat("d 'THÁNG' M").format(date).toUpperCase()}';
   }
 
   Widget _buildTransactionCard(
@@ -827,7 +858,12 @@ class _TransactionTabState extends State<TransactionTab> {
             }
           });
         } else {
-          _showTransactionDetails(context, tx, themeProvider);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TransactionDetailScreen(transaction: tx),
+            ),
+          );
         }
       },
       child: Container(
@@ -1044,21 +1080,29 @@ class _TransactionTabState extends State<TransactionTab> {
     );
   }
 
-  void _showTransactionDetails(BuildContext context, TransactionModel tx, ThemeProvider themeProvider) {
+  void _showTransactionDetails(
+    BuildContext context,
+    TransactionModel tx,
+    ThemeProvider themeProvider,
+  ) {
     final userProvider = context.read<UserProvider>();
     final isGuest = userProvider.bankAccounts.isEmpty;
 
     List<TransactionModel> walletTransactions;
     if (isGuest && (tx.wallet == 'main' || tx.wallet == 'demo')) {
-      walletTransactions = context.read<TransactionProvider>().transactions
+      walletTransactions = context
+          .read<TransactionProvider>()
+          .transactions
           .where((t) => t.wallet == 'main' || t.wallet == 'demo')
           .toList();
     } else {
-       walletTransactions = context.read<TransactionProvider>().transactions
+      walletTransactions = context
+          .read<TransactionProvider>()
+          .transactions
           .where((t) => t.wallet == tx.wallet)
           .toList();
     }
-    
+
     walletTransactions.sort((a, b) => a.date.compareTo(b.date));
     double runningBalance = 0;
     for (var t in walletTransactions) {
@@ -1070,7 +1114,7 @@ class _TransactionTabState extends State<TransactionTab> {
 
       if (t.id == tx.id) break;
     }
-    
+
     final endingBalance = runningBalance;
 
     showModalBottomSheet(
@@ -1129,7 +1173,9 @@ class _TransactionTabState extends State<TransactionTab> {
                         Text(
                           tx.category,
                           style: TextStyle(
-                            color: themeProvider.foregroundColor.withOpacity(0.5),
+                            color: themeProvider.foregroundColor.withOpacity(
+                              0.5,
+                            ),
                             fontSize: 14,
                           ),
                         ),
@@ -1144,19 +1190,47 @@ class _TransactionTabState extends State<TransactionTab> {
                 decoration: BoxDecoration(
                   color: themeProvider.secondaryColor.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: themeProvider.borderColor.withOpacity(0.5)),
+                  border: Border.all(
+                    color: themeProvider.borderColor.withOpacity(0.5),
+                  ),
                 ),
                 child: Column(
                   children: [
-                    _buildDetailRow('Số tiền', '${tx.type == TransactionType.income ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ', themeProvider, isAmount: true, isIncome: tx.type == TransactionType.income),
+                    _buildDetailRow(
+                      'Số tiền',
+                      '${tx.type == TransactionType.income ? '+' : '-'}${NumberFormat('#,###').format(tx.amount)}đ',
+                      themeProvider,
+                      isAmount: true,
+                      isIncome: tx.type == TransactionType.income,
+                    ),
                     const Divider(height: 24),
-                    _buildDetailRow('Thời gian', DateFormat('HH:mm:ss - dd/MM/yyyy').format(tx.date), themeProvider),
+                    _buildDetailRow(
+                      'Thời gian',
+                      DateFormat('HH:mm:ss - dd/MM/yyyy').format(tx.date),
+                      themeProvider,
+                    ),
                     const SizedBox(height: 12),
-                    _buildDetailRow('Tài khoản', isGuest ? 'Ví dùng thử' : (tx.wallet == 'main' ? 'Ví chính' : tx.wallet), themeProvider),
+                    _buildDetailRow(
+                      'Tài khoản',
+                      isGuest
+                          ? 'Ví dùng thử'
+                          : (tx.wallet == 'main' ? 'Ví chính' : tx.wallet),
+                      themeProvider,
+                    ),
                     const SizedBox(height: 12),
-                    _buildDetailRow('Số dư cuối', '${NumberFormat('#,###').format(endingBalance)}đ', themeProvider),
+                    _buildDetailRow(
+                      'Số dư cuối',
+                      '${NumberFormat('#,###').format(endingBalance)}đ',
+                      themeProvider,
+                    ),
                     const SizedBox(height: 12),
-                    _buildDetailRow('Nội dung', (tx.note != null && tx.note!.isNotEmpty) ? tx.note! : 'Không có ghi chú', themeProvider),
+                    _buildDetailRow(
+                      'Nội dung',
+                      (tx.note != null && tx.note!.isNotEmpty)
+                          ? tx.note!
+                          : 'Không có ghi chú',
+                      themeProvider,
+                    ),
                     const SizedBox(height: 12),
                     _buildDetailRow('Mã GD', tx.id, themeProvider, isId: true),
                   ],
@@ -1170,7 +1244,14 @@ class _TransactionTabState extends State<TransactionTab> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, ThemeProvider themeProvider, {bool isAmount = false, bool isIncome = false, bool isId = false}) {
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    ThemeProvider themeProvider, {
+    bool isAmount = false,
+    bool isIncome = false,
+    bool isId = false,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1188,9 +1269,15 @@ class _TransactionTabState extends State<TransactionTab> {
             value,
             textAlign: TextAlign.right,
             style: TextStyle(
-              color: isAmount ? (isIncome ? const Color(0xFF4ADE80) : Colors.redAccent) : (isId ? themeProvider.foregroundColor.withOpacity(0.4) : themeProvider.foregroundColor),
+              color: isAmount
+                  ? (isIncome ? const Color(0xFF4ADE80) : Colors.redAccent)
+                  : (isId
+                        ? themeProvider.foregroundColor.withOpacity(0.4)
+                        : themeProvider.foregroundColor),
               fontSize: isId ? 11 : (isAmount ? 18 : 14),
-              fontWeight: (isAmount || isId == false) ? FontWeight.bold : FontWeight.normal,
+              fontWeight: (isAmount || isId == false)
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ),
