@@ -5,9 +5,6 @@
   "targets": {
     "chitieuplus-app": {
       "hosting": {
-        "landing": [
-          "chitieuplus-landing"
-        ],
         "app": [
           "chitieuplus-app"
         ],
