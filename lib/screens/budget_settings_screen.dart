@@ -72,9 +72,11 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
 
-    return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
-      appBar: AppBar(
+    return Container(
+      decoration: themeProvider.backgroundDecoration,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -157,8 +159,9 @@ class _BudgetSettingsScreenState extends State<BudgetSettingsScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTotalCard(ThemeProvider themeProvider) {
     return Container(

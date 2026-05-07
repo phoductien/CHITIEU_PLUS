@@ -37,6 +37,9 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
   DateTime _currentTime = DateTime.now();
   late AnimationController _syncController;
   Timer? _lastSyncRefreshTimer;
+  bool _isEditingBalance = false;
+  final TextEditingController _balanceEditController = TextEditingController();
+  final FocusNode _balanceFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -67,6 +70,8 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
     _timer.cancel();
     _lastSyncRefreshTimer?.cancel();
     _syncController.dispose();
+    _balanceEditController.dispose();
+    _balanceFocusNode.dispose();
     super.dispose();
   }
 
@@ -146,79 +151,87 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: themeProvider.secondaryColor.withValues(
-                              alpha: 0.5,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: themeProvider.borderColor,
-                            ),
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.menu_rounded,
-                              color: themeProvider.foregroundColor,
-                              size: 24,
-                            ),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () => Scaffold.of(context).openDrawer(),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _getGreetingText(),
-                              style: TextStyle(
-                                color: themeProvider.foregroundColor.withValues(
-                                  alpha: 0.6,
-                                ),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: themeProvider.secondaryColor.withValues(
+                                alpha: 0.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: themeProvider.borderColor,
                               ),
                             ),
-                            Text(
-                              userProvider.name.isNotEmpty
-                                  ? userProvider.name
-                                  : 'Khách',
-                              style: TextStyle(
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.menu_rounded,
                                 color: themeProvider.foregroundColor,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
+                                size: 24,
                               ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () => Scaffold.of(context).openDrawer(),
                             ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEC5B13).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                _getFormattedDateTime(),
-                                style: const TextStyle(
-                                  color: Color(0xFFEC5B13),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _getGreetingText(),
+                                  style: TextStyle(
+                                    color: themeProvider.foregroundColor.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
+                                Text(
+                                  userProvider.name.isNotEmpty
+                                      ? userProvider.name
+                                      : 'Khách',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: themeProvider.foregroundColor,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEC5B13).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    _getFormattedDateTime(),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Color(0xFFEC5B13),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         _buildHeaderButton(
                           icon: Icons.notifications_none_rounded,
@@ -510,19 +523,92 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic,
                             children: [
-                              Text(
-                                _isBalanceVisible
-                                    ? NumberFormat(
-                                        '#,###',
-                                      ).format(_totalBalance)
-                                    : '*********',
-                                style: TextStyle(
-                                  color: themeProvider.foregroundColor,
-                                  fontSize: 38,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -1,
-                                ),
-                              ),
+                              _isBalanceVisible
+                                  ? (_isEditingBalance
+                                      ? SizedBox(
+                                          width: 220,
+                                          child: TextField(
+                                            focusNode: _balanceFocusNode,
+                                            controller: _balanceEditController,
+                                            keyboardType: TextInputType.number,
+                                            autofocus: true,
+                                            style: TextStyle(
+                                              color: themeProvider.foregroundColor,
+                                              fontSize: 38,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: -1,
+                                            ),
+                                            decoration: const InputDecoration(
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                              isDense: true,
+                                            ),
+                                            onSubmitted: (val) async {
+                                              final cleanVal = val.replaceAll('.', '').replaceAll(',', '');
+                                              final double? newBalance = double.tryParse(cleanVal);
+                                              if (newBalance != null) {
+                                                await userProvider.setTotalBalance(newBalance);
+                                              }
+                                              setState(() {
+                                                _isEditingBalance = false;
+                                              });
+                                            },
+                                            onTapOutside: (_) async {
+                                              final cleanVal = _balanceEditController.text.replaceAll('.', '').replaceAll(',', '');
+                                              final double? newBalance = double.tryParse(cleanVal);
+                                              if (newBalance != null) {
+                                                await userProvider.setTotalBalance(newBalance);
+                                              }
+                                              setState(() {
+                                                _isEditingBalance = false;
+                                              });
+                                            },
+                                          ),
+                                        )
+                                      : GestureDetector(
+                                          onTap: () {
+                                            _balanceEditController.text = _totalBalance.toInt().toString();
+                                            setState(() {
+                                              _isEditingBalance = true;
+                                            });
+                                          },
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                NumberFormat('#,###').format(_totalBalance),
+                                                style: TextStyle(
+                                                  color: themeProvider.foregroundColor,
+                                                  fontSize: 38,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: -1,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Icon(
+                                                Icons.edit_rounded,
+                                                color: const Color(0xFFEC5B13).withOpacity(0.6),
+                                                size: 18,
+                                              ),
+                                            ],
+                                          ),
+                                        ))
+                                  : GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _isBalanceVisible = true;
+                                        });
+                                      },
+                                      child: Text(
+                                        '*********',
+                                        style: TextStyle(
+                                          color: themeProvider.foregroundColor,
+                                          fontSize: 38,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: -1,
+                                        ),
+                                      ),
+                                    ),
                               const SizedBox(width: 8),
                               const Text(
                                 'đ',
@@ -535,51 +621,25 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                             ],
                           ),
                           const SizedBox(height: 30),
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const DepositScreen(),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const NotificationScreen(),
+                                    ),
+                                  ),
+                                  child: _buildActionChip(
+                                    icon: Icons.history_rounded,
+                                    label: 'Lịch sử',
+                                    color: Colors.white.withOpacity(0.2),
                                   ),
                                 ),
-                                child: _buildActionChip(
-                                  icon: Icons.add_circle_outline_rounded,
-                                  label: 'Nạp tiền',
-                                  color: const Color(0xFFEC5B13),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const NotificationScreen(),
-                                  ),
-                                ),
-                                child: _buildActionChip(
-                                  icon: Icons.history_rounded,
-                                  label: 'Lịch sử',
-                                  color: Colors.white.withOpacity(0.2),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const BalanceAdjustmentScreen(),
-                                  ),
-                                ),
-                                child: _buildActionChip(
-                                  icon: Icons.edit_note_rounded,
-                                  label: 'Cập nhật',
-                                  color: Colors.white.withOpacity(0.2),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),

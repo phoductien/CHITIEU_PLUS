@@ -230,10 +230,10 @@ class _MainDrawerState extends State<MainDrawer> {
                         context: context,
                         themeProvider: themeProvider,
                         icon: Icons.open_in_browser_rounded,
-                        title: 'Mở trang web',
+                        title: 'Mở trang quản trị',
                         onTap: () async {
                           final url = Uri.parse(
-                            'https://chitieuplus-app.web.app',
+                            'https://chitieuplus-admin.web.app',
                           );
                           if (await canLaunchUrl(url)) {
                             await launchUrl(

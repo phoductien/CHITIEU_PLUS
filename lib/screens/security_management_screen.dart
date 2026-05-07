@@ -13,21 +13,23 @@ class SecurityManagementScreen extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final userProvider = context.watch<UserProvider>();
 
-    return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Bảo mật & Thiết bị',
-          style: TextStyle(
-            color: themeProvider.foregroundColor,
-            fontWeight: FontWeight.bold,
+    return Container(
+      decoration: themeProvider.backgroundDecoration,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text(
+            'Bảo mật & Thiết bị',
+            style: TextStyle(
+              color: themeProvider.foregroundColor,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+          iconTheme: IconThemeData(color: themeProvider.foregroundColor),
         ),
-        backgroundColor: themeProvider.backgroundColor,
-        elevation: 0,
-        centerTitle: false,
-        iconTheme: IconThemeData(color: themeProvider.foregroundColor),
-      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -102,8 +104,9 @@ class SecurityManagementScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSectionTitle(ThemeProvider theme, String title) {
     return Text(

@@ -315,21 +315,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final themeProvider = context.watch<ThemeProvider>();
     final userProvider = context.watch<UserProvider>();
 
-    return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Thông tin tài khoản',
-          style: TextStyle(
-            color: themeProvider.foregroundColor,
-            fontWeight: FontWeight.bold,
+    return Container(
+      decoration: themeProvider.backgroundDecoration,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text(
+            'Thông tin tài khoản',
+            style: TextStyle(
+              color: themeProvider.foregroundColor,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+          iconTheme: IconThemeData(color: themeProvider.foregroundColor),
         ),
-        backgroundColor: themeProvider.backgroundColor,
-        elevation: 0,
-        centerTitle: false,
-        iconTheme: IconThemeData(color: themeProvider.foregroundColor),
-      ),
       body: _isLoading
           ? Center(
               child: CircularProgressIndicator(
@@ -613,6 +615,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               ),
             ),
+      ),
     );
   }
 

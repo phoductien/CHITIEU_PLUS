@@ -72,10 +72,7 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
       );
 
       final userProvider = context.read<UserProvider>();
-      await txProvider.addTransaction(
-        adjustmentTx,
-        userProvider: userProvider,
-      );
+      await txProvider.addTransaction(adjustmentTx, userProvider: userProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cập nhật số dư thành công')),
@@ -130,9 +127,9 @@ class _BalanceAdjustmentScreenState extends State<BalanceAdjustmentScreen> {
       try {
         final userProvider = context.read<UserProvider>();
         await context.read<TransactionProvider>().deleteAllTransactions(
-              userProvider: userProvider,
-              resetBalance: true,
-            );
+          userProvider: userProvider,
+          resetBalance: true,
+        );
         if (mounted) {
           ScaffoldMessenger.of(
             context,

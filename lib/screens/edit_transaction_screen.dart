@@ -133,11 +133,13 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     final userProvider = Provider.of<UserProvider>(context);
     final wallets = ['main', ...userProvider.bankAccounts.map((b) => b)];
 
-    return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
-      appBar: AppBar(
+    return Container(
+      decoration: themeProvider.backgroundDecoration,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_new_rounded,
@@ -430,8 +432,9 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // Widget hiển thị phần chọn thông tin (Danh mục, Ngày)
   Widget _buildSelectionSection(

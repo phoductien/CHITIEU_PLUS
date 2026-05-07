@@ -249,7 +249,7 @@ class _TransactionTabState extends State<TransactionTab> {
     }
 
     return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           children: [

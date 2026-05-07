@@ -492,6 +492,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
+          localeId: 'vi_VN',
           onResult: (result) {
             setState(() {
               _textController.text = result.recognizedWords;
@@ -783,7 +784,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       ),
       drawer: _buildDrawer(),
       body: Container(
-        decoration: BoxDecoration(gradient: themeProvider.backgroundGradient),
+        decoration: themeProvider.backgroundDecoration,
         child: SelectionArea(
           child: Column(
             children: [

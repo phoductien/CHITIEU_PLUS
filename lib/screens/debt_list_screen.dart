@@ -35,9 +35,11 @@ class _DebtListScreenState extends State<DebtListScreen>
     final debtProvider = context.watch<DebtProvider>();
     final themeProvider = context.watch<ThemeProvider>();
 
-    return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
-      appBar: AppBar(
+    return Container(
+      decoration: themeProvider.backgroundDecoration,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
         title: const Text('Quản lý NỢ & Cho vay'),
         backgroundColor: Colors.transparent,
         foregroundColor: themeProvider.foregroundColor,
@@ -95,8 +97,9 @@ class _DebtListScreenState extends State<DebtListScreen>
         backgroundColor: const Color(0xFFF05D15),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSummaryStats(DebtProvider provider) {
     return Container(

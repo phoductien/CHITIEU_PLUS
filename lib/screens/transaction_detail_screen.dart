@@ -16,9 +16,11 @@ class TransactionDetailScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isIncome = transaction.type == TransactionType.income;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Màu nền tối theo mẫu
-      appBar: AppBar(
+    return Container(
+      decoration: themeProvider.backgroundDecoration,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -309,8 +311,9 @@ class TransactionDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // Hàm hỗ trợ xây dựng hàng thông tin chi tiết
   Widget _buildDetailRow(

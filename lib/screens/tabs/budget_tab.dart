@@ -63,7 +63,7 @@ class _BudgetTabState extends State<BudgetTab> {
         : 0.0;
 
     return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           children: [

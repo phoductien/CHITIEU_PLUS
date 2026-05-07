@@ -15,14 +15,17 @@ import 'package:chitieu_plus/screens/qr_scanner_screen.dart';
 import 'package:chitieu_plus/providers/app_session_provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/screens/online_category_screen.dart'; // Thêm import màn hình danh mục trực tuyến
+import 'package:chitieu_plus/providers/theme_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final String? initialOcrResult;
   final String? initialQrResult;
+  final bool isFromVoice; // Khóa giao diện nếu từ giọng nói / Lock interface if from voice
   const AddTransactionScreen({
     super.key,
     this.initialOcrResult,
     this.initialQrResult,
+    this.isFromVoice = false, // Mặc định là false / Default is false
   });
 
   @override
@@ -294,64 +297,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
         ? 'demo'
         : 'main';
 
-    if (type == TransactionType.expense) {
-      final transactions = context.read<TransactionProvider>().transactions;
-      double currentBalance = 0;
-      double demoExpenses = 0;
 
-      for (var t in transactions) {
-        if (t.wallet == 'main') {
-          currentBalance += (t.type == TransactionType.income
-              ? t.amount
-              : -t.amount);
-        } else if (t.wallet == 'demo' && t.type == TransactionType.expense) {
-          demoExpenses += t.amount;
-        }
-      }
-
-      double checkBalance = isGuest
-          ? (currentBalance - demoExpenses)
-          : currentBalance;
-
-      if (checkBalance < amount) {
-        if (mounted) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: const Color(0xFF1E293B),
-              title: const Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                  SizedBox(width: 8),
-                  Text(
-                    'Số dư không đủ',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-              content: Text(
-                'Ví của bạn hiện tại còn ${NumberFormat('#,###').format(checkBalance)}đ, không đủ để thực hiện giao dịch này. Vui lòng nạp thêm tiền!',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text(
-                    'Đã hiểu',
-                    style: TextStyle(color: Color(0xFFEC5B13)),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-        return;
-      }
-    }
 
     final transaction = TransactionModel(
       id: '', // Firestore will generate this
@@ -545,60 +491,69 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      appBar: AppBar(
+    final themeProvider = context.watch<ThemeProvider>();
+    return Container(
+      decoration: themeProvider.backgroundDecoration,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Thêm giao dịch',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Stack(
-        children: [
-          // Thêm Center và ConstrainedBox để căn giữa và giới hạn kích thước trên màn hình rộng (Web)
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: _buildBody(),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
             ),
+            onPressed: () => Navigator.pop(context),
           ),
-          if (_isAiProcessing)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(color: Color(0xFFEC5B13)),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Đang phân tích ảnh...',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+          title: const Text(
+            'Thêm giao dịch',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+        ),
+        body: Stack(
+          children: [
+            // Thêm Center và ConstrainedBox để căn giữa và giới hạn kích thước trên màn hình rộng (Web)
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: _buildBody(),
               ),
             ),
-        ],
+            if (_isAiProcessing)
+              Container(
+                color: Colors.black54,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(color: Color(0xFFEC5B13)),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Đang phân tích ảnh...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+        bottomNavigationBar: _buildBottomAction(),
       ),
-      bottomNavigationBar: _buildBottomAction(),
     );
   }
 
   Widget _buildBody() {
+    // Nếu là từ giọng nói, không hiển thị TabBar và chỉ hiển thị phần nhập liệu thủ công đã điền sẵn
+    // If from voice, do not show TabBar and only show pre-filled manual input form
+    if (widget.isFromVoice) {
+      return _buildManualTab();
+    }
     return Column(
       children: [
         Padding(
@@ -658,8 +613,9 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                       child: TextField(
                         controller: _amountController,
                         keyboardType: TextInputType.number,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        readOnly: widget.isFromVoice, // Khóa chỉnh sửa nếu từ giọng nói / Lock editing if from voice
+                        style: TextStyle(
+                          color: widget.isFromVoice ? Colors.white60 : Colors.white,
                           fontSize: 40,
                           fontWeight: FontWeight.bold,
                         ),
@@ -717,65 +673,70 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                     final cat = _categories[index];
                     final isSelected = _selectedCategory == cat['name'];
                     return GestureDetector(
-                      onTap: () async {
-                        // Nếu chọn "Khác", mở màn hình danh mục trực tuyến
-                        // If "Other" is selected, open online category screen
-                        if (cat['name'] == 'Khác') {
-                          final result =
-                              await Navigator.push<Map<String, dynamic>>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const OnlineCategoryScreen(),
-                                ),
-                              );
+                      onTap: widget.isFromVoice
+                          ? null // Khóa nhấn chọn danh mục khi từ giọng nói / Disable category selection when using voice
+                          : () async {
+                              // Nếu chọn "Khác", mở màn hình danh mục trực tuyến
+                              // If "Other" is selected, open online category screen
+                              if (cat['name'] == 'Khác') {
+                                final result =
+                                    await Navigator.push<Map<String, dynamic>>(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const OnlineCategoryScreen(),
+                                      ),
+                                    );
 
-                          if (result != null) {
-                            setState(() {
-                              _selectedCategory = result['name'];
-                              // Tạm thời thêm vào danh sách hiển thị nếu chưa có
-                              // Temporarily add to display list if not present
-                              if (!_categories.any(
-                                (c) => c['name'] == result['name'],
-                              )) {
-                                _categories.insert(_categories.length - 1, {
-                                  'name': result['name'],
-                                  'icon': result['icon'],
-                                  'color': result['color'],
-                                });
+                                if (result != null) {
+                                  setState(() {
+                                    _selectedCategory = result['name'];
+                                    // Tạm thời thêm vào danh sách hiển thị nếu chưa có
+                                    // Temporarily add to display list if not present
+                                    if (!_categories.any(
+                                      (c) => c['name'] == result['name'],
+                                    )) {
+                                      _categories.insert(_categories.length - 1, {
+                                        'name': result['name'],
+                                        'icon': result['icon'],
+                                        'color': result['color'],
+                                      });
+                                    }
+                                  });
+                                }
+                              } else {
+                                setState(() => _selectedCategory = cat['name']);
                               }
-                            });
-                          }
-                        } else {
-                          setState(() => _selectedCategory = cat['name']);
-                        }
-                      },
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? const Color(0xFFEC5B13)
-                                  : const Color(0xFF334155),
-                              shape: BoxShape.circle,
+                            },
+                      child: Opacity(
+                        opacity: widget.isFromVoice ? (isSelected ? 1.0 : 0.3) : 1.0, // Làm mờ các danh mục không được chọn khi khóa giọng nói / Fade unselected categories when voice-locked
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFFEC5B13)
+                                    : const Color(0xFF334155),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                cat['icon'],
+                                color: Colors.white,
+                                size: 24,
+                              ),
                             ),
-                            child: Icon(
-                              cat['icon'],
-                              color: Colors.white,
-                              size: 24,
+                            const SizedBox(height: 8),
+                            Text(
+                              cat['name'],
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.white54,
+                                fontSize: 11,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            cat['name'],
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white54,
-                              fontSize: 11,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -795,7 +756,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                     Expanded(
                       flex: 3,
                       child: GestureDetector(
-                        onTap: () => _selectDate(context),
+                        onTap: widget.isFromVoice ? null : () => _selectDate(context), // Khóa chọn ngày nếu từ giọng nói / Disable date picker if from voice
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -822,9 +783,9 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                           ),
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.calendar_month_rounded,
-                                color: Color(0xFF00D1FF),
+                                color: widget.isFromVoice ? Colors.white30 : const Color(0xFF00D1FF), // Làm mờ icon nếu từ giọng nói / Dim icon if from voice
                                 size: 20,
                               ),
                               const SizedBox(width: 10),
@@ -834,8 +795,8 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                                     'dd/MM/yyyy',
                                     'vi',
                                   ).format(_selectedDate),
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: widget.isFromVoice ? Colors.white30 : Colors.white, // Làm mờ chữ nếu từ giọng nói / Dim text if from voice
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -850,7 +811,7 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                     Expanded(
                       flex: 2,
                       child: GestureDetector(
-                        onTap: () => _selectTime(context),
+                        onTap: widget.isFromVoice ? null : () => _selectTime(context), // Khóa chọn giờ nếu từ giọng nói / Disable time picker if from voice
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -877,17 +838,17 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                           ),
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.access_time_rounded,
-                                color: Color(0xFF00D1FF),
+                                color: widget.isFromVoice ? Colors.white30 : const Color(0xFF00D1FF), // Làm mờ icon nếu từ giọng nói / Dim icon if from voice
                                 size: 20,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   DateFormat('HH:mm').format(_selectedDate),
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: widget.isFromVoice ? Colors.white30 : Colors.white, // Làm mờ chữ nếu từ giọng nói / Dim text if from voice
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -918,7 +879,8 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                   ),
                   child: TextField(
                     controller: _noteController,
-                    style: const TextStyle(color: Colors.white),
+                    readOnly: widget.isFromVoice, // Khóa ghi chú nếu từ giọng nói / Lock note editing if from voice
+                    style: TextStyle(color: widget.isFromVoice ? Colors.white60 : Colors.white),
                     maxLines: 4,
                     decoration: const InputDecoration(
                       hintText: 'Nhập ghi chú tại đây...',

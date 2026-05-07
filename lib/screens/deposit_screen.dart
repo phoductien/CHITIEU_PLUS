@@ -73,7 +73,7 @@ class _DepositScreenState extends State<DepositScreen> {
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       body: Container(
-        decoration: BoxDecoration(gradient: themeProvider.backgroundGradient),
+        decoration: themeProvider.backgroundDecoration,
         child: Stack(
           children: [
             SafeArea(

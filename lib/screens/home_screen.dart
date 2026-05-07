@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/notification_provider.dart';
 import 'package:chitieu_plus/providers/theme_provider.dart';
@@ -14,6 +16,10 @@ import 'package:chitieu_plus/screens/ocr_scan_screen.dart';
 import 'package:chitieu_plus/widgets/main_drawer.dart';
 import 'package:chitieu_plus/widgets/mini_ai_chat_widget.dart';
 import 'package:chitieu_plus/providers/app_session_provider.dart';
+import 'package:chitieu_plus/services/ai_service.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
+
 
 import 'package:chitieu_plus/screens/tabs/home_tab.dart';
 import 'package:chitieu_plus/screens/tabs/transaction_tab.dart';
@@ -33,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late PageController _pageController;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isAiOverlayOpen = false;
+  final stt.SpeechToText _speech = stt.SpeechToText();
 
   String _getAiGreeting(int tabIndex) {
     switch (tabIndex) {
@@ -276,6 +283,620 @@ class _HomeScreenState extends State<HomeScreen> {
         false;
   }
 
+  // Hàm phân tích giọng nói ngoại tuyến (Offline) khi không có mạng hoặc lỗi AI.
+  // Thêm xử lý thời gian: Mặc định lấy thời gian hiện tại, nếu phát hiện từ khóa "hôm qua" hoặc "hôm kia" thì trừ ngày tương ứng.
+  Map<String, dynamic> _parseSpeechTextOffline(String text) {
+    final lower = text.toLowerCase();
+    int amount = 0;
+    
+    final kRegExp = RegExp(r'(\d+)\s*k');
+    final trieuRegExp = RegExp(r'(\d+)\s*triệu');
+    final matchK = kRegExp.firstMatch(lower);
+    final matchTrieu = trieuRegExp.firstMatch(lower);
+    
+    if (matchK != null) {
+      amount = int.parse(matchK.group(1)!) * 1000;
+    } else if (matchTrieu != null) {
+      amount = int.parse(matchTrieu.group(1)!) * 1000000;
+    } else {
+      final digitsRegExp = RegExp(r'\d+[\d\.,]*');
+      final matchDigits = digitsRegExp.allMatches(lower);
+      if (matchDigits.isNotEmpty) {
+        final numStr = matchDigits.first.group(0)!.replaceAll('.', '').replaceAll(',', '');
+        amount = int.tryParse(numStr) ?? 0;
+      }
+    }
+
+    String category = 'Khác';
+    if (lower.contains('ăn') || lower.contains('phở') || lower.contains('cơm') || lower.contains('uống') || lower.contains('cafe')) {
+      category = 'Ăn uống';
+    } else if (lower.contains('xe') || lower.contains('xăng') || lower.contains('taxi') || lower.contains('bus') || lower.contains('vé')) {
+      category = 'Di chuyển';
+    } else if (lower.contains('siêu thị') || lower.contains('mua sắm') || lower.contains('quần áo') || lower.contains('mỹ phẩm')) {
+      category = 'Mua sắm';
+    } else if (lower.contains('điện')) {
+      category = 'Tiền điện';
+    } else if (lower.contains('nước')) {
+      category = 'Tiền nước';
+    } else if (lower.contains('gas') || lower.contains('ga')) {
+      category = 'Tiền Gas';
+    } else if (lower.contains('điện thoại') || lower.contains('card') || lower.contains('nạp đt')) {
+      category = 'Nạp điện thoại';
+    } else if (lower.contains('học') || lower.contains('trường') || lower.contains('sách')) {
+      category = 'Học phí';
+    } else if (lower.contains('bảo hiểm')) {
+      category = 'Bảo hiểm';
+    } else if (lower.contains('chơi') || lower.contains('game') || lower.contains('phim') || lower.contains('hát')) {
+      category = 'Giải trí';
+    } else if (lower.contains('khám') || lower.contains('thuốc') || lower.contains('bệnh') || lower.contains('viện')) {
+      category = 'Sức khỏe';
+    } else if (lower.contains('nhà') || lower.contains('phòng') || lower.contains('thuê')) {
+      category = 'Nhà cửa';
+    }
+
+    // Thiết lập ngày giờ hiện tại
+    DateTime date = DateTime.now();
+    if (lower.contains('hôm qua')) {
+      date = date.subtract(const Duration(days: 1));
+    } else if (lower.contains('hôm kia')) {
+      date = date.subtract(const Duration(days: 2));
+    }
+
+    return {
+      'amount': amount,
+      'category': category,
+      'title': text,
+      'note': 'Ghi bằng giọng nói ngoại tuyến',
+      'date': date.toIso8601String(), // Lưu đầy đủ ngày giờ
+    };
+  }
+
+  void _showVoiceRecordingDialog(BuildContext context) {
+    final themeProvider = context.read<ThemeProvider>();
+    final textController = TextEditingController();
+    bool isRecording = false;
+    bool isProcessing = false;
+    Map<String, dynamic>? parsedTransaction;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            // Hàm mô phỏng giọng nói cho mục đích chạy thử nhanh
+            void simulateSpeech(String sampleText) {
+              setModalState(() {
+                isRecording = true;
+                textController.clear();
+                parsedTransaction = null;
+              });
+              Future.delayed(const Duration(milliseconds: 1500), () {
+                if (context.mounted) {
+                  setModalState(() {
+                    isRecording = false;
+                    textController.text = sampleText;
+                  });
+                }
+              });
+            }
+
+            // Hàm kích hoạt ghi âm và nhận diện giọng nói thực tế từ micro
+            Future<void> toggleListening() async {
+              if (isRecording) {
+                // Nếu đang ghi âm, nhấn lần nữa sẽ dừng ghi âm
+                await _speech.stop();
+                setModalState(() {
+                  isRecording = false;
+                });
+                return;
+              }
+
+              // Kiểm tra quyền truy cập Microphone bằng permission_handler
+              var status = await Permission.microphone.status;
+              if (!status.isGranted) {
+                status = await Permission.microphone.request();
+              }
+
+              // Nếu người dùng không cấp quyền truy cập, hiển thị thông báo lỗi bằng tiếng Việt
+              if (!status.isGranted) {
+                if (context.mounted) {
+                  final lang = context.read<LanguageProvider>();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(lang.translate('ai_chat_mic_error') ?? 'Không thể truy cập Micro. Vui lòng cấp quyền.'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+                return;
+              }
+
+              // Khởi tạo thư viện nhận diện giọng nói speech_to_text
+              bool available = await _speech.initialize(
+                onError: (error) {
+                  debugPrint('Lỗi nhận diện giọng nói: $error');
+                  setModalState(() {
+                    isRecording = false;
+                  });
+                },
+                onStatus: (status) {
+                  debugPrint('Trạng thái nhận diện: $status');
+                  if (status == 'done' || status == 'notListening') {
+                    setModalState(() {
+                      isRecording = false;
+                    });
+                  }
+                },
+              );
+
+              if (available) {
+                setModalState(() {
+                  isRecording = true;
+                  parsedTransaction = null;
+                });
+                // Bắt đầu lắng nghe với ngôn ngữ tiếng Việt (vi_VN) và cập nhật nội dung văn bản theo thời gian thực
+                await _speech.listen(
+                  localeId: 'vi_VN',
+                  onResult: (result) {
+                    setModalState(() {
+                      textController.text = result.recognizedWords;
+                      // Giữ con trỏ nhập liệu ở cuối chuỗi văn bản
+                      textController.selection = TextSelection.fromPosition(
+                        TextPosition(offset: textController.text.length),
+                      );
+                    });
+                  },
+                );
+              } else {
+                // Nếu không thể khởi tạo bộ nhận diện, thông báo lỗi cho người dùng
+                if (context.mounted) {
+                  final lang = context.read<LanguageProvider>();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(lang.translate('ai_chat_mic_error') ?? 'Không thể khởi động bộ nhận diện giọng nói.'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            }
+
+            // Hàm phân tích giọng nói sử dụng AI (Gemini) để trích xuất thông tin giao dịch bao gồm ngày, tháng, giờ.
+            Future<void> performAiParsing() async {
+              final text = textController.text.trim();
+              if (text.isEmpty) return;
+
+              setModalState(() {
+                isProcessing = true;
+                parsedTransaction = null;
+              });
+
+              try {
+                final aiService = AiService();
+                final now = DateTime.now();
+                final nowStr = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+                
+                final prompt = 'Hãy phân tích câu nói ghi chép chi tiêu sau và trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm markdown, không giải thích gì thêm, không có dấu ```json) chứa thông tin giao dịch.\n'
+                    'Ngày giờ hiện tại làm mốc tham chiếu: $nowStr\n\n'
+                    'Yêu cầu đặc biệt về THỜI GIAN:\n'
+                    '1. Hãy phân tích từ câu nói chi tiết về Ngày, Tháng, Giờ nếu người dùng có đề cập đến (ví dụ: "hôm qua", "sáng nay lúc 8h", "ngày 5 tháng 5", "hồi nãy", "lúc 10h", "tháng trước", "tối qua",...). '
+                    'Nếu người dùng có nhắc đến các mốc thời gian này, hãy tính toán so với mốc thời gian hiện tại ($nowStr) để đưa ra giá trị chính xác tuyệt đối.\n'
+                    '2. Nếu câu nói KHÔNG đề cập đến ngày hay giờ cụ thể nào, hãy mặc định lấy ngày giờ hiện tại là "$nowStr".\n\n'
+                    'Cấu trúc JSON yêu cầu:\n'
+                    '{\n'
+                    '  "amount": <số tiền nguyên, ví dụ: 45000>,\n'
+                    '  "category": "<danh mục phù hợp nhất trong các danh mục sau: Ăn uống, Mua sắm, Học phí, Bảo hiểm, Tiền điện, Tiền nước, Tiền Gas, Nạp điện thoại, Di chuyển, Giải trí, Sức khỏe, Nhà cửa, Khác>",\n'
+                    '  "title": "<mô tả ngắn gọn về giao dịch, ví dụ: Ăn trưa phở bò>",\n'
+                    '  "note": "<ghi chú chi tiết>",\n'
+                    '  "date": "<ngày giờ giao dịch theo định dạng ISO 8601 YYYY-MM-DDTHH:mm:ss>"\n'
+                    '}\n\n'
+                    'Câu nói của người dùng: "$text"';
+
+                final response = await aiService.sendMessage(prompt);
+                Map<String, dynamic> parsedData;
+                try {
+                  String cleanRes = response.trim();
+                  if (cleanRes.startsWith("```")) {
+                    cleanRes = cleanRes.replaceAll(RegExp(r'^```json\s*|```$'), '');
+                  }
+                  cleanRes = cleanRes.trim();
+                  final decoded = jsonDecode(cleanRes);
+                  parsedData = decoded['transaction'] ?? decoded;
+                } catch (_) {
+                  parsedData = _parseSpeechTextOffline(text);
+                }
+
+                setModalState(() {
+                  parsedTransaction = parsedData;
+                  isProcessing = false;
+                });
+              } catch (e) {
+                setModalState(() {
+                  parsedTransaction = _parseSpeechTextOffline(text);
+                  isProcessing = false;
+                });
+              }
+            }
+
+            final padding = MediaQuery.of(context).viewInsets.bottom;
+            return Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20 + padding,
+              ),
+              decoration: BoxDecoration(
+                color: themeProvider.backgroundColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: themeProvider.foregroundColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.mic_rounded,
+                              color: Color(0xFF2196F3),
+                              size: 28,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Ghi chép bằng Giọng nói AI',
+                              style: TextStyle(
+                                color: themeProvider.foregroundColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: themeProvider.foregroundColor.withOpacity(0.6),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Nói chi tiêu của bạn (ví dụ: "Ăn phở bò 45k" hoặc "Đóng tiền điện 500k")',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withOpacity(0.6),
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (isRecording)
+                            ...List.generate(3, (index) {
+                              return Pulse(
+                                infinite: true,
+                                duration: Duration(milliseconds: 1000 + (index * 300)),
+                                child: Container(
+                                  width: 80 + (index * 20.0),
+                                  height: 80 + (index * 20.0),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: const Color(0xFF2196F3).withOpacity(0.15),
+                                  ),
+                                ),
+                              );
+                            }),
+                          GestureDetector(
+                            onTap: toggleListening,
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: isRecording
+                                      ? [const Color(0xFFF44336), const Color(0xFFFF5722)]
+                                      : [const Color(0xFF2196F3), const Color(0xFF00BCD4)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isRecording ? Colors.red : Colors.blue).withOpacity(0.4),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                                color: Colors.white,
+                                size: 36,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Text(
+                        isRecording ? 'Đang nghe...' : 'Nhấn nút để nói',
+                        style: TextStyle(
+                          color: isRecording ? const Color(0xFFF44336) : themeProvider.foregroundColor.withOpacity(0.8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Câu nói mẫu (Nhấn để thử ngay):',
+                      style: TextStyle(
+                        color: themeProvider.foregroundColor.withOpacity(0.7),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildPresetChip(context, "Phở bò gia truyền 45k", simulateSpeech, themeProvider),
+                        _buildPresetChip(context, "Mua sắm quần áo 250k", simulateSpeech, themeProvider),
+                        _buildPresetChip(context, "Đóng tiền nước 120k", simulateSpeech, themeProvider),
+                        _buildPresetChip(context, "Xăng xe máy 50k", simulateSpeech, themeProvider),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: textController,
+                      style: TextStyle(color: themeProvider.foregroundColor),
+                      decoration: InputDecoration(
+                        labelText: 'Nội dung nhận diện giọng nói',
+                        labelStyle: TextStyle(color: themeProvider.foregroundColor.withOpacity(0.6)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: themeProvider.borderColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.clear_rounded),
+                          onPressed: () {
+                            textController.clear();
+                            setModalState(() {
+                              parsedTransaction = null;
+                            });
+                          },
+                        ),
+                      ),
+                      onChanged: (_) {
+                        setModalState(() {
+                          parsedTransaction = null;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    if (parsedTransaction == null)
+                      ElevatedButton.icon(
+                        onPressed: isProcessing ? null : performAiParsing,
+                        icon: isProcessing
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.psychology_rounded),
+                        label: Text(isProcessing ? 'AI đang phân tích...' : 'AI Phân tích chi tiêu'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2196F3),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      )
+                    else ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: themeProvider.secondaryColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: themeProvider.borderColor),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'KẾT QUẢ PHÂN TÍCH AI',
+                              style: TextStyle(
+                                color: const Color(0xFF2196F3),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildResultRow(
+                              'Số tiền:',
+                              NumberFormat('#,###', 'vi_VN').format(parsedTransaction!['amount'] ?? 0) + ' đ',
+                              Icons.payments_rounded,
+                              const Color(0xFF4CAF50),
+                              themeProvider,
+                            ),
+                            const Divider(height: 16),
+                            _buildResultRow(
+                              'Danh mục:',
+                              parsedTransaction!['category'] ?? 'Khác',
+                              Icons.category_rounded,
+                              const Color(0xFFFF9800),
+                              themeProvider,
+                            ),
+                            const Divider(height: 16),
+                            _buildResultRow(
+                              'Nội dung:',
+                              parsedTransaction!['title'] ?? '',
+                              Icons.description_rounded,
+                              const Color(0xFF2196F3),
+                              themeProvider,
+                            ),
+                            const Divider(height: 16),
+                            // Thêm ngày, tháng, giờ được trích xuất từ câu nói giọng nói của người dùng (Xác nhận khớp Hình 2)
+                            _buildResultRow(
+                              'Thời gian:',
+                              (() {
+                                if (parsedTransaction!['date'] != null) {
+                                  try {
+                                    final parsedDate = DateTime.parse(parsedTransaction!['date']);
+                                    return DateFormat('dd/MM/yyyy HH:mm', 'vi_VN').format(parsedDate);
+                                  } catch (_) {}
+                                }
+                                return DateFormat('dd/MM/yyyy HH:mm', 'vi_VN').format(DateTime.now());
+                              })(),
+                              Icons.access_time_filled_rounded,
+                              const Color(0xFF9C27B0),
+                              themeProvider,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddTransactionScreen(
+                                initialOcrResult: jsonEncode(parsedTransaction),
+                                isFromVoice: true,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.check_circle_rounded),
+                        label: const Text('Xác nhận & Thêm giao dịch'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4CAF50),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      _speech.stop();
+    });
+  }
+
+  Widget _buildPresetChip(
+    BuildContext context,
+    String text,
+    Function(String) onTap,
+    ThemeProvider themeProvider,
+  ) {
+    return ActionChip(
+      label: Text(
+        text,
+        style: TextStyle(
+          color: themeProvider.foregroundColor,
+          fontSize: 12,
+        ),
+      ),
+      backgroundColor: themeProvider.secondaryColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: themeProvider.borderColor),
+      ),
+      onPressed: () => onTap(text),
+    );
+  }
+
+  Widget _buildResultRow(
+    String label,
+    String value,
+    IconData icon,
+    Color iconColor,
+    ThemeProvider themeProvider,
+  ) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: themeProvider.foregroundColor.withOpacity(0.5),
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                color: themeProvider.foregroundColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
@@ -297,7 +918,7 @@ class _HomeScreenState extends State<HomeScreen> {
         drawer: const MainDrawer(),
         backgroundColor: themeProvider.backgroundColor,
         body: Container(
-          decoration: BoxDecoration(gradient: themeProvider.backgroundGradient),
+          decoration: themeProvider.backgroundDecoration,
           child: Stack(
             children: [
               PageView(
@@ -328,98 +949,164 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 16,
                 bottom: 85, // Nằm ngay trên tab điều hướng
                 child: SafeArea(
-                  child: ZoomIn(
-                    duration: const Duration(milliseconds: 300),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _isAiOverlayOpen = !_isAiOverlayOpen;
-                            });
-                          },
-                          child: Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFFEC5B13,
-                                  ).withOpacity(0.4),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.smart_toy_rounded,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          ),
-                        ),
-                        if (!_isAiOverlayOpen)
-                          Positioned(
-                            top: -55,
-                            right: 15,
-                            child: FadeInUp(
-                              key: ValueKey<int>(
-                                _currentIndex,
-                              ), // Re-animate when tab changes
-                              duration: const Duration(milliseconds: 600),
-                              delay: const Duration(milliseconds: 500),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Chatbot Floating Button
+                      ZoomIn(
+                        duration: const Duration(milliseconds: 300),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _isAiOverlayOpen = !_isAiOverlayOpen;
+                                });
+                              },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
+                                width: 56,
+                                height: 56,
                                 decoration: BoxDecoration(
-                                  color: themeProvider.secondaryColor
-                                      .withValues(alpha: 0.95),
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(16),
-                                    topRight: Radius.circular(16),
-                                    bottomLeft: Radius.circular(16),
-                                    bottomRight: Radius.circular(4),
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFEC5B13), Color(0xFFFF8C42)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  border: Border.all(
-                                    color: themeProvider.borderColor,
-                                  ),
+                                  shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
+                                      color: const Color(0xFFEC5B13).withOpacity(0.4),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 8),
                                     ),
                                   ],
                                 ),
-                                child: Text(
-                                  _getAiGreeting(_currentIndex),
-                                  style: TextStyle(
-                                    color: themeProvider.foregroundColor,
-                                    fontSize: 13,
-                                    height: 1.4,
-                                  ),
+                                child: const Icon(
+                                  Icons.smart_toy_rounded,
+                                  color: Colors.white,
+                                  size: 28,
                                 ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
+                            if (!_isAiOverlayOpen)
+                              Positioned(
+                                top: -55,
+                                right: 15,
+                                child: FadeInUp(
+                                  key: ValueKey<int>(_currentIndex), // Re-animate when tab changes
+                                  duration: const Duration(milliseconds: 600),
+                                  delay: const Duration(milliseconds: 500),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: themeProvider.secondaryColor.withValues(alpha: 0.95),
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(16),
+                                        topRight: Radius.circular(16),
+                                        bottomLeft: Radius.circular(16),
+                                        bottomRight: Radius.circular(4),
+                                      ),
+                                      border: Border.all(
+                                        color: themeProvider.borderColor,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      _getAiGreeting(_currentIndex),
+                                      style: TextStyle(
+                                        color: themeProvider.foregroundColor,
+                                        fontSize: 13,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Mic Button (Nói chi tiêu)
+                      ZoomIn(
+                        duration: const Duration(milliseconds: 300),
+                        delay: const Duration(milliseconds: 100),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: themeProvider.secondaryColor.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: themeProvider.borderColor),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                "Nói chi tiêu",
+                                style: TextStyle(
+                                  color: themeProvider.foregroundColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () {
+                                _showVoiceRecordingDialog(context);
+                              },
+                              child: Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF2196F3), Color(0xFF00BCD4)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF2196F3).withOpacity(0.4),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.mic_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               if (_isAiOverlayOpen)
                 Positioned(
-                  bottom: 160, // right above FAB
+                  bottom: 230, // right above both FABs
                   right: 16,
                   child: SafeArea(
                     child: Material(

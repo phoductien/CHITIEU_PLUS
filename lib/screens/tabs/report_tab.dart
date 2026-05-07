@@ -167,7 +167,7 @@ class _ReportTabState extends State<ReportTab> {
 
     if (transactions.isEmpty) {
       return Scaffold(
-        backgroundColor: themeProvider.backgroundColor,
+        backgroundColor: Colors.transparent,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -202,7 +202,7 @@ class _ReportTabState extends State<ReportTab> {
     }
 
     return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),

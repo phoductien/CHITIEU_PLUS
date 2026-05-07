@@ -96,9 +96,11 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     final themeProvider = context.watch<ThemeProvider>();
     final isEdit = widget.debt != null;
 
-    return Scaffold(
-      backgroundColor: themeProvider.backgroundColor,
-      appBar: AppBar(
+    return Container(
+      decoration: themeProvider.backgroundDecoration,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
         title: Text(isEdit ? 'SỬa thông tin' : 'Thêm mới'),
         backgroundColor: Colors.transparent,
         foregroundColor: themeProvider.foregroundColor,
@@ -205,8 +207,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTypeButton(String label, DebtType type, Color color) {
     final isSelected = _type == type;

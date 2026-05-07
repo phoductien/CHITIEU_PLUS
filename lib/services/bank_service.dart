@@ -7,16 +7,12 @@ import '../constants/api_constants.dart';
 /// Service xử lý các nghiệp vụ liên quan đến Ngân hàng và SePay.
 class BankService {
   /// XÁC THỰC TÀI KHOẢN NGÂN HÀNG
-  ///
-  /// LƯU Ý: SePay không hỗ trợ tra cứu tên chủ tài khoản từ số tài khoản bất kỳ.
-  /// Hàm này hiện tại trả về kết quả giả định hoặc có thể tích hợp API khác nếu cần.
   Future<Map<String, dynamic>> verifyAccount({
     required String bankId,
     required String accountNumber,
     required String expectedName,
   }) async {
-    // Vì SePay không hỗ trợ Lookup, chúng ta sẽ giả định thành công để người dùng trải nghiệm flow
-    // Trong thực tế, bạn cần một provider khác (như VietQR) nếu muốn tính năng này.
+
 
     await Future.delayed(const Duration(seconds: 1)); // Giả lập độ trễ mạng
 
