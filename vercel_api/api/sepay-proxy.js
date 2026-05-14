@@ -39,6 +39,20 @@ async function getAccessToken(clientId, clientSecret) {
 }
 
 export default async function handler(req, res) {
+  // Cấp quyền CORS cho môi trường Test và Web Client truy cập backend an toàn
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
+  // Xử lý CORS Preflight request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   // 1. Lấy endpoint và các query params (ví dụ: limit, account_number...)
   const { endpoint, ...otherParams } = req.query;
 
