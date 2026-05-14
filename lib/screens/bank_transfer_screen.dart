@@ -29,6 +29,8 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
 
   bool _isVerifying = false; // Trạng thái đang kiểm tra tài khoản
   final BankService _bankService = BankService(); // Khởi tạo service ngân hàng
+  int _activeTabIndex = 0; // Tab đang hoạt động: 0 = SePay, 1 = Thủ công
+
 
   // Danh sách các ngân hàng phổ biến được hiển thị ưu tiên.
   // Logo sử dụng assets địa phương nếu có, ngược lại dùng fallback mặc định.
@@ -682,8 +684,481 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   }
 
   Widget _buildSelectionView(ThemeProvider themeProvider) {
-    return SingleChildScrollView(
+    return Column(
       key: const ValueKey('selection_view'),
+      children: [
+        _buildTabSelector(themeProvider),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            child: _activeTabIndex == 0
+                ? SingleChildScrollView(
+                    key: const ValueKey('sepay_accounts_scroll'),
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildSepayAccountsView(themeProvider),
+                  )
+                : _buildManualSelectionView(themeProvider),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabSelector(ThemeProvider themeProvider) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.all(5),
+      height: 52,
+      decoration: BoxDecoration(
+        color: themeProvider.secondaryColor.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _activeTabIndex = 0),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: _activeTabIndex == 0
+                      ? const LinearGradient(
+                          colors: [Color(0xFF00BFA5), Color(0xFF00796B)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: _activeTabIndex == 0 ? null : Colors.transparent,
+                  boxShadow: _activeTabIndex == 0
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF00BFA5).withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : [],
+                ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.bolt_rounded,
+                      color: _activeTabIndex == 0 ? Colors.white : Colors.white38,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Tự động SePay',
+                      style: TextStyle(
+                        color: _activeTabIndex == 0 ? Colors.white : Colors.white38,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _activeTabIndex = 1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: _activeTabIndex == 1
+                      ? const LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: _activeTabIndex == 1 ? null : Colors.transparent,
+                  boxShadow: _activeTabIndex == 1
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : [],
+                ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.edit_note_rounded,
+                      color: _activeTabIndex == 1 ? Colors.white : Colors.white38,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Nhập thủ công',
+                      style: TextStyle(
+                        color: _activeTabIndex == 1 ? Colors.white : Colors.white38,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSepayAccountsView(ThemeProvider themeProvider) {
+    return FutureBuilder<List<dynamic>>(
+      future: _bankService.fetchBankAccounts(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.only(top: 80),
+            child: CircularProgressIndicator(
+              color: themeProvider.foregroundColor,
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return _buildSepayErrorState(themeProvider, "Không thể tải danh sách tài khoản. Vui lòng thử lại.");
+        }
+
+        final accounts = snapshot.data ?? [];
+        if (accounts.isEmpty) {
+          return _buildSepayErrorState(themeProvider, "Không tìm thấy thông tin tài khoản trên SePay Hub. Để bật đồng bộ tự động, bạn cần điền API Token trên backend hoặc chọn Nhập thủ công.");
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00BFA5).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF00BFA5).withValues(alpha: 0.2)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.verified_user_rounded, size: 14, color: Color(0xFF00BFA5)),
+                      SizedBox(width: 4),
+                      Text(
+                        'ĐÃ ĐỒNG BỘ QUA SEPAY',
+                        style: TextStyle(
+                          color: Color(0xFF00BFA5),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: accounts.length,
+              itemBuilder: (context, index) {
+                final item = accounts[index] as Map<String, dynamic>;
+                final bankName = item['brand_name'] ??
+                    item['bank_brand_name'] ??
+                    item['bank_name'] ??
+                    'Ngân hàng';
+                final accountNumber = item['account_number'] ??
+                    item['bank_number'] ??
+                    item['number'] ??
+                    '';
+                final holderName = item['account_holder_name'] ??
+                    item['holder_name'] ??
+                    item['account_name'] ??
+                    'CHƯA RÕ';
+
+                return FadeInUp(
+                  delay: Duration(milliseconds: index * 100),
+                  duration: const Duration(milliseconds: 400),
+                  child: GestureDetector(
+                    onTap: () => _handleLinkSepayAccount(bankName, accountNumber, holderName),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF1E293B).withValues(alpha: 0.9),
+                            const Color(0xFF0F172A).withValues(alpha: 0.9),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF00BFA5).withValues(alpha: 0.3),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF00BFA5).withValues(alpha: 0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.account_balance_rounded,
+                                      color: Color(0xFF00BFA5),
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    bankName.toString().toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.1,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Colors.white24,
+                                size: 14,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            accountNumber,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'CHỦ TÀI KHOẢN',
+                                    style: TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    holderName.toString().toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF00BFA5).withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'LIÊN KẾT',
+                                  style: TextStyle(
+                                    color: Color(0xFF00BFA5),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 30),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSepayErrorState(ThemeProvider themeProvider, String message) {
+    return FadeIn(
+      duration: const Duration(milliseconds: 500),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 40),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: themeProvider.secondaryColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.sync_problem_rounded,
+                  color: Color(0xFFEF4444),
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Chưa cấu hình SePay',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _activeTabIndex = 1; // Switch to manual
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.edit_note_rounded, size: 20),
+                label: const Text(
+                  'Chuyển sang Nhập thủ công',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleLinkSepayAccount(
+      String bankName, String accountNumber, String holderName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Xác nhận liên kết',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Bạn có chắc muốn liên kết tài khoản $bankName ($accountNumber) không?',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Xác nhận',
+              style: TextStyle(
+                color: Color(0xFF00BFA5),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final displayInfo = '$bankName - $accountNumber';
+      if (!mounted) return;
+      final userProvider = context.read<UserProvider>();
+      await userProvider.addBankAccount(displayInfo);
+      if (!mounted) return;
+      _showSuccessDialog(holderName, displayInfo);
+    }
+  }
+
+  Widget _buildManualSelectionView(ThemeProvider themeProvider) {
+    return SingleChildScrollView(
+      key: const ValueKey('manual_selection_view'),
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -729,7 +1204,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                       border: Border.all(color: Colors.white10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -766,7 +1241,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                       borderRadius: BorderRadius.circular(15),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF2DD4BF).withOpacity(0.3),
+                          color: const Color(0xFF2DD4BF).withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
