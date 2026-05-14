@@ -31,6 +31,12 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   final BankService _bankService = BankService(); // Khởi tạo service ngân hàng
   int _activeTabIndex = 0; // Tab đang hoạt động: 0 = SePay, 1 = Thủ công
 
+  final TextEditingController _sepayTokenController = TextEditingController();
+  bool _isSavingToken = false;
+  bool _showTokenInput = false;
+  bool _hasTokenError = false; // Lỗi Token nhập sai
+  int _tokenShakeKey = 0; // Key kích hoạt hiệu ứng rung lắc
+
 
   // Danh sách các ngân hàng phổ biến được hiển thị ưu tiên.
   // Logo sử dụng assets địa phương nếu có, ngược lại dùng fallback mặc định.
@@ -325,6 +331,12 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
         _searchQuery = _searchController.text;
       });
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _sepayTokenController.text =
+            Provider.of<UserProvider>(context, listen: false).sepayToken;
+      }
+    });
   }
 
   @override
@@ -333,6 +345,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
     _accountNumberController.dispose();
     _accountHolderController.dispose();
     _idCardController.dispose();
+    _sepayTokenController.dispose();
     super.dispose();
   }
 
@@ -639,6 +652,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final userProvider = context.watch<UserProvider>();
 
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
@@ -675,7 +689,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         child: _selectedBank == null
-            ? _buildSelectionView(themeProvider)
+            ? _buildSelectionView(themeProvider, userProvider)
             : (_isFormMode
                   ? _buildLinkingFormView(themeProvider)
                   : _buildLinkingView(themeProvider)),
@@ -683,7 +697,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
     );
   }
 
-  Widget _buildSelectionView(ThemeProvider themeProvider) {
+  Widget _buildSelectionView(ThemeProvider themeProvider, UserProvider userProvider) {
     return Column(
       key: const ValueKey('selection_view'),
       children: [
@@ -696,7 +710,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                     key: const ValueKey('sepay_accounts_scroll'),
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _buildSepayAccountsView(themeProvider),
+                    child: _buildSepayAccountsView(themeProvider, userProvider),
                   )
                 : _buildManualSelectionView(themeProvider),
           ),
@@ -753,7 +767,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Tự động SePay',
+                      'Tự động',
                       style: TextStyle(
                         color: _activeTabIndex == 0 ? Colors.white : Colors.white38,
                         fontWeight: FontWeight.bold,
@@ -819,9 +833,13 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
     );
   }
 
-  Widget _buildSepayAccountsView(ThemeProvider themeProvider) {
+  Widget _buildSepayAccountsView(ThemeProvider themeProvider, UserProvider userProvider) {
+    if (userProvider.sepayToken.isEmpty || _showTokenInput) {
+      return _buildTokenInputView(themeProvider, userProvider);
+    }
+
     return FutureBuilder<List<dynamic>>(
-      future: _bankService.fetchBankAccounts(),
+      future: _bankService.fetchBankAccounts(userToken: userProvider.sepayToken),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -839,7 +857,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
 
         final accounts = snapshot.data ?? [];
         if (accounts.isEmpty) {
-          return _buildSepayErrorState(themeProvider, "Không tìm thấy thông tin tài khoản trên SePay Hub. Để bật đồng bộ tự động, bạn cần điền API Token trên backend hoặc chọn Nhập thủ công.");
+          return _buildSepayErrorState(themeProvider, "Không tìm thấy thông tin tài khoản trên SePay Hub. Vui lòng kiểm tra lại API Token của bạn.");
         }
 
         return Column(
@@ -847,6 +865,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
           children: [
             const SizedBox(height: 20),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -871,6 +890,16 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings_rounded, color: Colors.white54, size: 20),
+                  tooltip: 'Cấu hình API Token',
+                  onPressed: () {
+                    setState(() {
+                      _showTokenInput = true;
+                      _sepayTokenController.text = userProvider.sepayToken;
+                    });
+                  },
                 ),
               ],
             ),
@@ -1104,6 +1133,264 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                   'Chuyển sang Nhập thủ công',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
+              ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _showTokenInput = true;
+                  });
+                },
+                icon: const Icon(Icons.vpn_key_rounded, size: 18, color: Colors.white60),
+                label: const Text(
+                  'Cấu hình API Token',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTokenInputView(ThemeProvider themeProvider, UserProvider userProvider) {
+    return FadeInDown(
+      duration: const Duration(milliseconds: 400),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 20),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: themeProvider.secondaryColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00BFA5).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.vpn_key_rounded,
+                      color: Color(0xFF00BFA5),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Cấu hình SePay Token',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Vui lòng nhập SePay API Token cá nhân để thực hiện đồng bộ hóa lịch sử giao dịch ngân hàng của bạn.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '* Token được lưu trữ bảo mật trên Firestore cá nhân.',
+                style: TextStyle(
+                  color: const Color(0xFF00BFA5).withValues(alpha: 0.8),
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ShakeX(
+                key: ValueKey(_tokenShakeKey),
+                animate: _tokenShakeKey > 0,
+                duration: const Duration(milliseconds: 500),
+                child: TextField(
+                  controller: _sepayTokenController,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white, letterSpacing: 2),
+                  onChanged: (value) {
+                    if (_hasTokenError) {
+                      setState(() {
+                        _hasTokenError = false;
+                      });
+                    }
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'SePay API Token',
+                    labelStyle: TextStyle(
+                      color: _hasTokenError ? Colors.redAccent : Colors.white54,
+                      letterSpacing: 0,
+                    ),
+                    hintText: 'Nhập API Key từ SePay Hub',
+                    hintStyle: const TextStyle(color: Colors.white24, letterSpacing: 0),
+                    filled: true,
+                    fillColor: _hasTokenError
+                        ? Colors.redAccent.withValues(alpha: 0.05)
+                        : Colors.black12,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: _hasTokenError ? Colors.redAccent : Colors.white10,
+                        width: _hasTokenError ? 2 : 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: _hasTokenError ? Colors.redAccent : const Color(0xFF00BFA5),
+                        width: 2,
+                      ),
+                    ),
+                    errorText: _hasTokenError
+                        ? 'Token không hợp lệ hoặc không thể kết nối tới SePay!'
+                        : null,
+                    errorStyle: const TextStyle(color: Colors.redAccent),
+                    prefixIcon: Icon(
+                      Icons.lock_outline,
+                      color: _hasTokenError ? Colors.redAccent : Colors.white38,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  if (userProvider.sepayToken.isNotEmpty)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              _showTokenInput = false;
+                              _sepayTokenController.text = userProvider.sepayToken;
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.white24),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text('Hủy'),
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: _isSavingToken
+                          ? null
+                          : () async {
+                              final token = _sepayTokenController.text.trim();
+                              
+                              if (token.isEmpty) {
+                                HapticFeedback.heavyImpact();
+                                setState(() {
+                                  _hasTokenError = true;
+                                  _tokenShakeKey++;
+                                });
+                                return;
+                              }
+
+                              setState(() {
+                                _isSavingToken = true;
+                                _hasTokenError = false;
+                              });
+
+                              try {
+                                // Kiểm tra thực tế xem Token có gọi API thành công ko
+                                final isValid = await _bankService.validateSepayToken(token);
+                                
+                                if (!isValid) {
+                                  HapticFeedback.heavyImpact();
+                                  setState(() {
+                                    _hasTokenError = true;
+                                    _tokenShakeKey++;
+                                    _isSavingToken = false;
+                                  });
+                                  
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Kết nối thất bại! Vui lòng kiểm tra lại Token của bạn.'),
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                    );
+                                  }
+                                  return;
+                                }
+
+                                // Lưu token nếu hợp lệ
+                                await userProvider.setSepayToken(token);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Đã kết nối SePay thành công!'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                                setState(() {
+                                  _showTokenInput = false;
+                                });
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Lỗi khi lưu token: $e'),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _isSavingToken = false;
+                                  });
+                                }
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00BFA5),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isSavingToken
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Lưu Token & Kết nối',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

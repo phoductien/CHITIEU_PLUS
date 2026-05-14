@@ -6,6 +6,28 @@ import '../constants/api_constants.dart';
 
 /// Service xử lý các nghiệp vụ liên quan đến Ngân hàng và SePay.
 class BankService {
+  /// KIỂM TRA XEM TOKEN CÓ HỢP LỆ KHÔNG
+  Future<bool> validateSepayToken(String token) async {
+    try {
+      if (token.isEmpty) return false;
+      final Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'x-sepay-token': token,
+      };
+
+      final response = await http.get(
+        Uri.parse(ApiConstants.sepayBankAccountsUrl),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+
+      // Trả về true nếu mã trạng thái thành công
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Mã Token bạn nhập không đúng, hãy kiểm tra lại: $e');
+      return false;
+    }
+  }
+
   /// XÁC THỰC TÀI KHOẢN NGÂN HÀNG
   Future<Map<String, dynamic>> verifyAccount({
     required String bankId,
@@ -24,11 +46,16 @@ class BankService {
   }
 
   /// LẤY DANH SÁCH TÀI KHOẢN NGÂN HÀNG TỪ SEPAY
-  Future<List<dynamic>> fetchBankAccounts() async {
+  Future<List<dynamic>> fetchBankAccounts({String? userToken}) async {
     try {
+      final Map<String, String> headers = {'Content-Type': 'application/json'};
+      if (userToken != null && userToken.isNotEmpty) {
+        headers['x-sepay-token'] = userToken;
+      }
+
       final response = await http.get(
         Uri.parse(ApiConstants.sepayBankAccountsUrl),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -46,11 +73,16 @@ class BankService {
   }
 
   /// LẤY DANH SÁCH GIAO DỊCH TỪ SEPAY
-  Future<List<dynamic>> fetchTransactions() async {
+  Future<List<dynamic>> fetchTransactions({String? userToken}) async {
     try {
+      final Map<String, String> headers = {'Content-Type': 'application/json'};
+      if (userToken != null && userToken.isNotEmpty) {
+        headers['x-sepay-token'] = userToken;
+      }
+
       final response = await http.get(
         Uri.parse(ApiConstants.sepayTransactionsUrl),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {

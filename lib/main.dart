@@ -27,6 +27,8 @@ import 'package:chitieu_plus/providers/language_provider.dart';
 import 'package:chitieu_plus/utils/session_helper.dart'
     if (dart.library.html) 'package:chitieu_plus/utils/session_helper_web.dart'
     as session_helper;
+import 'package:chitieu_plus/services/web_update_checker.dart';
+import 'package:animate_do/animate_do.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -119,6 +121,12 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize Web Update Checker
+    if (kIsWeb) {
+      WebUpdateChecker.instance.init();
+    }
+
     _authStream = FirebaseAuth.instance.authStateChanges();
 
     // Listen to auth state changes to perform global redirects
@@ -286,6 +294,98 @@ class _MyAppState extends State<MyApp> {
           ),
         ),
         home: AuthWrapper(skipSplash: widget.skipSplash),
+        builder: (context, child) {
+          if (child == null) return const SizedBox.shrink();
+          return Stack(
+            children: [
+              child,
+              ValueListenableBuilder<bool>(
+                valueListenable: WebUpdateChecker.instance.updateAvailableNotifier,
+                builder: (context, isAvailable, _) {
+                  if (!isAvailable) return const SizedBox.shrink();
+                  
+                  return Positioned(
+                    top: 20,
+                    left: 20,
+                    right: 20,
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: FadeInDown(
+                          duration: const Duration(milliseconds: 500),
+                          child: Material(
+                            elevation: 12,
+                            borderRadius: BorderRadius.circular(30),
+                            color: const Color(0xFF1E1E2D),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(
+                                  color: const Color(0xFFF05D15).withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFF05D15).withValues(alpha: 0.2),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.rocket_launch_rounded, color: Color(0xFFF05D15)),
+                                  const SizedBox(width: 12),
+                                  const Expanded(
+                                    child: DefaultTextStyle(
+                                      style: TextStyle(
+                                        fontFamily: 'Arial',
+                                        decoration: TextDecoration.none,
+                                      ),
+                                      child: Text(
+                                        'Đã có phiên bản mới!',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  ElevatedButton(
+                                    onPressed: () => WebUpdateChecker.instance.reloadApp(),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFF05D15),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Cập nhật ngay',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }

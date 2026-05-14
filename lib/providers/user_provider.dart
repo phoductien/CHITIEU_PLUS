@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:device_info_plus/device_info_plus.dart'; // Added for device info
 import 'dart:async';
 import '../models/device_session_model.dart'; // Added model
+import '../services/google_auth_service.dart';
 
 /// UserProvider: Quản lý toàn bộ thông tin người dùng, ngân hàng, thiết bị và ngân sách.
 /// Tích hợp đồng bộ hóa thời gian thực với Firebase (Firestore & RTDB).
@@ -23,10 +24,13 @@ class UserProvider with ChangeNotifier {
   String _googleAccessToken = '';
 
   String _googleServerAuthCode = '';
+  String _sepayToken = '';
   bool _isGuest = false;
 
   double _totalBudget = 5000000;
   double _totalBalance = 0;
+  double _cashBalance = 0;
+  double _bankBalance = 0;
   Map<String, double> _categoryBudgets = {};
   List<String> _bankAccounts = [];
   List<DeviceSessionModel> _deviceSessions = [];
@@ -44,11 +48,14 @@ class UserProvider with ChangeNotifier {
   String get gender => _gender;
   String get googleAccessToken => _googleAccessToken;
   String get googleServerAuthCode => _googleServerAuthCode;
+  String get sepayToken => _sepayToken;
   bool get isGuest => _isGuest;
   String get uid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   double get totalBudget => _totalBudget;
   double get totalBalance => _totalBalance;
+  double get cashBalance => _cashBalance;
+  double get bankBalance => _bankBalance;
   Map<String, double> get categoryBudgets => _categoryBudgets;
   List<String> get bankAccounts => _bankAccounts;
   List<DeviceSessionModel> get deviceSessions => _deviceSessions;
@@ -66,10 +73,13 @@ class UserProvider with ChangeNotifier {
     _gender = prefs.getString('user_gender') ?? 'Nam';
     _googleAccessToken = prefs.getString('google_access_token') ?? '';
     _googleServerAuthCode = prefs.getString('google_server_auth_code') ?? '';
+    _sepayToken = prefs.getString('user_sepay_token') ?? '';
     _isGuest = prefs.getBool('is_guest') ?? false;
 
     _totalBudget = prefs.getDouble('user_total_budget') ?? 5000000;
     _totalBalance = prefs.getDouble('user_total_balance') ?? 0;
+    _cashBalance = prefs.getDouble('user_cash_balance') ?? 0;
+    _bankBalance = prefs.getDouble('user_bank_balance') ?? 0;
     _bankAccounts = prefs.getStringList('user_bank_accounts') ?? [];
     _currentDeviceId = prefs.getString('device_session_id');
 
@@ -181,6 +191,15 @@ class UserProvider with ChangeNotifier {
     await prefs.setString('google_server_auth_code', _googleServerAuthCode);
   }
 
+  /// Lưu SePay API Token vào Provider, Local Storage và Firebase
+  Future<void> setSepayToken(String token) async {
+    _sepayToken = token;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_sepay_token', token);
+    await syncToFirebase();
+  }
+
   /// Tải thông tin người dùng từ Firebase Firestore (Khi đã đăng nhập)
   Future<void> fetchFromFirebase() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -233,11 +252,16 @@ class UserProvider with ChangeNotifier {
         _phone = data['phone'] ?? _phone;
         _dob = data['dob'] ?? _dob;
         _gender = data['gender'] ?? _gender;
+        _sepayToken = data['sepayToken'] ?? '';
 
         _totalBudget =
             (data['totalBudget'] as num?)?.toDouble() ?? _totalBudget;
         _totalBalance =
             (data['totalBalance'] as num?)?.toDouble() ?? _totalBalance;
+        _cashBalance =
+            (data['cashBalance'] as num?)?.toDouble() ?? _cashBalance;
+        _bankBalance =
+            (data['bankBalance'] as num?)?.toDouble() ?? _bankBalance;
         _bankAccounts = List<String>.from(
           data['bankAccounts'] ?? _bankAccounts,
         );
@@ -255,9 +279,12 @@ class UserProvider with ChangeNotifier {
         await prefs.setString('user_phone', _phone);
         await prefs.setString('user_dob', _dob);
         await prefs.setString('user_gender', _gender);
+        await prefs.setString('user_sepay_token', _sepayToken);
         await prefs.setBool('is_guest', _isGuest);
         await prefs.setDouble('user_total_budget', _totalBudget);
         await prefs.setDouble('user_total_balance', _totalBalance);
+        await prefs.setDouble('user_cash_balance', _cashBalance);
+        await prefs.setDouble('user_bank_balance', _bankBalance);
         await prefs.setStringList('user_bank_accounts', _bankAccounts);
         await prefs.setString(
           'user_category_budgets',
@@ -334,8 +361,11 @@ class UserProvider with ChangeNotifier {
         'isGuest': _isGuest,
         'totalBudget': _totalBudget,
         'totalBalance': _totalBalance,
+        'cashBalance': _cashBalance,
+        'bankBalance': _bankBalance,
         'categoryBudgets': _categoryBudgets,
         'bankAccounts': _bankAccounts,
+        'sepayToken': _sepayToken,
       };
 
       try {
@@ -373,6 +403,41 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('user_total_balance', value);
+    await syncToFirebase();
+  }
+
+  Future<void> updateBalances({required double cash, required double bank}) async {
+    _cashBalance = cash;
+    _bankBalance = bank;
+    _totalBalance = cash + bank;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('user_cash_balance', cash);
+    await prefs.setDouble('user_bank_balance', bank);
+    await prefs.setDouble('user_total_balance', _totalBalance);
+    await syncToFirebase();
+  }
+
+  Future<void> adjustBalance({
+    required double amount,
+    required String paymentMethod,
+    required bool isIncome,
+  }) async {
+    final isCash = paymentMethod.toLowerCase().contains('tiền mặt') || paymentMethod.toLowerCase() == 'cash';
+    final delta = isIncome ? amount : -amount;
+
+    if (isCash) {
+      _cashBalance += delta;
+    } else {
+      _bankBalance += delta;
+    }
+    _totalBalance = _cashBalance + _bankBalance;
+
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('user_cash_balance', _cashBalance);
+    await prefs.setDouble('user_bank_balance', _bankBalance);
+    await prefs.setDouble('user_total_balance', _totalBalance);
     await syncToFirebase();
   }
 
@@ -510,7 +575,7 @@ class UserProvider with ChangeNotifier {
               debugPrint(
                 '[UserProvider] Current session revoked. Logging out...',
               );
-              FirebaseAuth.instance.signOut();
+              GoogleAuthService().signOut();
             }
           },
           onError: (error) {
@@ -574,7 +639,7 @@ class UserProvider with ChangeNotifier {
           debugPrint(
             '[UserProvider] Error deleting guest user (token may have expired): $e',
           );
-          await FirebaseAuth.instance.signOut();
+          await GoogleAuthService().signOut();
         }
       }
 

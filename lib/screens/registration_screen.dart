@@ -463,7 +463,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         }
 
         // 3. Sign out so user must log in explicitly
-        await FirebaseAuth.instance.signOut();
+        await GoogleAuthService().signOut();
 
         // 4. Navigate back to Login
         if (mounted) {

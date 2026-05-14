@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/user_provider.dart';
 import 'edit_transaction_screen.dart';
 
 class TransactionDetailScreen extends StatelessWidget {
@@ -385,10 +386,11 @@ class TransactionDetailScreen extends StatelessWidget {
     );
 
     if (confirm == true && context.mounted) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
       await Provider.of<TransactionProvider>(
         context,
         listen: false,
-      ).deleteTransaction(transaction.id);
+      ).deleteTransaction(transaction.id, userProvider: userProvider);
       if (context.mounted) Navigator.pop(context);
     }
   }

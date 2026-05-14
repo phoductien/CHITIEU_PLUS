@@ -71,6 +71,7 @@ class _PaymentDetailsScreenState extends State<PaymentDetailsScreen> {
         note: _selectedSource == null
             ? 'Nạp qua Ví dùng thử'
             : 'Nạp qua ngân hàng $_selectedSource',
+        paymentMethod: _selectedSource == null ? 'cash' : 'bank',
       );
 
       await transactionProvider.addTransaction(

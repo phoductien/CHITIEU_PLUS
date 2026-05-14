@@ -364,7 +364,8 @@ class _TransactionTabState extends State<TransactionTab> {
                     .map((tx) => tx.id)
                     .toList();
                 if (demoIds.isNotEmpty) {
-                  await txProvider.deleteTransactions(demoIds);
+                  final userProvider = context.read<UserProvider>();
+                  await txProvider.deleteTransactions(demoIds, userProvider: userProvider);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Đã xóa số dư ví dùng thử')),
@@ -532,7 +533,8 @@ class _TransactionTabState extends State<TransactionTab> {
     );
 
     if (confirm == true && mounted) {
-      await context.read<TransactionProvider>().deleteTransactions(ids);
+      final userProvider = context.read<UserProvider>();
+      await context.read<TransactionProvider>().deleteTransactions(ids, userProvider: userProvider);
       if (mounted) {
         setState(() {
           _isSelectionMode = false;
@@ -1019,9 +1021,10 @@ class _TransactionTabState extends State<TransactionTab> {
                               ),
                             );
                             if (confirm == true && mounted) {
+                              final userProvider = context.read<UserProvider>();
                               await context
                                   .read<TransactionProvider>()
-                                  .deleteTransaction(tx.id);
+                                  .deleteTransaction(tx.id, userProvider: userProvider);
                             }
                           }
                         },

@@ -235,10 +235,37 @@ class TransactionService {
     if (_userId == null) return;
 
     try {
-      final sepayTransactions = await _bankService.fetchTransactions();
+      // Load user document to retrieve their SePay token
+      final userDoc = await _db.collection('users').doc(_userId).get();
+      if (!userDoc.exists) return;
+      
+      final String? token = userDoc.data()?['sepayToken'];
+      if (token == null || token.trim().isEmpty) {
+        debugPrint('[TransactionService] Sync skipped: SePay Token is empty.');
+        return;
+      }
+
+      final List<dynamic> rawBankAccounts = userDoc.data()?['bankAccounts'] ?? [];
+      final List<String> linkedAccountNumbers = rawBankAccounts.map((acc) {
+        final str = acc.toString().trim();
+        if (str.contains(' - ')) {
+          return str.split(' - ').last.trim().toLowerCase();
+        }
+        return str.toLowerCase();
+      }).toList();
+
+      final sepayTransactions = await _bankService.fetchTransactions(userToken: token);
       if (sepayTransactions.isEmpty) return;
 
       for (var st in sepayTransactions) {
+        final String txAccountNumber = (st['account_number'] ?? '').toString().trim().toLowerCase();
+        
+        // Skip transaction if the account is not in user's linked bank accounts
+        if (txAccountNumber.isEmpty || !linkedAccountNumbers.contains(txAccountNumber)) {
+          debugPrint('[TransactionService] Sync skipped: Account $txAccountNumber not linked.');
+          continue;
+        }
+
         // SePay transaction ID as unique identifier
         final String sepayId = 'sepay_${st['id']}';
 
@@ -275,6 +302,7 @@ class TransactionService {
             'bank_brand_name': st['bank_brand_name'],
             'account_number': st['account_number'],
           },
+          paymentMethod: 'bank',
         );
 
         // Save to Firestore

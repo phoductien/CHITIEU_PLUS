@@ -45,6 +45,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
   bool _isAiProcessing = false;
   bool _isAiGenerated = false;
   Map<String, dynamic>? _aiMetadata;
+  String _selectedPaymentMethod = 'cash';
 
   final List<Map<String, dynamic>> _categories = [
     {
@@ -312,6 +313,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       note: _noteController.text,
       wallet: walletType,
       aiMetadata: _isAiGenerated ? _aiMetadata : null,
+      paymentMethod: _selectedPaymentMethod,
     );
 
     try {
@@ -740,6 +742,107 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
                       ),
                     );
                   },
+                ),
+                const SizedBox(height: 30),
+                const Text(
+                  'HÌNH THỨC THANH TOÁN',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: widget.isFromVoice ? null : () => setState(() => _selectedPaymentMethod = 'cash'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            gradient: _selectedPaymentMethod == 'cash'
+                                ? const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)])
+                                : LinearGradient(colors: [
+                                    const Color(0xFF1E293B).withOpacity(0.5),
+                                    const Color(0xFF0F172A).withOpacity(0.5),
+                                  ]),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _selectedPaymentMethod == 'cash'
+                                  ? Colors.greenAccent.withOpacity(0.5)
+                                  : Colors.white.withOpacity(0.05),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.money_rounded, 
+                                color: widget.isFromVoice 
+                                    ? (_selectedPaymentMethod == 'cash' ? Colors.white : Colors.white30) 
+                                    : (_selectedPaymentMethod == 'cash' ? Colors.white : Colors.white38)
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Tiền mặt',
+                                style: TextStyle(
+                                  color: widget.isFromVoice 
+                                      ? (_selectedPaymentMethod == 'cash' ? Colors.white : Colors.white30) 
+                                      : (_selectedPaymentMethod == 'cash' ? Colors.white : Colors.white38),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: widget.isFromVoice ? null : () => setState(() => _selectedPaymentMethod = 'bank'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            gradient: _selectedPaymentMethod == 'bank'
+                                ? const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF2563EB)])
+                                : LinearGradient(colors: [
+                                    const Color(0xFF1E293B).withOpacity(0.5),
+                                    const Color(0xFF0F172A).withOpacity(0.5),
+                                  ]),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _selectedPaymentMethod == 'bank'
+                                  ? Colors.blueAccent.withOpacity(0.5)
+                                  : Colors.white.withOpacity(0.05),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.account_balance_rounded, 
+                                color: widget.isFromVoice 
+                                    ? (_selectedPaymentMethod == 'bank' ? Colors.white : Colors.white30) 
+                                    : (_selectedPaymentMethod == 'bank' ? Colors.white : Colors.white38)
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Ngân hàng',
+                                style: TextStyle(
+                                  color: widget.isFromVoice 
+                                      ? (_selectedPaymentMethod == 'bank' ? Colors.white : Colors.white30) 
+                                      : (_selectedPaymentMethod == 'bank' ? Colors.white : Colors.white38),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 30),
                 const Text(

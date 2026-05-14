@@ -36,6 +36,50 @@ class TransactionProvider with ChangeNotifier {
     return balance;
   }
 
+  /// Tính toán số dư tiền mặt
+  double get cashBalance {
+    double balance = 0;
+    for (var tx in _transactions) {
+      if (tx.paymentMethod == 'cash') {
+        if (tx.type == TransactionType.income) {
+          balance += tx.amount;
+        } else {
+          balance -= tx.amount;
+        }
+      }
+    }
+    return balance;
+  }
+
+  /// Tính toán số dư tài khoản ngân hàng
+  double get bankBalance {
+    double balance = 0;
+    for (var tx in _transactions) {
+      if (tx.paymentMethod == 'bank') {
+        if (tx.type == TransactionType.income) {
+          balance += tx.amount;
+        } else {
+          balance -= tx.amount;
+        }
+      }
+    }
+    return balance;
+  }
+
+  /// Tính toán tổng nợ (khi bất kỳ nguồn tiền nào bị âm)
+  double get totalDebt {
+    double debt = 0;
+    final cash = cashBalance;
+    final bank = bankBalance;
+    if (cash < 0) {
+      debt += cash.abs();
+    }
+    if (bank < 0) {
+      debt += bank.abs();
+    }
+    return debt;
+  }
+
   TransactionProvider() {
     _loadLastSyncTime();
     _initAuthListener();
@@ -155,29 +199,65 @@ class TransactionProvider with ChangeNotifier {
   Future<void> addTransaction(TransactionModel tx, {UserProvider? userProvider}) async {
     await _service.addTransaction(tx);
     
-    // Cập nhật số dư thực tế nếu có userProvider
-    // Việc này đảm bảo số dư luôn đi kèm với giao dịch mới
+    // Cập nhật số dư thực tế sử dụng trường cashBalance/bankBalance chi tiết
     if (userProvider != null) {
-      double currentBalance = userProvider.totalBalance;
-      if (tx.type == TransactionType.income) {
-        currentBalance += tx.amount;
-      } else {
-        currentBalance -= tx.amount;
-      }
-      await userProvider.setTotalBalance(currentBalance);
+      await userProvider.adjustBalance(
+        amount: tx.amount,
+        paymentMethod: tx.paymentMethod,
+        isIncome: tx.type == TransactionType.income,
+      );
     }
     
     await syncDataWithFirestore();
   }
 
-  Future<void> deleteTransaction(String id) async {
-    // Logic: Chỉ xóa bản ghi giao dịch, không gọi cập nhật số dư trong UserProvider
+  Future<void> deleteTransaction(String id, {UserProvider? userProvider}) async {
+    // Hoàn tác biến động số dư trước khi xóa giao dịch nếu có userProvider
+    if (userProvider != null) {
+      try {
+        final tx = _transactions.firstWhere((t) => t.id == id);
+        // Đảo ngược logic: Nếu là thu nhập thì trừ đi, nếu chi tiêu thì cộng lại.
+        await userProvider.adjustBalance(
+          amount: tx.amount,
+          paymentMethod: tx.paymentMethod,
+          isIncome: tx.type != TransactionType.income,
+        );
+      } catch (e) {
+        debugPrint('[TransactionProvider] Lỗi hoàn tác số dư: $e');
+      }
+    }
     await _service.deleteTransaction(id);
     await syncDataWithFirestore();
   }
 
-  Future<void> deleteTransactions(List<String> ids) async {
-    // Logic: Xóa danh sách giao dịch, số dư chính vẫn giữ nguyên
+  Future<void> deleteTransactions(List<String> ids, {UserProvider? userProvider}) async {
+    if (userProvider != null) {
+      double cashDelta = 0;
+      double bankDelta = 0;
+
+      for (var id in ids) {
+        try {
+          final tx = _transactions.firstWhere((t) => t.id == id);
+          final isCash = tx.paymentMethod.toLowerCase().contains('tiền mặt') || tx.paymentMethod.toLowerCase() == 'cash';
+          final delta = tx.type != TransactionType.income ? tx.amount : -tx.amount;
+
+          if (isCash) {
+            cashDelta += delta;
+          } else {
+            bankDelta += delta;
+          }
+        } catch (e) {
+          debugPrint('[TransactionProvider] Transaction $id not found for multi-delete adjust');
+        }
+      }
+
+      if (cashDelta != 0 || bankDelta != 0) {
+        final newCash = userProvider.cashBalance + cashDelta;
+        final newBank = userProvider.bankBalance + bankDelta;
+        await userProvider.updateBalances(cash: newCash, bank: newBank);
+      }
+    }
+
     await _service.deleteTransactions(ids);
     await syncDataWithFirestore();
   }

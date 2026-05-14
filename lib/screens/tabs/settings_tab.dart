@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:chitieu_plus/providers/user_provider.dart';
 import 'package:chitieu_plus/providers/theme_provider.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chitieu_plus/widgets/auth_wrapper.dart';
+import 'package:chitieu_plus/services/google_auth_service.dart';
 import 'package:chitieu_plus/screens/ai_chat_screen.dart';
 import 'package:chitieu_plus/providers/transaction_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -373,7 +373,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         showArrow: false,
                         onTap: () async {
                           await UserProvider.cleanupGuestIfAny();
-                          await FirebaseAuth.instance.signOut();
+                          await GoogleAuthService().signOut();
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.remove('is_bypassed_auth');
                           await prefs.remove('bypassed_email');

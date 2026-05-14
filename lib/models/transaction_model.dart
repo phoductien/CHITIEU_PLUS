@@ -14,6 +14,7 @@ class TransactionModel {
   final String wallet; // 'main' or 'trial'
   final bool isPinned;
   final Map<String, dynamic>? aiMetadata;
+  final String paymentMethod; // 'cash' or 'bank'
 
   TransactionModel({
     required this.id,
@@ -27,6 +28,7 @@ class TransactionModel {
     this.wallet = 'main',
     this.isPinned = false,
     this.aiMetadata,
+    this.paymentMethod = 'cash',
   });
 
   /// Getters for SePay metadata convenience
@@ -45,10 +47,16 @@ class TransactionModel {
       'wallet': wallet,
       'isPinned': isPinned,
       'aiMetadata': aiMetadata,
+      'paymentMethod': paymentMethod,
     };
   }
 
   factory TransactionModel.fromMap(String id, Map<String, dynamic> map) {
+    final String inferredPaymentMethod = map['paymentMethod'] ??
+        ((id.startsWith('sepay_') || (map['aiMetadata'] != null && map['aiMetadata']['bank_brand_name'] != null) || (map['category'] == 'Ngân hàng'))
+            ? 'bank'
+            : 'cash');
+            
     return TransactionModel(
       id: id,
       userId: map['userId'] ?? '',
@@ -69,6 +77,7 @@ class TransactionModel {
       wallet: map['wallet'] ?? 'main',
       isPinned: map['isPinned'] ?? false,
       aiMetadata: map['aiMetadata'],
+      paymentMethod: inferredPaymentMethod,
     );
   }
 
@@ -84,6 +93,7 @@ class TransactionModel {
     String? wallet,
     bool? isPinned,
     Map<String, dynamic>? aiMetadata,
+    String? paymentMethod,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -97,6 +107,7 @@ class TransactionModel {
       wallet: wallet ?? this.wallet,
       isPinned: isPinned ?? this.isPinned,
       aiMetadata: aiMetadata ?? this.aiMetadata,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
     );
   }
 }

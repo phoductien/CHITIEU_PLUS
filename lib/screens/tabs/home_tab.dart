@@ -19,7 +19,9 @@ import 'package:chitieu_plus/screens/add_transaction_screen.dart';
 import 'package:chitieu_plus/providers/saving_goal_provider.dart';
 import 'package:chitieu_plus/widgets/saving_goal_card.dart';
 import 'package:chitieu_plus/screens/saving_goals_list_screen.dart';
-import 'package:chitieu_plus/screens/balance_adjustment_screen.dart';
+import 'package:chitieu_plus/screens/balance_screen.dart';
+import 'package:chitieu_plus/screens/sepay_qr_generator_screen.dart';
+
 import 'package:chitieu_plus/screens/transaction_detail_screen.dart';
 
 class HomeTab extends StatefulWidget {
@@ -37,9 +39,6 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
   DateTime _currentTime = DateTime.now();
   late AnimationController _syncController;
   Timer? _lastSyncRefreshTimer;
-  bool _isEditingBalance = false;
-  final TextEditingController _balanceEditController = TextEditingController();
-  final FocusNode _balanceFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -70,8 +69,6 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
     _timer.cancel();
     _lastSyncRefreshTimer?.cancel();
     _syncController.dispose();
-    _balanceEditController.dispose();
-    _balanceFocusNode.dispose();
     super.dispose();
   }
 
@@ -115,10 +112,6 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
     }
   }
 
-  /// Phương thức này hiện tại chỉ dùng để log hoặc xử lý các dữ liệu khác nếu cần
-  void _calculateData(List<TransactionModel> transactions) {
-    // Không tính toán số dư ở đây nữa để tránh bị reset khi xoá giao dịch
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +123,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
     final transactions = transactionProvider.transactions;
     final isLoading = transactionProvider.isLoading;
 
-    // Lấy số dư thực tế từ UserProvider thay vì tính toán từ list giao dịch
+    // Lấy số dư thực tế được quản lý từ UserProvider
     _totalBalance = userProvider.totalBalance;
 
     final screenWidth = MediaQuery.of(context).size.width;
@@ -519,87 +512,28 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              _isBalanceVisible
-                                  ? (_isEditingBalance
-                                      ? SizedBox(
-                                          width: 220,
-                                          child: TextField(
-                                            focusNode: _balanceFocusNode,
-                                            controller: _balanceEditController,
-                                            keyboardType: TextInputType.number,
-                                            autofocus: true,
-                                            style: TextStyle(
-                                              color: themeProvider.foregroundColor,
-                                              fontSize: 38,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: -1,
-                                            ),
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
-                                              contentPadding: EdgeInsets.zero,
-                                              isDense: true,
-                                            ),
-                                            onSubmitted: (val) async {
-                                              final cleanVal = val.replaceAll('.', '').replaceAll(',', '');
-                                              final double? newBalance = double.tryParse(cleanVal);
-                                              if (newBalance != null) {
-                                                await userProvider.setTotalBalance(newBalance);
-                                              }
-                                              setState(() {
-                                                _isEditingBalance = false;
-                                              });
-                                            },
-                                            onTapOutside: (_) async {
-                                              final cleanVal = _balanceEditController.text.replaceAll('.', '').replaceAll(',', '');
-                                              final double? newBalance = double.tryParse(cleanVal);
-                                              if (newBalance != null) {
-                                                await userProvider.setTotalBalance(newBalance);
-                                              }
-                                              setState(() {
-                                                _isEditingBalance = false;
-                                              });
-                                            },
-                                          ),
-                                        )
-                                      : GestureDetector(
-                                          onTap: () {
-                                            _balanceEditController.text = _totalBalance.toInt().toString();
-                                            setState(() {
-                                              _isEditingBalance = true;
-                                            });
-                                          },
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                NumberFormat('#,###').format(_totalBalance),
-                                                style: TextStyle(
-                                                  color: themeProvider.foregroundColor,
-                                                  fontSize: 38,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: -1,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Icon(
-                                                Icons.edit_rounded,
-                                                color: const Color(0xFFEC5B13).withOpacity(0.6),
-                                                size: 18,
-                                              ),
-                                            ],
-                                          ),
-                                        ))
-                                  : GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _isBalanceVisible = true;
-                                        });
-                                      },
-                                      child: Text(
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const BalanceScreen(),
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                _isBalanceVisible
+                                    ? Text(
+                                        NumberFormat('#,###').format(_totalBalance),
+                                        style: TextStyle(
+                                          color: themeProvider.foregroundColor,
+                                          fontSize: 38,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: -1,
+                                        ),
+                                      )
+                                    : Text(
                                         '*********',
                                         style: TextStyle(
                                           color: themeProvider.foregroundColor,
@@ -608,17 +542,17 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                           letterSpacing: -1,
                                         ),
                                       ),
-                                    ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'đ',
-                                style: TextStyle(
-                                  color: Color(0xFFEC5B13),
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'đ',
+                                  style: TextStyle(
+                                    color: Color(0xFFEC5B13),
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 30),
                           SingleChildScrollView(
@@ -636,6 +570,20 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                                     icon: Icons.history_rounded,
                                     label: 'Lịch sử',
                                     color: Colors.white.withOpacity(0.2),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                GestureDetector(
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const SepayQrGeneratorScreen(),
+                                    ),
+                                  ),
+                                  child: _buildActionChip(
+                                    icon: Icons.qr_code_2_rounded,
+                                    label: 'Tạo mã QR',
+                                    color: const Color(0xFFEC5B13).withOpacity(0.25),
                                   ),
                                 ),
                               ],

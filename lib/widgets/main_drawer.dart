@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,6 +11,7 @@ import '../providers/theme_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/auth_wrapper.dart';
+import '../services/google_auth_service.dart';
 import '../screens/ai_chat_screen.dart';
 import '../screens/debt_list_screen.dart';
 import '../screens/terms_and_privacy_screen.dart';
@@ -428,7 +428,7 @@ class _MainDrawerState extends State<MainDrawer> {
                         iconColor: const Color(0xFFE53935),
                         onTap: () async {
                           await UserProvider.cleanupGuestIfAny();
-                          await FirebaseAuth.instance.signOut();
+                          await GoogleAuthService().signOut();
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.remove('is_bypassed_auth');
                           await prefs.remove('bypassed_email');

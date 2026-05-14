@@ -12,6 +12,7 @@ import '../providers/theme_provider.dart';
 import '../widgets/auth_wrapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'balance_adjustment_screen.dart';
+import '../services/google_auth_service.dart';
 
 // Màn hình Quản lý Tài khoản: cung cấp các tính năng quản lý ngân hàng, thiết bị và cài đặt bảo mật.
 class AccountManagementScreen extends StatefulWidget {
@@ -1255,7 +1256,7 @@ class _AccountManagementScreenState extends State<AccountManagementScreen> {
 
     if (confirm == true && context.mounted) {
       await UserProvider.cleanupGuestIfAny();
-      await FirebaseAuth.instance.signOut();
+      await GoogleAuthService().signOut();
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('is_bypassed_auth');
       await prefs.remove('bypassed_email');
