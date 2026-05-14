@@ -75,12 +75,12 @@ export default async function handler(req, res) {
     };
     targetUrl = endpointMap[endpoint];
   } else {
-    // --- Chế độ Cá nhân (API v1 cũ) - Dùng Token tĩnh ---
+    // --- Chế độ Cá nhân (API v2 mới) - Dùng Token tĩnh ---
     useAuthToken = apiToken;
 
     const endpointMap = {
-      'transactions': 'https://my.sepay.vn/api/transactions/list',
-      'bank-accounts': 'https://my.sepay.vn/api/bank-accounts/list',
+      'transactions': 'https://userapi.sepay.vn/v2/transactions',
+      'bank-accounts': 'https://userapi.sepay.vn/v2/bank-accounts',
     };
     targetUrl = endpointMap[endpoint];
   }
@@ -105,12 +105,24 @@ export default async function handler(req, res) {
       },
     });
 
-    const data = await response.json();
+    // Hỗ trợ xử lý an toàn lỗi dạng HTML / Không phải JSON từ API
+    const contentType = response.headers.get('content-type') || '';
+    let data;
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const errText = await response.text();
+      console.error('Lỗi SePay API (Không phải JSON):', response.status, errText);
+      return res.status(response.status).json({
+        error: `SePay API trả về mã lỗi HTTP ${response.status} hoặc nội dung không phải JSON.`,
+        details: errText.substring(0, 200)
+      });
+    }
 
     // 5. Chuẩn hóa đầu ra (Data Transformation) cho Flutter App tương thích 100%
-    // Bank Hub API trả về cấu trúc: { status: "success", data: [...] }
+    // SePay API v2 và Bank Hub API đều trả về cấu trúc: { status: "success", data: [...] }
     // Chuyển về format cũ mà Flutter đang parse sẵn: { status: 200, transactions/bank_accounts: [...] }
-    if (isBankHub && data.status === 'success' && Array.isArray(data.data)) {
+    if (data.status === 'success' && Array.isArray(data.data)) {
       const transformed = {
         status: 200,
         error: null,
@@ -120,16 +132,20 @@ export default async function handler(req, res) {
       if (endpoint === 'transactions') {
         transformed.transactions = data.data;
       } else if (endpoint === 'bank-accounts') {
-        transformed.bank_accounts = data.data;
+        // Ánh xạ thêm trường bank_brand_name từ bank_short_name cho tương thích client
+        transformed.bank_accounts = data.data.map(acc => ({
+          ...acc,
+          bank_brand_name: acc.bank_brand_name || acc.bank_short_name || acc.bank_code || 'Ngân hàng'
+        }));
       }
 
       return res.status(200).json(transformed);
     }
 
-    // 6. Trả kết quả nguyên bản cho API cũ
+    // 6. Trả kết quả nguyên bản
     return res.status(response.status).json(data);
   } catch (error) {
-    console.error('Lỗi tại SePay Proxy:', error);
-    return res.status(500).json({ error: 'Lỗi máy chủ nội bộ khi kết nối SePay API.' });
+    console.error('Lỗi hệ thống tại SePay Proxy:', error);
+    return res.status(500).json({ error: 'Lỗi hệ thống máy chủ nội bộ khi kết nối đến SePay.' });
   }
 }
