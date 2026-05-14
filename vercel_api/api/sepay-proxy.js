@@ -45,7 +45,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-SePay-Token'
   );
 
   // Xử lý CORS Preflight request
@@ -56,17 +56,20 @@ export default async function handler(req, res) {
   // 1. Lấy endpoint và các query params (ví dụ: limit, account_number...)
   const { endpoint, ...otherParams } = req.query;
 
-  // Đọc các biến môi trường từ Cấu hình Vercel Dashboard
-  const apiToken = process.env.SEPAY_API_TOKEN;
+  // Đọc token cá nhân được truyền từ Client (App Flutter) qua Headers
+  const clientSepayToken = req.headers['x-sepay-token'];
+
+  // Đọc các biến môi trường từ Cấu hình Vercel Dashboard (Lấy client token làm ưu tiên)
+  const apiToken = clientSepayToken || process.env.SEPAY_API_TOKEN;
   const clientId = process.env.SEPAY_CLIENT_ID;
   const clientSecret = process.env.SEPAY_CLIENT_SECRET;
 
-  const isBankHub = clientId && clientSecret;
+  const isBankHub = clientId && clientSecret && !clientSepayToken;
 
   // 2. Kiểm tra thông tin cấu hình bảo mật
   if (!apiToken && !isBankHub) {
     return res.status(500).json({ 
-      error: 'Chưa cấu hình SEPAY_API_TOKEN hoặc bộ SEPAY_CLIENT_ID/SECRET trong Vercel Environment Variables.' 
+      error: 'Chưa cấu hình SEPAY_API_TOKEN hoặc bộ SEPAY_CLIENT_ID/SECRET trong Vercel Environment Variables, và chưa truyền X-SePay-Token từ App.' 
     });
   }
 
