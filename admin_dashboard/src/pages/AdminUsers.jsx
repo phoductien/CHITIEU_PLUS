@@ -4,8 +4,8 @@ import {
   Calendar, ShieldAlert, Loader2, X, Phone, 
   User, CreditCard, PieChart, Activity 
 } from 'lucide-react';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageTransition } from '../components/PageTransition';
 
@@ -31,26 +31,12 @@ export const AdminUsers = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const usersSnap = await getDocs(collection(db, 'users'));
-        const usersData = usersSnap.docs.map(doc => ({ 
-          uid: doc.id, 
-          ...doc.data(),
-          status: doc.data().isLocked ? 'Locked' : 'Active'
-        }));
-
-        // Fetch transactions to count usage
-        const transSnap = await getDocs(collection(db, 'transactions'));
-        const transactions = transSnap.docs.map(d => d.data());
-
-        const usersWithUsage = usersData.map(user => {
-           const usage = transactions.filter(t => t.userId === user.uid && t.aiMetadata != null).length;
-           return { ...user, requests: usage };
-        });
-
-        setUsers(usersWithUsage);
+        const response = await axios.get('/api/admin/users');
+        setUsers(response.data.users || []);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching users:", error);
+        toast.error('Lỗi khi tải dữ liệu người dùng');
         setLoading(false);
       }
     };
@@ -62,7 +48,7 @@ export const AdminUsers = () => {
     e.stopPropagation();
     try {
       const isLocked = currentStatus === 'Active';
-      await updateDoc(doc(db, 'users', uid), { isLocked });
+      await axios.put('/api/admin/users', { uid, isLocked });
       
       setUsers(users.map(u => 
         u.uid === uid ? { ...u, status: isLocked ? 'Locked' : 'Active' } : u
@@ -70,8 +56,10 @@ export const AdminUsers = () => {
       if (selectedUser && selectedUser.uid === uid) {
         setSelectedUser({ ...selectedUser, status: isLocked ? 'Locked' : 'Active' });
       }
+      toast.success(`Đã ${isLocked ? 'khóa' : 'mở khóa'} tài khoản`);
     } catch (error) {
       console.error("Error updating user status:", error);
+      toast.error('Lỗi khi cập nhật trạng thái tài khoản');
     }
   };
 
@@ -180,8 +168,8 @@ export const AdminUsers = () => {
                          <td>
                             <div className="date-cell">
                                <span className="date-text">
-                                 {user.lastLogin?.toDate 
-                                   ? user.lastLogin.toDate().toLocaleDateString('vi-VN') 
+                                 {user.lastLogin 
+                                   ? new Date(user.lastLogin).toLocaleDateString('vi-VN') 
                                    : 'Chưa có dữ liệu'}
                                </span>
                             </div>

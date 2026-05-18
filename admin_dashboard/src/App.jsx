@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 import { Login } from './pages/Login';
 import { AdminLayout } from './components/AdminLayout';
@@ -9,6 +10,8 @@ import { AdminAnalytics } from './pages/AdminAnalytics';
 import { AdminUsers } from './pages/AdminUsers';
 import { AdminCategories } from './pages/AdminCategories';
 import { AdminFeedback } from './pages/AdminFeedback';
+import { AdminConfig } from './pages/AdminConfig';
+import { AdminNews } from './pages/AdminNews';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -27,6 +30,8 @@ const AnimatedRoutes = () => {
         <Route path="/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         <Route path="/categories" element={<ProtectedRoute><AdminCategories /></ProtectedRoute>} />
         <Route path="/feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
+        <Route path="/config" element={<ProtectedRoute><AdminConfig /></ProtectedRoute>} />
+        <Route path="/news" element={<ProtectedRoute><AdminNews /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );
@@ -35,6 +40,16 @@ const AnimatedRoutes = () => {
 function App() {
   return (
     <Router>
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          style: {
+            background: '#1a2235',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }
+        }} 
+      />
       <AnimatedRoutes />
     </Router>
   );
