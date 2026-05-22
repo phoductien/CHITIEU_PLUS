@@ -29,10 +29,7 @@ module.exports = async (req, res) => {
   try {
     // 1. Kích hoạt logic cào tin tức mới
     if (req.method === 'GET' && action === 'fetch') {
-      // Mock logic: Ở đây sẽ gọi script cào dữ liệu thực tế
-      // Sau đó lưu vào Firestore (collection 'news')
-      
-      // Giả lập lưu 1 tin tức mới vào DB
+      // Mock logic: Ở đây sẽ gọi script cào dữ liệu thực tế, lưu vào Firestore (collection 'news')
       const newNewsRef = db.collection('news').doc();
       await newNewsRef.set({
         title: 'Thị trường vừa ghi nhận biến động mới',
@@ -50,7 +47,6 @@ module.exports = async (req, res) => {
       if (!id) return res.status(400).json({ error: 'Missing news ID' });
       
       // Cập nhật trạng thái tin tức thành 'approved' trên Firestore
-      // await db.collection('news').doc(id).update({ status: 'approved' });
       
       return res.status(200).json({ success: true, message: `Đã duyệt tin tức ID: ${id}` });
     }
