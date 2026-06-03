@@ -328,10 +328,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
           body: 'Đã lưu ${NumberFormat('#,###').format(amount)}đ vào Ví chính',
           type: NotificationType.transaction,
         );
+        final today = DateTime.now();
+        final isToday = _selectedDate.year == today.year &&
+            _selectedDate.month == today.month &&
+            _selectedDate.day == today.day;
+        final dateFormatted = DateFormat('dd/MM/yyyy').format(_selectedDate);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Lưu giao dịch thành công!'),
+          SnackBar(
+            content: Text(isToday
+                ? 'Lưu giao dịch thành công!'
+                : 'Lưu thành công vào ngày $dateFormatted! (Chọn bộ lọc [Tháng này] hoặc [Tất cả] để xem)'),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
           ),
         );
         Navigator.pop(context);
@@ -478,10 +486,11 @@ Trả về DUY NHẤT một mã JSON với cấu trúc:
 
       _tabController.animateTo(0);
 
+      final dateFormatted = DateFormat('dd/MM/yyyy').format(_selectedDate);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã trích xuất thông tin từ hóa đơn'),
-          backgroundColor: Color(0xFFEC5B13),
+        SnackBar(
+          content: Text('Đã trích xuất thông tin từ hóa đơn (Ngày: $dateFormatted)'),
+          backgroundColor: const Color(0xFFEC5B13),
         ),
       );
     } catch (e) {

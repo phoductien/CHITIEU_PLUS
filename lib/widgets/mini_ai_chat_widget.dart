@@ -11,6 +11,7 @@ import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
 import '../providers/notification_provider.dart';
 import '../models/notification_model.dart';
+import '../providers/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
@@ -249,7 +250,10 @@ class _MiniAiChatWidgetState extends State<MiniAiChatWidget> {
         wallet: data['wallet'] ?? 'main',
       );
 
-      await context.read<TransactionProvider>().addTransaction(transaction);
+      await context.read<TransactionProvider>().addTransaction(
+            transaction,
+            userProvider: context.read<UserProvider>(),
+          );
 
       if (mounted) {
         context.read<NotificationProvider>().addNotification(

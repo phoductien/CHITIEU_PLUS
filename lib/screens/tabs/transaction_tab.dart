@@ -21,7 +21,7 @@ class TransactionTab extends StatefulWidget {
 }
 
 class _TransactionTabState extends State<TransactionTab> {
-  String _activeFilter = 'Hôm nay';
+  String _activeFilter = 'Tháng này';
   final TextEditingController _searchController = TextEditingController();
   final Set<String> _selectedIds = {};
   bool _isSelectionMode = false;
@@ -166,7 +166,9 @@ class _TransactionTabState extends State<TransactionTab> {
           tx.category.toLowerCase().contains(query);
 
       bool matchesDate = true;
-      if (_activeFilter == 'Hôm nay') {
+      if (_activeFilter == 'Tất cả') {
+        matchesDate = true;
+      } else if (_activeFilter == 'Hôm nay') {
         matchesDate =
             tx.date.year == today.year &&
             tx.date.month == today.month &&
@@ -684,6 +686,7 @@ class _TransactionTabState extends State<TransactionTab> {
           physics: const BouncingScrollPhysics(),
           child: Row(
             children: [
+              _buildFilterChip('Tất cả', themeProvider),
               _buildFilterChip('Hôm nay', themeProvider),
               _buildFilterChip('Tuần này', themeProvider),
               _buildFilterChip('Tháng này', themeProvider),
